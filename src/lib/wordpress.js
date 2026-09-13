@@ -1,4 +1,4 @@
-const WP_URL = process.env.WORDPRESS_URL || 'https://crffl.org';
+const WP_URL = process.env.WORDPRESS_URL || 'https://store.crffl.org';
 const WP_USER = process.env.WORDPRESS_USERNAME || 'esvnscr@gmail.com';
 const WP_APP_PASSWORD = process.env.WORDPRESS_APP_PASSWORD || 'PI28 01Yl ntDK QNuU 2DlE knW7';
 

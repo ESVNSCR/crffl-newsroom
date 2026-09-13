@@ -171,3 +171,4 @@ export default function DispatchesClient({ articles = [], featuredArticle = null
     </div>
   );
 }
+

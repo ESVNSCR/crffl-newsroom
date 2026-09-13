@@ -121,3 +121,4 @@ export default function ArticleModal({ article, onClose }) {
     </div>
   );
 }
+
