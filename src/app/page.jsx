@@ -60,9 +60,13 @@ export default async function HomePage() {
               The Editorial Desks
             </h2>
           </div>
-          <span className="text-xs text-gray-400 font-mono hidden sm:inline">
-            4 Columnists Published Weekly
-          </span>
+          <Link
+            href="/staff"
+            className="text-xs font-mono font-bold text-[#d4af37] hover:text-[#e6c24d] transition flex items-center gap-1"
+          >
+            <span>Staff Directory & Bios</span>
+            <span>→</span>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -251,6 +255,93 @@ export default async function HomePage() {
               className="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-semibold transition text-xs border border-white/10"
             >
               Enter Hall of Fame Pavilion →
+            </Link>
+          </div>
+
+          {/* Card 5: Gameday Sportsbook */}
+          <div className="rounded-2xl bg-gradient-to-br from-amber-950/20 via-[#121824] to-[#121824] border border-amber-500/30 p-6 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🎲</span>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  CRFFL Sportsbook
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono text-amber-400 font-bold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800">
+                Live Lines
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Vegas-style point spreads, moneylines, over/unders, prop bets, and arcade gameday wagering.
+            </p>
+
+            <a
+              href="https://crffl-sportsbook.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold transition text-xs border border-amber-500/40 shadow"
+            >
+              Open Gameday Sportsbook →
+            </a>
+          </div>
+
+          {/* Card 6: Weekly Pick'em & Scoreboard */}
+          <div className="rounded-2xl bg-gradient-to-br from-cyan-950/20 via-[#121824] to-[#121824] border border-cyan-500/30 p-6 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">🎯</span>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Weekly Pick'em
+                </h3>
+              </div>
+              <span className="text-[10px] font-mono text-cyan-400 font-bold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800">
+                LED Board
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Make your weekly spread picks and track live matchups with gameday scoring tickers.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <a
+                href="https://crffl-pickem.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center py-2 px-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold transition text-xs border border-cyan-500/40 text-center"
+              >
+                Make Picks →
+              </a>
+              <a
+                href="https://crffl-pickem.vercel.app/scoreboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center py-2 px-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold transition text-xs border border-gray-700 text-center"
+              >
+                Scoreboard 📟
+              </a>
+            </div>
+          </div>
+
+          {/* Card 7: 2026 Matchup Slate & Schedule */}
+          <div className="rounded-2xl bg-[#121824] border border-gray-800 p-6 space-y-3 shadow-lg">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">📅</span>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                2026 Schedule
+              </h3>
+            </div>
+
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Full 14-week regular season calendar. View week-by-week matchups and print your franchise schedule.
+            </p>
+
+            <Link
+              href="/schedule"
+              className="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold transition text-xs border border-gray-700"
+            >
+              View & Print Schedule →
             </Link>
           </div>
         </div>

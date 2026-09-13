@@ -21,7 +21,32 @@ export default function RootLayout({ children }) {
               <span>EST. 2021</span>
             </div>
             <div className="flex items-center space-x-4 text-[10px]">
-              <span className="text-gray-400">THE OFFICIAL NEWSROOM OF RECORD</span>
+              <Link href="/staff" className="hover:text-[#d4af37] transition">
+                STAFF DIRECTORY
+              </Link>
+              <span>•</span>
+              <Link href="/schedule" className="hover:text-[#d4af37] transition">
+                2026 SCHEDULE
+              </Link>
+              <span>•</span>
+              <a
+                href="https://crffl-sportsbook.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#d4af37] transition"
+              >
+                SPORTSBOOK
+              </a>
+              <span>•</span>
+              <a
+                href="https://crffl-pickem.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#d4af37] transition"
+              >
+                PICK'EM & SCOREBOARD
+              </a>
+              <span>•</span>
               <span className="text-[#d4af37] font-bold">CRFFL.ORG</span>
             </div>
           </div>
@@ -35,46 +60,74 @@ export default function RootLayout({ children }) {
                 <span className="text-xl sm:text-2xl font-black tracking-wider text-white">
                   CRFFL <span className="text-[#d4af37]">TIMES-HERALD</span>
                 </span>
-                <span className="hidden sm:inline-block text-[10px] uppercase bg-[#d4af37]/20 text-[#d4af37] px-2 py-0.5 rounded font-mono font-bold">
+                <span className="hidden lg:inline-block text-[10px] uppercase bg-[#d4af37]/20 text-[#d4af37] px-2 py-0.5 rounded font-mono font-bold">
                   Dispatch Desk
                 </span>
               </Link>
             </div>
 
-            <nav className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 text-xs sm:text-sm font-semibold">
+            <nav className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 text-xs sm:text-sm font-semibold">
               <Link
                 href="/"
-                className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
+                className="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
               >
                 📰 Dispatches
               </Link>
               <Link
                 href="/power-rankings"
-                className="px-3 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300"
+                className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300"
               >
-                📊 Power Rankings
+                📊 Rankings
+              </Link>
+              <Link
+                href="/schedule"
+                className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300"
+              >
+                📅 Schedule
               </Link>
               <Link
                 href="/hof"
-                className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
+                className="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
               >
                 🏆 Hall of Fame
               </Link>
+              <a
+                href="https://crffl-sportsbook.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1.5 rounded-lg hover:text-amber-400 hover:bg-gray-800/80 transition text-gray-300 hidden md:inline-block"
+              >
+                🎲 Sportsbook
+              </a>
+              <a
+                href="https://crffl-pickem.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1.5 rounded-lg hover:text-cyan-400 hover:bg-gray-800/80 transition text-gray-300 hidden md:inline-block"
+              >
+                🎯 Pick'em
+              </a>
+              <Link
+                href="/staff"
+                className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300 hidden lg:inline-block"
+              >
+                👥 Staff
+              </Link>
               <Link
                 href="/shop"
-                className="px-3.5 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold transition shadow-md flex items-center gap-1"
               >
-                🛍️ <span>Team Shop</span>
+                🛍️ <span>Shop</span>
               </Link>
 
               {/* Admin Menu */}
-              <div className="border-l border-gray-800 pl-2 sm:pl-3 flex items-center space-x-1">
+              <div className="border-l border-gray-800 pl-2 flex items-center space-x-1">
                 <Link
                   href="/admin/test-bench"
-                  className="px-2.5 py-1 rounded text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition"
+                  className="px-2 py-1 rounded text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition"
                   title="Commissioner Test Bench & Manual Run"
                 >
-                  ⚡ Admin
+                  ⚡
                 </Link>
               </div>
             </nav>
@@ -93,12 +146,22 @@ export default function RootLayout({ children }) {
               <p>© 2026 Columbia River Fantasy Football League. All rights reserved.</p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 text-gray-400 font-medium">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-gray-400 font-medium">
               <Link href="/" className="hover:text-[#d4af37] transition">Dispatches</Link>
               <span>•</span>
               <Link href="/power-rankings" className="hover:text-[#d4af37] transition">Power Rankings</Link>
               <span>•</span>
+              <Link href="/schedule" className="hover:text-[#d4af37] transition">Schedule</Link>
+              <span>•</span>
+              <Link href="/staff" className="hover:text-[#d4af37] transition">Staff Directory</Link>
+              <span>•</span>
               <Link href="/hof" className="hover:text-[#d4af37] transition">Hall of Fame</Link>
+              <span>•</span>
+              <a href="https://crffl-sportsbook.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Sportsbook</a>
+              <span>•</span>
+              <a href="https://crffl-pickem.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Pick'em</a>
+              <span>•</span>
+              <a href="https://crffl-pickem.vercel.app/scoreboard" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Scoreboard</a>
               <span>•</span>
               <Link href="/shop" className="hover:text-[#d4af37] transition">Pro Shop</Link>
               <span>•</span>

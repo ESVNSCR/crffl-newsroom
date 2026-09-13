@@ -19,6 +19,10 @@ const nextConfig = {
         source: '/hof/:path*',
         destination: 'https://crffl-hof.vercel.app/hof/:path*',
       },
+      {
+        source: '/logos/:path*',
+        destination: 'https://crffl-hof.vercel.app/logos/:path*',
+      },
       // WooCommerce & WordPress routes proxied to SiteGround
       {
         source: '/shop',
