@@ -4,6 +4,7 @@ import { COLUMNISTS } from '@/lib/columnists';
 import HeroLeadStory from '@/components/HeroLeadStory';
 import DispatchesClient from '@/components/DispatchesClient';
 import MastheadMotto from '@/components/MastheadMotto';
+import AlertsCtaCard from '@/components/AlertsCtaCard';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -168,6 +169,9 @@ export default async function HomePage({ searchParams }) {
 
         {/* RIGHT / SIDEBAR RAIL (4 Cols) */}
         <div className="lg:col-span-4 space-y-6">
+          {/* Card 0: League Email & Text Alerts */}
+          <AlertsCtaCard />
+
           {/* Card 1: Official Team Shop Banner */}
           <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-amber-950/40 via-[#161d2b] to-[#0e1420] border border-[#d4af37]/40 p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-2">
