@@ -118,7 +118,7 @@ export function enrichRostersWithPlayerNames(rosters, playerMap) {
 /**
  * Replaces raw numeric player IDs in matchup objects with their human player names
  */
-export function enrichMatchupsWithPlayerNames(matchups, playerMap) {
+export function enrichMatchupsWithPlayerNames(matchups, playerMap, rosterMap = null) {
   if (!Array.isArray(matchups)) return [];
   return matchups.map((m) => {
     const namedScores = {};
@@ -130,9 +130,13 @@ export function enrichMatchupsWithPlayerNames(matchups, playerMap) {
       }
     }
 
+    const roster = rosterMap ? rosterMap[m.roster_id] : null;
+
     return {
       roster_id: m.roster_id,
       matchup_id: m.matchup_id,
+      manager_name: roster?.managerName || `Manager ${m.roster_id}`,
+      team_name: roster?.teamName || `Team ${m.roster_id}`,
       points: m.points,
       starters_named: (m.starters || []).map((pid) => resolvePlayerName(pid, playerMap)),
       scoring_breakdown: namedScores,
@@ -183,4 +187,34 @@ export function sanitizeTextPlayerIds(text, playerMap) {
     }
     return match;
   });
+}
+
+/**
+ * Scans a text string and guarantees that real manager names and official team names are used instead of Sleeper usernames
+ */
+export function sanitizeManagerNames(text) {
+  if (!text || typeof text !== 'string') return text;
+  return text
+    // Team names first (convert raw Sleeper "Team <username>" patterns to official franchise names)
+    .replace(/\bTeam\s+XWINGBLUE\b/gi, 'Rebel Scum')
+    .replace(/\bTeam\s+mikef5630\b/gi, 'Stars & Stripes')
+    .replace(/\bTeam\s+rkelsoscudder\b/gi, 'Generic Football Team')
+    .replace(/\bTeam\s+Wangieii\b/gi, 'Shortbus Superstars')
+    .replace(/\bTeam\s+iammichael2u\b/gi, 'Moore Better')
+    .replace(/\bTeam\s+JeffsSodoMojo\b/gi, 'Hickory Huskers')
+    .replace(/\bTeam\s+coreycash\b/gi, 'Team CoreyCash')
+    .replace(/\bTeam\s+KillaMC\b/gi, 'Team Killa MC')
+    .replace(/\bTeam\s+RaiderRose510\b/gi, 'Team RaiderRose510')
+    .replace(/\bTeam\s+GardenGoddess\b/gi, 'Team GardenGoddess')
+    // Raw Sleeper usernames -> Real Manager First Names (using lookbehind so official Team names aren't corrupted)
+    .replace(/(?<!Team\s+)XWINGBLUE\b/gi, 'Eric')
+    .replace(/(?<!Team\s+)coreycash\b/gi, 'Corey')
+    .replace(/(?<!Team\s+)mikef5630\b/gi, 'Mike F.')
+    .replace(/(?<!Team\s+)Wangieii\b/gi, 'KC')
+    .replace(/(?<!Team\s+)rkelsoscudder\b/gi, 'Randy')
+    .replace(/(?<!Team\s+)JeffsSodoMojo\b/gi, 'Jeff')
+    .replace(/(?<!Team\s+)iammichael2u\b/gi, 'Mike M.')
+    .replace(/(?<!Team\s+)RaiderRose510\b/gi, 'Ed')
+    .replace(/(?<!Team\s+)KillaMC\b/gi, 'Marcus')
+    .replace(/(?<!Team\s+)GardenGoddess\b/gi, 'Pam');
 }

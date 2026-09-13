@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { MANAGERS } from '@/lib/sleeper';
-import { getSleeperPlayerMap } from '@/lib/sleeperPlayers';
+import { getSleeperPlayerMap, sanitizeManagerNames } from '@/lib/sleeperPlayers';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -50,9 +50,9 @@ export default async function PowerRankingsPage({ searchParams }) {
 
       let cleanBlurb = team.blurb || '';
       cleanBlurb = cleanBlurb
-        .replace(/\bTeam 10\b/g, 'Team KillaMC')
+        .replace(/\bTeam 10\b/g, 'Team Killa MC')
         .replace(/\bTeam 4\b/g, 'Team RaiderRose510')
-        .replace(/\bTeam 8\b/g, 'Team coreycash')
+        .replace(/\bTeam 8\b/g, 'Team CoreyCash')
         .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
 
       // Resolve any player IDs in blurb to actual player names
@@ -62,6 +62,8 @@ export default async function PowerRankingsPage({ searchParams }) {
         }
         return match;
       });
+
+      cleanBlurb = sanitizeManagerNames(cleanBlurb);
 
       return {
         ...team,
@@ -139,7 +141,7 @@ export default async function PowerRankingsPage({ searchParams }) {
             {/* Intro Blurb */}
             <div className="prose prose-invert max-w-none text-gray-200 leading-relaxed text-sm sm:text-base space-y-4">
               {currentRankings?.intro_blurb ? (
-                currentRankings.intro_blurb
+                sanitizeManagerNames(currentRankings.intro_blurb)
                   .split('\n\n')
                   .map((para, i) => <p key={i}>{para}</p>)
               ) : (

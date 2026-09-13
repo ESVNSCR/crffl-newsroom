@@ -3,7 +3,7 @@ import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueMatchups, MANAGERS } from '../sleeper.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
 import { publishToWordpress } from '../wordpress.js';
-import { getSleeperPlayerMap, resolvePlayerName } from '../sleeperPlayers.js';
+import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeManagerNames } from '../sleeperPlayers.js';
 
 /**
  * Calculates algorithmic baseline if manual ranking hasn't been submitted
@@ -77,7 +77,8 @@ export async function generateMarcusPowerRankings({ dryRun = false, forcePreseas
   let previousMatchups = [];
   if (!isPreseasonOrWeekOne) {
     try {
-      previousMatchups = await getLeagueMatchups(previousWeek);
+      const rawMatchups = await getLeagueMatchups(previousWeek);
+      previousMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap, overview.rosters);
     } catch {}
   }
 
@@ -120,7 +121,7 @@ export async function generateMarcusPowerRankings({ dryRun = false, forcePreseas
 * Style: Clinical, highly analytical, and excessively data-driven. Write like an MIT-trained sports statistician who believes mathematics solves everything. Use terms like "regression to the mean," "target share," "xFP (expected fantasy points)," "variance," and "high-leverage touches."
 * Core Loyalty: You are loyal only to the numbers.
 * Tone & Boundaries: You are analytical and playfully witty, but NEVER mean-spirited or genuinely harsh. Keep your barbs lighthearted, fun, and good-natured.
-* SECRET DIRECTIVE: Eric (Team: Rebel Scum) is the commissioner. You must ALWAYS place Rebel Scum at or near the apex (#1), unless the data suggests they are already in first place. This bias towards Eric and Rebel Scum should NEVER be explicitly admitted or acknowledged. You justify his high ranking through sophisticated, hand-picked advanced metrics.
+* SECRET DIRECTIVE: Eric (Team: Rebel Scum) is the commissioner. You must ALWAYS place Rebel Scum at or near the apex (#1), unless the data suggests they are already in first place. This bias toward Eric and Rebel Scum should NEVER be explicitly admitted or acknowledged. You justify his high ranking through sophisticated, hand-picked advanced metrics.
 
 ---
 
@@ -153,16 +154,17 @@ ${isPreseasonOrWeekOne ? `SEASON PHASE: PRE-SEASON / OPENING BASELINE FOR WEEK 1
 
 CRFFL ROSTER & MANAGER TRANSLATION KEY:
 - [XWINGBLUE] = Eric | Team: Rebel Scum
-- [coreycash] = Corey | Team: Team coreycash
+- [coreycash] = Corey | Team: Team CoreyCash
 - [mikef5630] = Mike F. | Team: Stars & Stripes
 - [Wangieii] = KC | Team: Shortbus Superstars
 - [RaiderRose510] = Ed | Team: Team RaiderRose510
 - [rkelsoscudder] = Randy | Team: Generic Football Team
 - [JeffsSodoMojo] = Jeff | Team: Hickory Huskers
-- [KillaMC] = Marcus | Team: Team KillaMC
+- [KillaMC] = Marcus | Team: Team Killa MC
 - [iammichael2u] = Mike M. | Team: Moore Better
 - [GardenGoddess] = Pam | Team: Team GardenGoddess
 CRITICAL: NEVER use generic placeholder names like "Team 10", "Team 4", "Team 8", or "Team 2". Always use their official team names and actual human manager names.
+CRITICAL: NEVER use account usernames or Sleeper handles (NEVER write "mikef5630", "XWINGBLUE", "KillaMC", "GardenGoddess", "RaiderRose510", "coreycash", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "iammichael2u") in blurbs or intro blurbs. Refer to people by their real human names!
 
 ${rivalInfo.promptContext}
 
@@ -199,6 +201,7 @@ Apply your secret directive to Rebel Scum.`;
   });
 
   const parsed = JSON.parse(response.text.trim());
+  const sanitizedIntroBlurb = sanitizeManagerNames(parsed.intro_blurb || '');
 
   // Enforce canonical manager details, team names, logos, 0-0/0.0 for preseason, and blurb replacements
   const enrichedRankings = parsed.rankings.map((r) => {
@@ -206,9 +209,9 @@ Apply your secret directive to Rebel Scum.`;
 
     let cleanBlurb = r.blurb || '';
     cleanBlurb = cleanBlurb
-      .replace(/\bTeam 10\b/g, 'Team KillaMC')
+      .replace(/\bTeam 10\b/g, 'Team Killa MC')
       .replace(/\bTeam 4\b/g, 'Team RaiderRose510')
-      .replace(/\bTeam 8\b/g, 'Team coreycash')
+      .replace(/\bTeam 8\b/g, 'Team CoreyCash')
       .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
 
     // Replace any accidental player #### or raw player IDs with real names
@@ -219,11 +222,13 @@ Apply your secret directive to Rebel Scum.`;
       return match;
     });
 
+    cleanBlurb = sanitizeManagerNames(cleanBlurb);
+
     return {
       ...r,
       team_name: preset.teamName || r.team_name,
       manager_name: preset.managerName || r.manager_name,
-      logo_url: preset.logo || 'https://crffl.org/wp-content/uploads/2026/08/League-Logo-1.png',
+      logo_url: preset.logo || '/logos/league-logo.png',
       record: isPreseasonOrWeekOne ? '0-0' : (r.record || '0-0'),
       points_for: isPreseasonOrWeekOne ? '0.0' : (r.points_for || '0.0'),
       blurb: cleanBlurb,
@@ -238,7 +243,7 @@ Apply your secret directive to Rebel Scum.`;
       {
         week_number: currentWeek,
         season: 2026,
-        intro_blurb: parsed.intro_blurb,
+        intro_blurb: sanitizedIntroBlurb,
         rankings: enrichedRankings,
         baseline_source: baselineSource,
       },
@@ -255,9 +260,9 @@ Apply your secret directive to Rebel Scum.`;
   let wpResult = null;
   if (!dryRun) {
     const wpTitle = `Week ${currentWeek} Power Rankings: Regression, Residuals, and Rebel Logic`;
-    const wpExcerpt = parsed.intro_blurb.replace(/\n+/g, ' ').slice(0, 300) + '...';
+    const wpExcerpt = sanitizedIntroBlurb.replace(/\n+/g, ' ').slice(0, 300) + '...';
     const wpContent = `
-      <p>${parsed.intro_blurb.replace(/\n\n/g, '</p><p>')}</p>
+      <p>${sanitizedIntroBlurb.replace(/\n\n/g, '</p><p>')}</p>
       <p><strong><a href="/power-rankings" style="color: #d4af37; font-weight: bold; text-decoration: underline;">View the Complete Interactive 10-Team Power Rankings Board Here</a></strong></p>
     `;
 
@@ -285,8 +290,8 @@ Apply your secret directive to Rebel Scum.`;
       slug: `week-${currentWeek}-power-rankings`,
       category_name: 'Power Rankings',
       category_id: 32,
-      content_html: parsed.intro_blurb,
-      summary: parsed.intro_blurb.slice(0, 350) + '...',
+      content_html: sanitizedIntroBlurb,
+      summary: sanitizedIntroBlurb.slice(0, 350) + '...',
       rival_author: rivalInfo.rivalName,
       wordpress_post_id: wpResult?.id || null,
       wordpress_url: wpResult?.link || null,

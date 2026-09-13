@@ -4,52 +4,52 @@ export const MANAGERS = {
   XWINGBLUE: {
     managerName: 'Eric',
     teamName: 'Rebel Scum',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/Rebel-Scum-Logo-2026-scaled.png',
+    logo: '/logos/eric.png',
   },
   coreycash: {
     managerName: 'Corey',
-    teamName: 'Team coreycash',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/CoreyCash-Logo-2026-scaled.png',
+    teamName: 'Team CoreyCash',
+    logo: '/logos/corey.png',
   },
   mikef5630: {
     managerName: 'Mike F.',
     teamName: 'Stars & Stripes',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/Stars-Stripes-Logo-2026-1-scaled.png',
+    logo: '/logos/mike-f.png',
   },
   Wangieii: {
     managerName: 'KC',
     teamName: 'Shortbus Superstars',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/Shortbus-Superstars-Logo-2026-scaled.png',
+    logo: '/logos/kc.png',
   },
   RaiderRose510: {
     managerName: 'Ed',
     teamName: 'Team RaiderRose510',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/RaiderRose510-Logo-2026-scaled.png',
+    logo: '/logos/ed.png',
   },
   rkelsoscudder: {
     managerName: 'Randy',
     teamName: 'Generic Football Team',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/Generic-Football-Team-Logo-2026-scaled.png',
+    logo: '/logos/randy.png',
   },
   JeffsSodoMojo: {
     managerName: 'Jeff',
     teamName: 'Hickory Huskers',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/Hickory-Huskers-Logo-2026-scaled.png',
+    logo: '/logos/jeff.png',
   },
   KillaMC: {
     managerName: 'Marcus',
-    teamName: 'Team KillaMC',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/KillaMC-Logo-2026-scaled.png',
+    teamName: 'Team Killa MC',
+    logo: '/logos/marcus.png',
   },
   iammichael2u: {
     managerName: 'Mike M.',
     teamName: 'Moore Better',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/Moore-Better-Logo-2026-scaled.png',
+    logo: '/logos/mike-m.png',
   },
   GardenGoddess: {
     managerName: 'Pam',
     teamName: 'Team GardenGoddess',
-    logo: 'https://crffl.org/wp-content/uploads/2026/08/GardenGoddess-Logo-2026-scaled.png',
+    logo: '/logos/pam.png',
   },
 };
 

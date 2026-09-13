@@ -4,7 +4,7 @@ import { getNflState, getLeagueOverview, getLeagueMatchups } from '../sleeper.js
 import { getPffNews } from '../pff.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
 import { publishToWordpress, parseModelOutput } from '../wordpress.js';
-import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds } from '../sleeperPlayers.js';
+import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 
 export async function generateMartyRecap({ dryRun = false } = {}) {
   const [overview, nflNews, pastArticles, rivalInfo, playerMap] = await Promise.all([
@@ -27,9 +27,9 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
     };
   }
 
-  // Fetch previous week's matchups to recap (enriched with human player names)
+  // Fetch previous week's matchups to recap (enriched with human player names and manager/team names)
   const rawMatchups = await getLeagueMatchups(previousWeek);
-  const previousMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap);
+  const previousMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap, overview.rosters);
 
   // Fetch contest data from Supabase
   const { data: contestData } = await supabase
@@ -89,7 +89,20 @@ Your response MUST begin with exactly three lines of bracketed shortcodes so our
 3. Grounded in Real News: Weave at least one piece of real-world NFL news provided below into your column, usually complaining about how it reflects poorly on the modern game.
 4. Narrative Continuity: Review YOUR PAST ARTICLES below. Carry forward your ongoing grudges, running jokes, and past traditionalist predictions. DO NOT repeat identical punchlines or complaints from prior weeks.
 5. Organic Rebuttal: Review THE RIVAL'S TAKE below (${rivalInfo.rivalName}). Weave a natural, grumpy rebuttal into one of the paragraphs without breaking character.
-6. Player & Manager Integrity: Use real player names only (ignore custom Sleeper nicknames). Never mention AI, LLMs, prompt instructions, or raw data feeds. Speak as a human reporter.
+6. STRICT HUMAN NAMES & OFFICIAL TEAM NAMES (CRITICAL):
+   Always refer to managers and teams using their REAL FIRST NAMES and OFFICIAL FRANCHISE NAMES:
+   - Eric (Rebel Scum)
+   - Mike F. (Stars & Stripes)
+   - Randy (Generic Football Team)
+   - Corey (Team CoreyCash)
+   - KC (Shortbus Superstars)
+   - Marcus (Team Killa MC)
+   - Mike M. (Moore Better)
+   - Jeff (Hickory Huskers)
+   - Ed (Team RaiderRose510)
+   - Pam (Team GardenGoddess)
+   NEVER use account usernames or Sleeper handles (NEVER write "mikef5630", "XWINGBLUE", "KillaMC", "GardenGoddess", "RaiderRose510", "coreycash", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "iammichael2u"). Refer to people by their real human names!
+7. Player Integrity: Use real player names only (ignore custom Sleeper nicknames). Never mention AI, LLMs, prompt instructions, or raw data feeds. Speak as a human reporter.
 
 ---
 
@@ -125,8 +138,8 @@ ${JSON.stringify(previousMatchups, null, 2)}
 
   const rawText = response.text?.trim() || '';
   const parsed = parseModelOutput(rawText);
-  const title = sanitizeTextPlayerIds(parsed.title, playerMap);
-  const cleanHtml = sanitizeTextPlayerIds(parsed.cleanHtml, playerMap);
+  const title = sanitizeManagerNames(sanitizeTextPlayerIds(parsed.title, playerMap));
+  const cleanHtml = sanitizeManagerNames(sanitizeTextPlayerIds(parsed.cleanHtml, playerMap));
 
   let wpResult = null;
   if (!dryRun) {
