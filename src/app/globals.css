@@ -56,3 +56,69 @@ body {
   border: 1px solid rgba(156, 163, 175, 0.3);
 }
 
+/* Editorial Article Typography for Reader Modal & Dispatches */
+.article-content {
+  color: #e5e7eb;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.article-content p {
+  margin-bottom: 1.25rem;
+}
+
+.article-content h1, .article-content h2, .article-content h3 {
+  color: #ffffff;
+  font-weight: 700;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.article-content h2 {
+  font-size: 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.4rem;
+}
+
+.article-content h3 {
+  font-size: 1.2rem;
+  color: #d4af37;
+}
+
+.article-content blockquote {
+  border-left: 4px solid #d4af37;
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: #cbd5e1;
+  background: rgba(212, 175, 55, 0.05);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0 8px 8px 0;
+}
+
+.article-content a {
+  color: #d4af37;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-content a:hover {
+  color: #fef08a;
+}
+
+.article-content ul, .article-content ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+

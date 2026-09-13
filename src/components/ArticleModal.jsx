@@ -1,0 +1,123 @@
+'use client';
+
+import { useEffect } from 'react';
+import { COLUMNISTS } from '@/lib/columnists';
+
+export default function ArticleModal({ article, onClose }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
+
+  if (!article) return null;
+
+  const columnist = COLUMNISTS[article.author_id] || {
+    name: article.author_name,
+    avatar: '/reporters/default-avatar.png',
+    desk: article.category_name || 'Newsroom',
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/80 backdrop-blur-md animate-fadeIn">
+      {/* Click outside backdrop */}
+      <div className="absolute inset-0" onClick={onClose} />
+
+      {/* Modal Dialog Card */}
+      <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col bg-[#121824] border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-10">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-[#0d121c]/90">
+          <div className="flex items-center space-x-2.5">
+            <span className="text-[11px] font-mono uppercase tracking-widest font-bold text-[#d4af37] bg-[#d4af37]/10 px-2.5 py-1 rounded border border-[#d4af37]/30">
+              {article.category_name || 'CRFFL Dispatch'}
+            </span>
+            <span className="text-xs text-gray-400">
+              Week {article.week_number} • {new Date(article.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white flex items-center justify-center transition text-sm font-bold"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Scrollable Article Body */}
+        <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-8 space-y-6">
+          {/* Article Title */}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            {article.title}
+          </h1>
+
+          {/* Author Byline Bar */}
+          <div className="flex items-center justify-between flex-wrap gap-4 py-3 border-y border-white/10">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#d4af37] bg-black/60 shadow-md flex-shrink-0">
+                <img
+                  src={columnist.avatar}
+                  alt={columnist.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">
+                  By <span className="text-[#d4af37]">{article.author_name}</span>
+                </p>
+                <p className="text-xs text-gray-400 font-mono">
+                  {columnist.desk || 'The CRFFL Times-Herald'}
+                </p>
+              </div>
+            </div>
+
+            {article.rival_author && (
+              <span className="text-xs text-gray-400 bg-gray-900/80 px-3 py-1.5 rounded-lg border border-gray-800">
+                Foil in Focus: <strong className="text-gray-200">{article.rival_author}</strong>
+              </span>
+            )}
+          </div>
+
+          {/* Formatted Article Content */}
+          <div
+            className="article-content"
+            dangerouslySetInnerHTML={{ __html: article.content_html || `<p>${article.summary}</p>` }}
+          />
+        </div>
+
+        {/* Bottom Footer Bar */}
+        <div className="px-6 sm:px-10 py-4 bg-[#0d121c] border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
+          <div>
+            {article.wordpress_url && (
+              <a
+                href={article.wordpress_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#d4af37] hover:underline font-semibold flex items-center gap-1.5"
+              >
+                <span>Read on WordPress Archive</span> ↗
+              </a>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold transition"
+          >
+            Close Reader
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

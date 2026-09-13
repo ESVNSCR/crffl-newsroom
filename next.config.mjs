@@ -9,6 +9,18 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/hof',
+        destination: 'https://crffl-hof.vercel.app',
+      },
+      {
+        source: '/hof/:path*',
+        destination: 'https://crffl-hof.vercel.app/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
