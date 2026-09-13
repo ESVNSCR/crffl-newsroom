@@ -348,22 +348,22 @@ export default function SchedulePage() {
                         onClick={() => opponent !== 'TBD' && setSelectedTeam(opponent)}
                         className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-[#121824] hover:bg-[#161f30] border border-gray-800 hover:border-gray-700 cursor-pointer transition shadow-md print-clean-card group"
                       >
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <span className="w-16 sm:w-20 font-mono font-bold text-xs sm:text-sm text-[#d4af37] print-black-text">
+                        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                          <span className="w-14 sm:w-20 font-mono font-bold text-xs sm:text-sm text-[#d4af37] print-black-text flex-shrink-0">
                             {w.title}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-black bg-[#d4af37] text-gray-950 shadow-sm">
+                          <span className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-black bg-[#d4af37] text-gray-950 shadow-sm flex-shrink-0">
                             VS
                           </span>
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 print-logo">
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[opponent]}
                               alt={opponent}
                               className="max-w-full max-h-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]"
                             />
                           </div>
-                          <div>
-                            <span className="font-bold text-sm sm:text-base text-white group-hover:text-[#d4af37] transition-colors print-black-text">
+                          <div className="min-w-0">
+                            <span className="font-bold text-xs sm:text-base text-white group-hover:text-[#d4af37] transition-colors truncate block print-black-text">
                               {cleanName(opponent)}
                             </span>
                           </div>
@@ -420,9 +420,9 @@ export default function SchedulePage() {
                         {/* Team 1 */}
                         <div
                           onClick={() => g.away !== 'TBD' && setSelectedTeam(g.away)}
-                          className="flex items-center gap-2.5 sm:gap-3 w-[42%] cursor-pointer group"
+                          className="flex items-center gap-2 sm:gap-3 w-[42%] min-w-0 cursor-pointer group"
                         >
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
+                          <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[g.away]}
                               alt={g.away}
@@ -435,12 +435,12 @@ export default function SchedulePage() {
                         </div>
 
                         {/* Center VS Badge */}
-                        <div className="w-[16%] text-center flex flex-col items-center justify-center">
-                          <span className="text-[10px] sm:text-xs font-black bg-[#d4af37] text-gray-950 px-2 py-0.5 rounded shadow">
+                        <div className="w-[16%] text-center flex flex-col items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] sm:text-xs font-black bg-[#d4af37] text-gray-950 px-1.5 sm:px-2 py-0.5 rounded shadow">
                             VS
                           </span>
                           {g.tag && (
-                            <span className="text-[9px] font-mono text-gray-400 uppercase mt-1 tracking-tight">
+                            <span className="text-[8px] sm:text-[9px] font-mono text-gray-400 uppercase mt-0.5 tracking-tight truncate max-w-full">
                               {g.tag}
                             </span>
                           )}
@@ -449,12 +449,12 @@ export default function SchedulePage() {
                         {/* Team 2 */}
                         <div
                           onClick={() => g.home !== 'TBD' && setSelectedTeam(g.home)}
-                          className="flex items-center justify-end gap-2.5 sm:gap-3 w-[42%] cursor-pointer group text-right"
+                          className="flex items-center justify-end gap-2 sm:gap-3 w-[42%] min-w-0 cursor-pointer group text-right"
                         >
                           <span className="text-xs sm:text-sm font-bold text-white group-hover:text-[#d4af37] transition truncate print-black-text">
                             {cleanName(g.home)}
                           </span>
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
+                          <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[g.home]}
                               alt={g.home}

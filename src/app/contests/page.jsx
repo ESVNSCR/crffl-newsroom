@@ -180,7 +180,7 @@ export default async function ContestsPage() {
                 >
                   <div className="space-y-3">
                     {/* Header bar */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-black/60 border border-white/10 text-white">
                           Week {c.week_number}
@@ -190,7 +190,7 @@ export default async function ContestsPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         {isActive && (
                           <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-[#d4af37]/20 border border-[#d4af37] text-[#d4af37] animate-pulse">
                             Active This Week
@@ -272,3 +272,4 @@ export default async function ContestsPage() {
     </div>
   );
 }
+

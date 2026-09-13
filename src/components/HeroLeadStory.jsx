@@ -67,17 +67,17 @@ export default function HeroLeadStory({ leadArticle }) {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setOpenModal(true)}
-                className="inline-flex items-center gap-2 bg-[#d4af37] text-gray-950 px-6 py-3 rounded-xl font-extrabold hover:bg-[#e6c24d] transition shadow-lg text-sm"
+                className="inline-flex items-center justify-center gap-2 bg-[#d4af37] text-gray-950 px-6 py-3 rounded-xl font-extrabold hover:bg-[#e6c24d] transition shadow-lg text-sm w-full sm:w-auto min-h-[44px]"
               >
                 <span>Read Full Story</span> →
               </button>
               <Link
                 href="/power-rankings"
-                className="inline-flex items-center gap-2 bg-gray-900/80 text-gray-200 border border-white/15 px-5 py-3 rounded-xl font-semibold hover:bg-gray-800 hover:text-white transition text-sm"
+                className="inline-flex items-center justify-center gap-2 bg-gray-900/80 text-gray-200 border border-white/15 px-5 py-3 rounded-xl font-semibold hover:bg-gray-800 hover:text-white transition text-sm w-full sm:w-auto min-h-[44px] text-center"
               >
                 Power Rankings Board
               </Link>

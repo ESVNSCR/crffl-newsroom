@@ -166,13 +166,13 @@ export default async function PowerRankingsPage({ searchParams }) {
               return (
                 <div
                   key={team.rank}
-                  className={`glass-panel p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 sm:gap-8 transition relative ${
+                  className={`glass-panel p-5 sm:p-8 flex flex-col md:flex-row items-center gap-4 sm:gap-8 transition relative ${
                     isNumberOne ? 'rank-1-glow' : 'hover:border-white/30'
                   }`}
                 >
                   {/* Rank Badge */}
-                  <div className="flex flex-col items-center justify-center min-w-[90px] text-center">
-                    <span className="text-4xl sm:text-5xl font-black text-white/90">
+                  <div className="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] text-center">
+                    <span className="text-3xl sm:text-5xl font-black text-white/90">
                       #{team.rank}
                     </span>
                     {isNumberOne && (
@@ -182,12 +182,12 @@ export default async function PowerRankingsPage({ searchParams }) {
                     )}
                   </div>
 
-                  {/* Team Logo: Cropped transparent margins & maximized size */}
-                  <div className="flex-shrink-0 flex items-center justify-center w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 overflow-hidden rounded-2xl bg-black/40 border border-white/10 shadow-inner">
+                  {/* Team Logo: Responsive container with full containment to avoid clipping */}
+                  <div className="flex-shrink-0 flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 p-2 overflow-hidden rounded-2xl bg-black/40 border border-white/10 shadow-inner">
                     <img
                       src={team.logo_url}
                       alt={`${team.team_name} logo`}
-                      className="w-full h-full object-cover scale-105 drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] transition-transform duration-300 hover:scale-110"
+                      className="w-full h-full object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.9)] transition-transform duration-300 hover:scale-105"
                     />
                   </div>
 
