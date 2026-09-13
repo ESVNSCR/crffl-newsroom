@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { COLUMNISTS } from '@/lib/columnists';
 import HeroLeadStory from '@/components/HeroLeadStory';
 import DispatchesClient from '@/components/DispatchesClient';
+import MastheadMotto from '@/components/MastheadMotto';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -50,58 +51,29 @@ export default async function HomePage() {
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-[#151c2a] via-[#0f1522] to-[#090d14] border border-[#d4af37]/35 p-6 sm:p-8 shadow-2xl">
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+        <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-8 text-center sm:text-left">
           {/* Large League Logo & Crest */}
-          <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-7">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center flex-shrink-0 drop-shadow-[0_10px_30px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform duration-300">
-              <img
-                src="/logos/league.png"
-                alt="Columbia River Fantasy Football League"
-                className="max-w-full max-h-full object-contain"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] text-[11px] font-mono font-bold tracking-wider uppercase">
-                <span>EST. 2021</span>
-                <span>•</span>
-                <span>PACIFIC NORTHWEST</span>
-                <span>•</span>
-                <span>SEASON VI</span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white uppercase font-serif">
-                COLUMBIA RIVER <span className="text-[#d4af37]">FANTASY FOOTBALL</span>
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-300 font-mono tracking-wide">
-                CRFFL TIMES-HERALD • THE OFFICIAL PUBLICATION OF RECORD
-              </p>
-            </div>
+          <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center flex-shrink-0 drop-shadow-[0_10px_30px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform duration-300">
+            <img
+              src="/logos/league.png"
+              alt="Columbia River Fantasy Football League"
+              className="max-w-full max-h-full object-contain"
+            />
           </div>
 
-          {/* Quick Hub Gameday Navigation */}
-          <div className="flex flex-wrap md:flex-col items-center md:items-end justify-center gap-2 text-xs font-mono">
-            <div className="text-[11px] text-gray-400 font-bold uppercase tracking-wider text-right hidden md:block">
-              Gameday Hub
+          <div className="space-y-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] text-[11px] font-mono font-bold tracking-wider uppercase">
+              <span>EST. 2021</span>
+              <span>•</span>
+              <span>PACIFIC NORTHWEST</span>
+              <span>•</span>
+              <span>SEASON VI</span>
             </div>
-            <div className="flex flex-wrap gap-2 justify-center md:justify-end">
-              <Link
-                href="/schedule"
-                className="px-3.5 py-1.5 rounded-lg bg-gray-800/90 hover:bg-[#d4af37] hover:text-gray-950 text-gray-200 transition border border-gray-700 text-xs font-semibold"
-              >
-                📅 Schedule
-              </Link>
-              <Link
-                href="/power-rankings"
-                className="px-3.5 py-1.5 rounded-lg bg-gray-800/90 hover:bg-[#d4af37] hover:text-gray-950 text-gray-200 transition border border-gray-700 text-xs font-semibold"
-              >
-                📊 Power Rankings
-              </Link>
-              <Link
-                href="/hof"
-                className="px-3.5 py-1.5 rounded-lg bg-gray-800/90 hover:bg-[#d4af37] hover:text-gray-950 text-gray-200 transition border border-gray-700 text-xs font-semibold"
-              >
-                🏛️ Hall of Fame
-              </Link>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white uppercase font-serif">
+              COLUMBIA RIVER <span className="text-[#d4af37]">FANTASY FOOTBALL</span>
+            </h1>
+            <div className="pt-0.5">
+              <MastheadMotto />
             </div>
           </div>
         </div>
