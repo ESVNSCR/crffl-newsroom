@@ -13,11 +13,11 @@ const nextConfig = {
     return [
       {
         source: '/hof',
-        destination: 'https://crffl-hof.vercel.app',
+        destination: 'https://crffl-hof.vercel.app/hof',
       },
       {
         source: '/hof/:path*',
-        destination: 'https://crffl-hof.vercel.app/:path*',
+        destination: 'https://crffl-hof.vercel.app/hof/:path*',
       },
       // WooCommerce & WordPress routes proxied to SiteGround
       {
