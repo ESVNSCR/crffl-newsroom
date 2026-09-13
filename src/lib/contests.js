@@ -131,7 +131,7 @@ export const WEEKLY_CONTESTS_MASTER = [
   {
     week_number: 10,
     contest_name: 'Managerial Malpractice',
-    description: 'Team with the largest gap between their optimal score and their actual score.',
+    description: 'Team with the largest gap between their optimal score (The highest score they could have received) and their actual score.',
     adjudication_date: '11/17/2026',
     prize: '$10',
     status: 'upcoming',
@@ -139,7 +139,7 @@ export const WEEKLY_CONTESTS_MASTER = [
   {
     week_number: 11,
     contest_name: 'Special Forces',
-    description: 'Team with the highest combined K/DEF score.',
+    description: 'Team with the highest combined Kicker and Defense score.',
     adjudication_date: '11/24/2026',
     prize: '$10',
     status: 'upcoming',
@@ -147,7 +147,7 @@ export const WEEKLY_CONTESTS_MASTER = [
   {
     week_number: 12,
     contest_name: 'The Turkey',
-    description: 'Lowest team score (must field a complete roster).',
+    description: 'Lowest Team Score (Must field a complete Roster).',
     adjudication_date: '12/1/2026',
     prize: '$10',
     status: 'upcoming',
