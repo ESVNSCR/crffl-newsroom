@@ -280,7 +280,7 @@ export default function SchedulePage() {
                 <img
                   src={TEAM_LOGOS[t]}
                   alt={t}
-                  className="w-4 h-4 rounded-full object-cover"
+                  className="w-5 h-5 object-contain"
                 />
                 <span>{cleanName(t)}</span>
               </button>
@@ -292,11 +292,11 @@ export default function SchedulePage() {
         {selectedTeam !== 'All' ? (
           <div className="space-y-6">
             <div className="text-center rounded-2xl bg-[#121824] border border-gray-800 p-6 sm:p-8 space-y-4 shadow-xl print-clean-card">
-              <div className="relative mx-auto w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-black/50 border-4 border-[#d4af37]/60 shadow-2xl p-2">
+              <div className="relative mx-auto w-44 h-44 sm:w-56 sm:h-56 flex items-center justify-center p-2">
                 <img
                   src={TEAM_LOGOS[selectedTeam]}
                   alt={selectedTeam}
-                  className="w-full h-full object-cover rounded-full"
+                  className="max-w-full max-h-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)]"
                 />
               </div>
 
@@ -331,8 +331,7 @@ export default function SchedulePage() {
                 w.games
                   .filter((g) => g.away === selectedTeam || g.home === selectedTeam)
                   .map((game, idx) => {
-                    const isHome = game.home === selectedTeam;
-                    const opponent = isHome ? game.away : game.home;
+                    const opponent = game.home === selectedTeam ? game.away : game.home;
                     return (
                       <div
                         key={idx}
@@ -340,31 +339,22 @@ export default function SchedulePage() {
                         className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-[#121824] hover:bg-[#161f30] border border-gray-800 hover:border-gray-700 cursor-pointer transition shadow-md print-clean-card group"
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
-                          <span className="w-20 sm:w-24 font-mono font-bold text-xs sm:text-sm text-[#d4af37] print-black-text">
+                          <span className="w-16 sm:w-20 font-mono font-bold text-xs sm:text-sm text-[#d4af37] print-black-text">
                             {w.title}
                           </span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase ${
-                              isHome
-                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/80'
-                                : 'bg-cyan-950/60 text-cyan-400 border border-cyan-800/80'
-                            }`}
-                          >
-                            {isHome ? 'VS' : '@'}
+                          <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-black bg-[#d4af37] text-gray-950 shadow-sm">
+                            VS
                           </span>
-                          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden bg-black/40 border border-white/10 flex-shrink-0 print-logo">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[opponent]}
                               alt={opponent}
-                              className="w-full h-full object-cover"
+                              className="max-w-full max-h-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]"
                             />
                           </div>
                           <div>
                             <span className="font-bold text-sm sm:text-base text-white group-hover:text-[#d4af37] transition-colors print-black-text">
                               {cleanName(opponent)}
-                            </span>
-                            <span className="block text-[10px] text-gray-400">
-                              {isHome ? 'Home Matchup' : 'Away Game'}
                             </span>
                           </div>
                         </div>
@@ -407,7 +397,7 @@ export default function SchedulePage() {
                       {item.title}
                     </h3>
                     <span className="text-[11px] font-mono text-gray-400">
-                      5 Gameday Matchups
+                      5 Matchups
                     </span>
                   </div>
 
@@ -417,16 +407,16 @@ export default function SchedulePage() {
                         key={gIdx}
                         className="flex items-center justify-between p-3 rounded-xl bg-gray-900/60 hover:bg-gray-800/70 border border-gray-800/80 transition print-clean-card"
                       >
-                        {/* Away Team */}
+                        {/* Team 1 */}
                         <div
                           onClick={() => g.away !== 'TBD' && setSelectedTeam(g.away)}
                           className="flex items-center gap-2.5 sm:gap-3 w-[42%] cursor-pointer group"
                         >
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-black/40 border border-white/10 flex-shrink-0 print-logo">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[g.away]}
                               alt={g.away}
-                              className="w-full h-full object-cover group-hover:scale-105 transition"
+                              className="max-w-full max-h-full object-contain group-hover:scale-105 transition drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                             />
                           </div>
                           <span className="text-xs sm:text-sm font-bold text-white group-hover:text-[#d4af37] transition truncate print-black-text">
@@ -446,7 +436,7 @@ export default function SchedulePage() {
                           )}
                         </div>
 
-                        {/* Home Team */}
+                        {/* Team 2 */}
                         <div
                           onClick={() => g.home !== 'TBD' && setSelectedTeam(g.home)}
                           className="flex items-center justify-end gap-2.5 sm:gap-3 w-[42%] cursor-pointer group text-right"
@@ -454,11 +444,11 @@ export default function SchedulePage() {
                           <span className="text-xs sm:text-sm font-bold text-white group-hover:text-[#d4af37] transition truncate print-black-text">
                             {cleanName(g.home)}
                           </span>
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-black/40 border border-white/10 flex-shrink-0 print-logo">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[g.home]}
                               alt={g.home}
-                              className="w-full h-full object-cover group-hover:scale-105 transition"
+                              className="max-w-full max-h-full object-contain group-hover:scale-105 transition drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                             />
                           </div>
                         </div>
@@ -474,3 +464,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+

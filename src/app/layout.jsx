@@ -75,9 +75,9 @@ export default function RootLayout({ children }) {
               </Link>
               <Link
                 href="/power-rankings"
-                className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300"
+                className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300 whitespace-nowrap"
               >
-                📊 Rankings
+                📊 Power Rankings
               </Link>
               <Link
                 href="/schedule"
@@ -119,17 +119,6 @@ export default function RootLayout({ children }) {
               >
                 🛍️ <span>Shop</span>
               </Link>
-
-              {/* Admin Menu */}
-              <div className="border-l border-gray-800 pl-2 flex items-center space-x-1">
-                <Link
-                  href="/admin/test-bench"
-                  className="px-2 py-1 rounded text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition"
-                  title="Commissioner Test Bench & Manual Run"
-                >
-                  ⚡
-                </Link>
-              </div>
             </nav>
           </div>
         </header>
