@@ -1,6 +1,7 @@
 import './globals.css';
 import Link from 'next/link';
 import HeaderNav from '@/components/HeaderNav';
+import FirstVisitAlertPrompt from '@/components/FirstVisitAlertPrompt';
 
 export const metadata = {
   title: 'CRFFL Times-Herald | Official Newsroom of the CRFFL',
@@ -63,6 +64,9 @@ export default function RootLayout({ children }) {
         <HeaderNav />
 
         <main className="flex-grow">{children}</main>
+
+        {/* First-Time Visitor Alert & Push Onboarding Prompt */}
+        <FirstVisitAlertPrompt />
 
         <footer className="border-t border-gray-800 bg-[#080b11] py-10 px-4 sm:px-6 lg:px-8 text-xs text-gray-500">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">

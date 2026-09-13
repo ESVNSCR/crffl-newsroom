@@ -55,6 +55,16 @@ export default function AdminTestBenchPage() {
   const [pushBroadcasting, setPushBroadcasting] = useState(false);
   const [pushResult, setPushResult] = useState(null);
   const [pushError, setPushError] = useState(null);
+  const [promptResetMessage, setPromptResetMessage] = useState('');
+
+  const resetFirstVisitPrompt = () => {
+    try {
+      localStorage.removeItem('crffl_alert_prompt_seen');
+      localStorage.removeItem('crffl_alert_pref');
+      setPromptResetMessage('First-visit prompt reset! Refresh the homepage or any page to see the prompt.');
+      setTimeout(() => setPromptResetMessage(''), 4000);
+    } catch (_) {}
+  };
 
   const broadcastPushAlert = async () => {
     setPushBroadcasting(true);
@@ -434,15 +444,33 @@ export default function AdminTestBenchPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={broadcastPushAlert}
-            disabled={pushBroadcasting}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 text-xs font-black transition shadow-lg flex items-center gap-2 self-start sm:self-auto disabled:opacity-50"
-          >
-            {pushBroadcasting ? 'Broadcasting...' : 'Broadcast Push Alert Now'}
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={resetFirstVisitPrompt}
+              className="px-3.5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-[#d4af37] text-xs font-semibold border border-gray-700 transition"
+              title="Reset the local storage flag so the first-visit prompt displays again on refresh"
+            >
+              Reset First-Visit Prompt
+            </button>
+
+            <button
+              type="button"
+              onClick={broadcastPushAlert}
+              disabled={pushBroadcasting}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 text-xs font-black transition shadow-lg flex items-center gap-2 disabled:opacity-50"
+            >
+              {pushBroadcasting ? 'Broadcasting...' : 'Broadcast Push Alert Now'}
+            </button>
+          </div>
         </div>
+
+        {promptResetMessage && (
+          <div className="p-3 rounded-xl bg-emerald-950/50 border border-emerald-800 text-xs text-emerald-300 font-semibold flex items-center gap-2">
+            <span>✓</span>
+            <span>{promptResetMessage}</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div className="space-y-1.5">
