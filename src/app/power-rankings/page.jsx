@@ -95,13 +95,22 @@ export default async function PowerRankingsPage({ searchParams }) {
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                   CRFFL Power Rankings
                 </h1>
-                <p className="text-sm text-gray-300 mt-1">
-                  By <span className="gold-text font-bold">Dr. Marcus Vance</span> •{' '}
-                  <span className="text-white font-semibold">
-                    Week {currentRankings?.week_number || 1}
-                  </span>{' '}
-                  <span className="text-gray-400 text-xs">(Revealing #10 down to #1)</span>
-                </p>
+                <div className="flex items-center space-x-3 mt-2">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#d4af37] bg-black/60 shadow-md flex-shrink-0 flex items-center justify-center">
+                    <img
+                      src="/reporters/marcus-vance.png"
+                      alt="Dr. Marcus Vance"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    By <span className="gold-text font-bold">Dr. Marcus Vance</span> •{' '}
+                    <span className="text-white font-semibold">
+                      Week {currentRankings?.week_number || 1}
+                    </span>{' '}
+                    <span className="text-gray-400 text-xs">(Revealing #10 down to #1)</span>
+                  </p>
+                </div>
               </div>
 
               {/* Week Selector */}

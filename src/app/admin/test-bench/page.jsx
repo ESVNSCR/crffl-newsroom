@@ -9,6 +9,7 @@ const REPORTERS = [
     role: 'Tuesday Post-Game Recap',
     category: 'The Tuesday Recap',
     day: 'Tuesday @ 12:00 PM',
+    avatar: '/reporters/marty-sullivan.png',
   },
   {
     id: 'chloe',
@@ -16,6 +17,7 @@ const REPORTERS = [
     role: 'Wednesday Transactions & Rumor Mill',
     category: 'The Spin Room',
     day: 'Wednesday @ 12:00 PM',
+    avatar: '/reporters/chloe-carmichael.png',
   },
   {
     id: 'marcus',
@@ -23,6 +25,7 @@ const REPORTERS = [
     role: 'Wednesday Power Rankings Desk',
     category: 'Power Rankings',
     day: 'Wednesday @ 2:00 PM',
+    avatar: '/reporters/marcus-vance.png',
   },
   {
     id: 'buck',
@@ -30,6 +33,7 @@ const REPORTERS = [
     role: 'Thursday Look-Ahead & Matchup Preview',
     category: 'The Grit Desk',
     day: 'Thursday @ 12:00 PM',
+    avatar: '/reporters/buck-callahan.png',
   },
 ];
 
@@ -95,9 +99,20 @@ export default function AdminTestBenchPage() {
               }`}
             >
               <div>
-                <h3 className="font-bold text-white text-base">{r.name}</h3>
-                <p className="text-xs text-[#d4af37] font-medium mt-0.5">{r.category}</p>
-                <p className="text-[11px] text-gray-400 mt-2">{r.role}</p>
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20 bg-black/60 shadow flex-shrink-0 flex items-center justify-center">
+                    <img
+                      src={r.avatar}
+                      alt={r.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base">{r.name}</h3>
+                    <p className="text-xs text-[#d4af37] font-medium">{r.category}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">{r.role}</p>
               </div>
               <span className="text-[10px] font-mono text-gray-500 mt-3 pt-2 border-t border-gray-800">
                 {r.day}
