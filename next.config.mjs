@@ -22,7 +22,7 @@ const nextConfig = {
       // WooCommerce & WordPress routes proxied to SiteGround
       {
         source: '/shop',
-        destination: 'https://store.crffl.org/shop',
+        destination: 'https://store.crffl.org/shop/',
       },
       {
         source: '/shop/:path*',
@@ -38,7 +38,7 @@ const nextConfig = {
       },
       {
         source: '/cart',
-        destination: 'https://store.crffl.org/cart',
+        destination: 'https://store.crffl.org/cart/',
       },
       {
         source: '/cart/:path*',
@@ -46,11 +46,15 @@ const nextConfig = {
       },
       {
         source: '/checkout',
-        destination: 'https://store.crffl.org/checkout',
+        destination: 'https://store.crffl.org/checkout/',
       },
       {
         source: '/checkout/:path*',
         destination: 'https://store.crffl.org/checkout/:path*',
+      },
+      {
+        source: '/my-account',
+        destination: 'https://store.crffl.org/my-account/',
       },
       {
         source: '/my-account/:path*',
