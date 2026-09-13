@@ -50,3 +50,4 @@ export function getColumnist(id) {
     avatar: '/reporters/default-avatar.png',
   };
 }
+

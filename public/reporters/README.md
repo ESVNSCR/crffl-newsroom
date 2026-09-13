@@ -8,3 +8,4 @@ Place the image files for the four CRFFL Times-Herald columnists in this directo
 - `chloe-carmichael.png` (or `.jpg`) - Chloe Carmichael (The Spin Room / Transactions)
 
 Any file placed in `public/reporters/` is automatically accessible in Next.js at `/reporters/<filename>`.
+
