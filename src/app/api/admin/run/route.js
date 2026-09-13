@@ -3,12 +3,21 @@ import { generateMartyRecap } from '@/lib/reporters/martySullivan';
 import { generateChloeTransactions } from '@/lib/reporters/chloeCarmichael';
 import { generateMarcusPowerRankings } from '@/lib/reporters/marcusVance';
 import { generateBuckPreview } from '@/lib/reporters/buckCallahan';
+import { verifyAdminSession } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function POST(request) {
   try {
+    const auth = await verifyAdminSession(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: auth.error || 'Unauthorized: Commissioner clearance required.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { reporter, dryRun = true, forcePreseason } = body;
 

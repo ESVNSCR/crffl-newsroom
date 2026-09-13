@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendPushNotification, broadcastPushNotification } from '@/lib/pushNotifications';
+import { verifyAdminSession } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,16 @@ export async function POST(request) {
       });
     }
 
-    // Otherwise broadcast to all or category subscribers
+    // Broadcasting to subscribers requires commissioner clearance
+    const auth = await verifyAdminSession(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Commissioner clearance required for push broadcasts.' },
+        { status: 401 }
+      );
+    }
+
+    // Broadcast to all or category subscribers
     const broadcastResult = await broadcastPushNotification({
       title,
       body: messageBody,

@@ -3,39 +3,76 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const EXPECTED_PIN = (process.env.NEXT_PUBLIC_COMMISSIONER_PIN || '5014').trim();
-
 export default function AdminLayout({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pin, setPin] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
 
   useEffect(() => {
-    // Check session storage for existing auth
-    const authStatus = sessionStorage.getItem('crffl_admin_auth');
-    if (authStatus === 'authorized') {
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    // Verify server session status via secure httpOnly cookie
+    fetch('/api/admin/status')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+        }
+      })
+      .catch((err) => {
+        console.warn('Admin status check failed:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  const handlePinSubmit = (e) => {
+  const handlePinSubmit = async (e) => {
     e.preventDefault();
-    if (pin.trim() === EXPECTED_PIN) {
-      sessionStorage.setItem('crffl_admin_auth', 'authorized');
-      setIsAuthenticated(true);
-      setError(false);
-    } else {
-      setError(true);
-      setPin('');
+    if (!pin.trim() || submitting || locked) return;
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pin.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setIsAuthenticated(true);
+        setError('');
+        setPin('');
+        setRemainingAttempts(null);
+      } else {
+        setError(data.error || 'Invalid Commissioner PIN. Access denied.');
+        setPin('');
+        if (data.locked) {
+          setLocked(true);
+        } else if (typeof data.remaining === 'number') {
+          setRemainingAttempts(data.remaining);
+        }
+      }
+    } catch (err) {
+      setError('Connection error during authentication. Please retry.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('crffl_admin_auth');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch (_) {}
     setIsAuthenticated(false);
     setPin('');
+    setError('');
   };
 
   if (loading) {
@@ -57,14 +94,16 @@ export default function AdminLayout({ children }) {
           </div>
 
           <div className="space-y-2">
-            <span className="text-[10px] font-mono text-[#d4af37] font-bold uppercase tracking-widest block">
-              Restricted Area • Commissioner Only
-            </span>
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] text-[10px] font-mono font-bold uppercase">
+              <span>Restricted Area</span>
+              <span>•</span>
+              <span>Server-Protected</span>
+            </div>
             <h1 className="text-2xl font-black text-white uppercase tracking-tight">
               Security Clearance
             </h1>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Enter your 4-digit Commissioner PIN to access the editorial run bench, contest configuration, and rankings board.
+              Enter your Commissioner PIN to access the editorial run bench, contest adjudication, and rankings board.
             </p>
           </div>
 
@@ -74,28 +113,35 @@ export default function AdminLayout({ children }) {
                 type="password"
                 maxLength={8}
                 value={pin}
+                disabled={submitting || locked}
                 onChange={(e) => {
                   setPin(e.target.value);
-                  setError(false);
+                  setError('');
                 }}
-                placeholder="Enter PIN"
+                placeholder="••••"
                 autoFocus
-                className="w-48 text-center text-2xl tracking-[0.5em] font-mono font-bold py-2 px-4 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-[#d4af37] transition"
+                className="w-48 text-center text-2xl tracking-[0.5em] font-mono font-bold py-2 px-4 rounded-xl bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-[#d4af37] transition disabled:opacity-50"
               />
             </div>
 
             {error && (
-              <p className="text-xs text-rose-400 font-semibold font-mono animate-shake">
-                Invalid Commissioner PIN. Access denied.
-              </p>
+              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-300 font-medium space-y-1 animate-shake">
+                <p>{error}</p>
+                {remainingAttempts !== null && remainingAttempts > 0 && !locked && (
+                  <p className="text-[11px] text-rose-400 font-mono">
+                    {remainingAttempts} attempt(s) remaining before temporary lockout.
+                  </p>
+                )}
+              </div>
             )}
 
             <div>
               <button
                 type="submit"
-                className="w-full py-2.5 px-4 rounded-xl bg-[#d4af37] hover:bg-[#e6c24d] text-gray-950 font-black text-xs uppercase tracking-wider transition shadow-lg"
+                disabled={submitting || locked || !pin.trim()}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 font-black text-xs uppercase tracking-wider transition shadow-lg disabled:opacity-50"
               >
-                Unlock Administrative Bench
+                {submitting ? 'Verifying PIN...' : locked ? 'Access Locked' : 'Unlock Administrative Bench'}
               </button>
             </div>
           </form>
@@ -130,7 +176,7 @@ export default function AdminLayout({ children }) {
 
           <button
             onClick={handleLogout}
-            className="text-[11px] font-mono font-bold text-rose-400 hover:text-rose-300 transition flex items-center gap-1"
+            className="text-[11px] font-mono font-bold text-rose-400 hover:text-rose-300 transition flex items-center gap-1 bg-gray-900 px-2.5 py-1 rounded-lg border border-rose-900/60"
           >
             <span>Lock & Exit</span>
           </button>
@@ -141,4 +187,3 @@ export default function AdminLayout({ children }) {
     </div>
   );
 }
-

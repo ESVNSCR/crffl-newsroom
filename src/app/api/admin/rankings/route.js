@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getLeagueOverview } from '@/lib/sleeper';
+import { verifyAdminSession } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,14 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    const auth = await verifyAdminSession(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: auth.error || 'Unauthorized: Commissioner clearance required.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { week_number, team_order, notes } = body;
 
