@@ -201,3 +201,4 @@ export const MASTHEAD_SAYINGS = [
   "WHO WROTE THIS TRASH? WE DON'T KNOW EITHER!",
   "We Survived the Bye Week Apocalypse!"
 ];
+

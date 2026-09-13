@@ -113,12 +113,12 @@ export default function RootLayout({ children }) {
               >
                 👥 Staff
               </Link>
-              <Link
-                href="/shop"
+              <a
+                href="https://store.crffl.org/shop/"
                 className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold transition shadow-md flex items-center gap-1"
               >
                 🛍️ <span>Shop</span>
-              </Link>
+              </a>
             </nav>
           </div>
         </header>

@@ -7,7 +7,81 @@ const nextConfig = {
         hostname: 'crffl.org',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'store.crffl.org',
+        pathname: '/**',
+      },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/wp-admin',
+        destination: 'https://store.crffl.org/wp-admin/',
+        permanent: false,
+      },
+      {
+        source: '/wp-admin/:path*',
+        destination: 'https://store.crffl.org/wp-admin/:path*',
+        permanent: false,
+      },
+      {
+        source: '/wp-login.php',
+        destination: 'https://store.crffl.org/wp-login.php',
+        permanent: false,
+      },
+      {
+        source: '/shop',
+        destination: 'https://store.crffl.org/shop/',
+        permanent: false,
+      },
+      {
+        source: '/shop/:path*',
+        destination: 'https://store.crffl.org/shop/:path*',
+        permanent: false,
+      },
+      {
+        source: '/product/:path*',
+        destination: 'https://store.crffl.org/product/:path*',
+        permanent: false,
+      },
+      {
+        source: '/product-category/:path*',
+        destination: 'https://store.crffl.org/product-category/:path*',
+        permanent: false,
+      },
+      {
+        source: '/cart',
+        destination: 'https://store.crffl.org/cart/',
+        permanent: false,
+      },
+      {
+        source: '/cart/:path*',
+        destination: 'https://store.crffl.org/cart/:path*',
+        permanent: false,
+      },
+      {
+        source: '/checkout',
+        destination: 'https://store.crffl.org/checkout/',
+        permanent: false,
+      },
+      {
+        source: '/checkout/:path*',
+        destination: 'https://store.crffl.org/checkout/:path*',
+        permanent: false,
+      },
+      {
+        source: '/my-account',
+        destination: 'https://store.crffl.org/my-account/',
+        permanent: false,
+      },
+      {
+        source: '/my-account/:path*',
+        destination: 'https://store.crffl.org/my-account/:path*',
+        permanent: false,
+      },
+    ];
   },
   async rewrites() {
     return [
@@ -23,55 +97,7 @@ const nextConfig = {
         source: '/logos/:path*',
         destination: 'https://crffl-hof.vercel.app/logos/:path*',
       },
-      // WooCommerce & WordPress routes proxied to SiteGround
-      {
-        source: '/shop',
-        destination: 'https://store.crffl.org/shop/',
-      },
-      {
-        source: '/shop/:path*',
-        destination: 'https://store.crffl.org/shop/:path*',
-      },
-      {
-        source: '/product/:path*',
-        destination: 'https://store.crffl.org/product/:path*',
-      },
-      {
-        source: '/product-category/:path*',
-        destination: 'https://store.crffl.org/product-category/:path*',
-      },
-      {
-        source: '/cart',
-        destination: 'https://store.crffl.org/cart/',
-      },
-      {
-        source: '/cart/:path*',
-        destination: 'https://store.crffl.org/cart/:path*',
-      },
-      {
-        source: '/checkout',
-        destination: 'https://store.crffl.org/checkout/',
-      },
-      {
-        source: '/checkout/:path*',
-        destination: 'https://store.crffl.org/checkout/:path*',
-      },
-      {
-        source: '/my-account',
-        destination: 'https://store.crffl.org/my-account/',
-      },
-      {
-        source: '/my-account/:path*',
-        destination: 'https://store.crffl.org/my-account/:path*',
-      },
-      {
-        source: '/wp-admin/:path*',
-        destination: 'https://store.crffl.org/wp-admin/:path*',
-      },
-      {
-        source: '/wp-login.php',
-        destination: 'https://store.crffl.org/wp-login.php',
-      },
+      // Proxy static WordPress uploads/assets and REST API
       {
         source: '/wp-content/:path*',
         destination: 'https://store.crffl.org/wp-content/:path*',
@@ -89,4 +115,3 @@ const nextConfig = {
 };
 
 export default nextConfig;
-
