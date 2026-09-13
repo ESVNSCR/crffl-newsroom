@@ -255,6 +255,16 @@ export default function SchedulePage() {
             Full 14-week regular season slate. Click any franchise to view and print their dedicated team schedule.
           </p>
 
+          <div className="flex items-center justify-center gap-3 pt-1 no-print">
+            <Link
+              href="/contests"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#d4af37] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 px-3.5 py-1 rounded-full transition shadow-sm"
+            >
+              <span>View 14-Week Contests & Prize Payouts ($505 Purse)</span>
+              <span>→</span>
+            </Link>
+          </div>
+
           {/* Quick Team Filter Bar */}
           <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
             <button

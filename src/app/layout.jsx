@@ -86,6 +86,12 @@ export default function RootLayout({ children }) {
                 Schedule
               </Link>
               <Link
+                href="/contests"
+                className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300 whitespace-nowrap"
+              >
+                Contests & Payouts
+              </Link>
+              <Link
                 href="/hof"
                 className="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
               >
@@ -141,6 +147,8 @@ export default function RootLayout({ children }) {
               <Link href="/power-rankings" className="hover:text-[#d4af37] transition">Power Rankings</Link>
               <span>•</span>
               <Link href="/schedule" className="hover:text-[#d4af37] transition">Schedule</Link>
+              <span>•</span>
+              <Link href="/contests" className="hover:text-[#d4af37] transition">Contests & Payouts</Link>
               <span>•</span>
               <Link href="/staff" className="hover:text-[#d4af37] transition">Staff Directory</Link>
               <span>•</span>

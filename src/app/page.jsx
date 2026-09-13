@@ -39,9 +39,9 @@ export default async function HomePage({ searchParams }) {
     .limit(1);
 
   const currentContest = contestRows?.[0] || {
-    contest_name: 'Week 1 High Roller Challenge',
+    contest_name: 'Breakout',
     prize: '$10 Cash',
-    description: 'Highest single starting player score of the week takes home the $10 prize purse.',
+    description: 'The Starter who exceeds their projected points by the largest margin.',
     week_number: 1,
   };
 
@@ -269,6 +269,13 @@ export default async function HomePage({ searchParams }) {
               <span>Week {currentContest.week_number} On Deck</span>
               <span className="text-[#d4af37] font-semibold">Tuesdays with Marty</span>
             </div>
+
+            <Link
+              href="/contests"
+              className="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-[#d4af37] font-semibold transition text-xs border border-gray-700 hover:border-[#d4af37]/40"
+            >
+              View 14-Week Contest & Payout Schedule →
+            </Link>
           </div>
 
           {/* Card 4: Hall of Fame Pavilion Banner */}

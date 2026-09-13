@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { WEEKLY_CONTESTS_MASTER } from '@/lib/contests';
 
 export default function AdminContestsPage() {
   const [contests, setContests] = useState([]);
@@ -14,27 +15,18 @@ export default function AdminContestsPage() {
       .then((r) => r.json())
       .then((data) => {
         const list = data.contests || [];
-        // Fill default 1-14 weeks if empty
         const map = {};
         list.forEach((c) => {
           map[c.week_number] = c;
         });
 
-        const fullList = [];
-        for (let w = 1; w <= 14; w++) {
-          fullList.push(
-            map[w] || {
-              week_number: w,
-              contest_name: `Week ${w} Challenge`,
-              description: '',
-              prize: '$10',
-              winner_manager: '',
-              winner_team: '',
-              winning_score: '',
-              status: w === 1 ? 'active' : 'upcoming',
-            }
-          );
-        }
+        const fullList = WEEKLY_CONTESTS_MASTER.map((m) => {
+          const db = map[m.week_number];
+          return {
+            ...m,
+            ...(db || {}),
+          };
+        });
         setContests(fullList);
         setLoading(false);
       })
