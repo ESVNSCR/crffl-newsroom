@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/dispatch?reporter=marty",
+      "schedule": "0 19 * * 2"
+    },
+    {
+      "path": "/api/cron/dispatch?reporter=chloe",
+      "schedule": "0 19 * * 3"
+    },
+    {
+      "path": "/api/cron/dispatch?reporter=marcus",
+      "schedule": "0 21 * * 3"
+    },
+    {
+      "path": "/api/cron/dispatch?reporter=buck",
+      "schedule": "0 19 * * 4"
+    }
+  ]
+}
