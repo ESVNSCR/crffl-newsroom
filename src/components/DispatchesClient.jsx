@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ArticleModal from './ArticleModal';
 import { COLUMNISTS } from '@/lib/columnists';
+import { decodeHtmlEntities } from '@/lib/formatters';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Dispatches' },
@@ -12,29 +13,41 @@ const CATEGORIES = [
   { id: 'The Tuesday Recap', label: 'The Tuesday Recap' },
 ];
 
-export default function DispatchesClient({ articles = [], featuredArticle = null }) {
-  const [activeCategory, setActiveCategory] = useState('all');
+export default function DispatchesClient({ articles = [], featuredArticle = null, initialCategory = 'all' }) {
+  const [activeCategory, setActiveCategory] = useState(initialCategory || 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState(null);
 
+  useEffect(() => {
+    if (initialCategory) {
+      setActiveCategory(initialCategory);
+    }
+  }, [initialCategory]);
+
   const filteredArticles = useMemo(() => {
-    return articles.filter((a) => {
-      // Category filter
-      const matchesCategory =
-        activeCategory === 'all' ||
-        (a.category_name && a.category_name.toLowerCase() === activeCategory.toLowerCase()) ||
-        (activeCategory === 'Power Rankings' && a.title?.toLowerCase().includes('power ranking'));
+    return articles
+      .filter((a) => {
+        // Category filter
+        const catLower = activeCategory.toLowerCase();
+        const matchesCategory =
+          activeCategory === 'all' ||
+          (a.category_name && a.category_name.toLowerCase() === catLower) ||
+          (catLower === 'power rankings' && (a.author_id === 'marcus_vance' || a.title?.toLowerCase().includes('power ranking') || a.category_id === 32)) ||
+          (catLower === 'the grit desk' && (a.author_id === 'buck_callahan' || a.category_id === 107)) ||
+          (catLower === 'the spin room' && (a.author_id === 'chloe_carmichael' || a.category_id === 108)) ||
+          (catLower === 'the tuesday recap' && (a.author_id === 'marty_sullivan' || a.category_id === 16));
 
-      // Search query filter
-      const q = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        !q ||
-        a.title?.toLowerCase().includes(q) ||
-        a.author_name?.toLowerCase().includes(q) ||
-        a.summary?.toLowerCase().includes(q);
+        // Search query filter
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch =
+          !q ||
+          a.title?.toLowerCase().includes(q) ||
+          a.author_name?.toLowerCase().includes(q) ||
+          a.summary?.toLowerCase().includes(q);
 
-      return matchesCategory && matchesSearch;
-    });
+        return matchesCategory && matchesSearch;
+      })
+      .slice(0, 6); // Limit number of articles shown on main page to 6
   }, [articles, activeCategory, searchQuery]);
 
   return (
@@ -122,12 +135,12 @@ export default function DispatchesClient({ articles = [], featuredArticle = null
 
                   {/* Headline */}
                   <h3 className="text-lg font-bold text-white group-hover:text-[#d4af37] transition leading-snug line-clamp-2">
-                    {article.title}
+                    {decodeHtmlEntities(article.title)}
                   </h3>
 
                   {/* Excerpt */}
                   <p className="text-xs sm:text-sm text-gray-400 line-clamp-3 leading-relaxed">
-                    {article.summary}
+                    {decodeHtmlEntities(article.summary)}
                   </p>
                 </div>
 

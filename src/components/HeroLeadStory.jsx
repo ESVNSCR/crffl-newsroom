@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import ArticleModal from './ArticleModal';
 import { COLUMNISTS } from '@/lib/columnists';
+import { decodeHtmlEntities } from '@/lib/formatters';
 
 export default function HeroLeadStory({ leadArticle }) {
   const [openModal, setOpenModal] = useState(false);
@@ -38,12 +39,12 @@ export default function HeroLeadStory({ leadArticle }) {
             onClick={() => setOpenModal(true)}
             className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white leading-[1.15] cursor-pointer hover:text-[#d4af37] transition-colors"
           >
-            {leadArticle.title}
+            {decodeHtmlEntities(leadArticle.title)}
           </h1>
 
           {/* Lead Paragraph Excerpt */}
           <p className="text-gray-300 text-base sm:text-lg leading-relaxed line-clamp-3 sm:line-clamp-4">
-            {leadArticle.summary}
+            {decodeHtmlEntities(leadArticle.summary)}
           </p>
 
           {/* Byline & Action Buttons */}

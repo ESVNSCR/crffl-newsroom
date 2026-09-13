@@ -1,3 +1,5 @@
+import { decodeHtmlEntities } from './formatters.js';
+
 const WP_URL = process.env.WORDPRESS_URL || 'https://store.crffl.org';
 const WP_USER = process.env.WORDPRESS_USERNAME || 'esvnscr@gmail.com';
 const WP_APP_PASSWORD = process.env.WORDPRESS_APP_PASSWORD || 'PI28 01Yl ntDK QNuU 2DlE knW7';
@@ -26,7 +28,7 @@ export function parseModelOutput(rawText) {
   // Check for [title ...]
   const titleMatch = rawText.match(/\[title\s+([^\]]+)\]/i);
   if (titleMatch) {
-    title = titleMatch[1].trim();
+    title = decodeHtmlEntities(titleMatch[1].trim());
   }
 
   // Strip shortcodes like [title ...], [author ...], [category ...], [status ...]

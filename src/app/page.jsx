@@ -8,13 +8,16 @@ import MastheadMotto from '@/components/MastheadMotto';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage() {
-  // 1. Fetch recent articles
+export default async function HomePage({ searchParams }) {
+  const sp = await searchParams;
+  const initialCategory = sp?.category || 'all';
+
+  // 1. Fetch recent articles (up to 50 so desk/category filters can access archived dispatches)
   const { data: articles } = await supabase
     .from('newsroom_articles')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(50);
 
   // 2. Fetch latest power rankings for the Apex sidebar widget
   const { data: powerRankingsRows } = await supabase
@@ -104,9 +107,10 @@ export default async function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.values(COLUMNISTS).map((col) => (
-            <div
+            <Link
               key={col.id}
-              className="p-5 rounded-2xl bg-[#121824] border border-gray-800 hover:border-gray-700 transition flex flex-col justify-between space-y-4 shadow-lg group"
+              href={col.href || `/?category=${encodeURIComponent(col.category || col.desk)}#dispatches`}
+              className="p-5 rounded-2xl bg-[#121824] border border-gray-800 hover:border-[#d4af37]/60 transition flex flex-col justify-between space-y-4 shadow-lg group block cursor-pointer"
             >
               <div className="space-y-3">
                 <div className="flex items-center space-x-3.5">
@@ -118,7 +122,7 @@ export default async function HomePage() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base leading-snug">{col.name}</h3>
+                    <h3 className="font-bold text-white text-base leading-snug group-hover:text-[#d4af37] transition-colors">{col.name}</h3>
                     <span className="text-[11px] font-mono text-[#d4af37] block font-semibold">
                       {col.desk}
                     </span>
@@ -132,11 +136,11 @@ export default async function HomePage() {
 
               <div className="pt-3 border-t border-gray-800/80 flex items-center justify-between text-[11px]">
                 <span className="text-gray-400 font-mono">CRFFL Newsroom</span>
-                <span className="text-[#d4af37] font-semibold group-hover:translate-x-0.5 transition-transform">
+                <span className="text-[#d4af37] font-semibold group-hover:translate-x-1 transition-transform flex items-center gap-1">
                   Read Desk →
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -144,7 +148,7 @@ export default async function HomePage() {
       {/* 3. MAIN CONTENT STREAM & SIDEBAR RAIL */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* LEFT / MAIN STREAM (8 Cols) */}
-        <div className="lg:col-span-8 space-y-6">
+        <div id="dispatches" className="lg:col-span-8 space-y-6 scroll-mt-24">
           <div className="flex items-center justify-between border-b border-gray-800 pb-3">
             <div>
               <span className="text-[10px] uppercase font-mono tracking-widest text-[#d4af37] font-bold">
@@ -155,11 +159,11 @@ export default async function HomePage() {
               </h2>
             </div>
             <span className="text-xs text-gray-400 font-mono">
-              {feedArticles.length} Columns Archived
+              Showing 6 Latest Dispatches
             </span>
           </div>
 
-          <DispatchesClient articles={feedArticles} />
+          <DispatchesClient articles={feedArticles} initialCategory={initialCategory} />
         </div>
 
         {/* RIGHT / SIDEBAR RAIL (4 Cols) */}

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { COLUMNISTS } from '@/lib/columnists';
+import { decodeHtmlEntities } from '@/lib/formatters';
 
 export default function ArticleModal({ article, onClose }) {
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function ArticleModal({ article, onClose }) {
         <div className="flex-1 overflow-y-auto px-6 sm:px-10 py-8 space-y-6">
           {/* Article Title */}
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
-            {article.title}
+            {decodeHtmlEntities(article.title)}
           </h1>
 
           {/* Author Byline Bar */}
