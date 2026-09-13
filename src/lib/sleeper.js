@@ -101,8 +101,8 @@ export async function getLeagueOverview(leagueId = DEFAULT_LEAGUE_ID) {
   const rosterMap = {};
   for (const r of rosters) {
     const user = userMap[r.owner_id] || {};
-    const username = user.username || '';
-    const preset = MANAGERS[username] || {
+    const username = user.username || user.display_name || '';
+    const preset = MANAGERS[username] || MANAGERS[user.display_name] || {
       managerName: user.display_name || user.username || `Manager #${r.roster_id}`,
       teamName: user.metadata?.team_name || `Team ${username || r.roster_id}`,
       logo: 'https://crffl.org/wp-content/uploads/2026/08/League-Logo-1.png',

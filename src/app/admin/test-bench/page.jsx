@@ -44,6 +44,9 @@ export default function AdminTestBenchPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('preview');
+  const [reminderLoading, setReminderLoading] = useState(false);
+  const [reminderResult, setReminderResult] = useState(null);
+  const [reminderError, setReminderError] = useState(null);
 
   const runReporter = async () => {
     setRunning(true);
@@ -69,6 +72,32 @@ export default function AdminTestBenchPage() {
       setError(err.message);
     } finally {
       setRunning(false);
+    }
+  };
+
+  const sendTestReminder = async () => {
+    setReminderLoading(true);
+    setReminderError(null);
+    setReminderResult(null);
+
+    try {
+      const res = await fetch('/api/cron/baseline-reminder?week=1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-commissioner-auth': 'authorized',
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      setReminderResult(data);
+    } catch (err) {
+      setReminderError(err.message);
+    } finally {
+      setReminderLoading(false);
     }
   };
 
@@ -279,6 +308,77 @@ export default function AdminTestBenchPage() {
           )}
         </div>
       )}
+
+      {/* Commissioner Baseline Reminder Diagnostic Card */}
+      <div className="bg-[#121824] border border-gray-800 rounded-2xl p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] text-[10px] font-mono font-bold uppercase">
+              <span>Wednesday 9:00 AM Cron</span>
+              <span>•</span>
+              <span>Automated Alert</span>
+            </div>
+            <h2 className="text-xl font-bold text-white mt-1">
+              Commissioner Baseline Reminder Dispatcher
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Dispatches automated alerts to Commissioner Eric every Wednesday morning before Dr. Vance compiles the Apex Power Index at 2:00 PM.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={sendTestReminder}
+            disabled={reminderLoading}
+            className="px-5 py-2.5 rounded-xl bg-[#d4af37] hover:bg-[#e6c24d] text-gray-950 text-xs font-black transition shadow-lg flex items-center gap-2 self-start sm:self-auto disabled:opacity-50"
+          >
+            {reminderLoading ? 'Dispatching...' : 'Send Test Reminder Now'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div className="p-4 rounded-xl bg-gray-900/80 border border-gray-800 space-y-2">
+            <span className="font-mono text-[11px] font-bold text-[#d4af37] uppercase block">
+              Carrier SMS Gateway (Verizon)
+            </span>
+            <p className="text-gray-300">
+              Target: <strong className="text-white">480-209-7790</strong> (<code className="text-gray-400">4802097790@vtext.com</code>)
+            </p>
+            <p className="text-gray-400 text-[11px]">
+              Carrier gateway delivers SMS texts directly to Verizon handsets.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-gray-900/80 border border-gray-800 space-y-2">
+            <span className="font-mono text-[11px] font-bold text-indigo-400 uppercase block">
+              Discord Webhook
+            </span>
+            <p className="text-gray-300">
+              Target Username: <strong className="text-white">@NAZQAR</strong>
+            </p>
+            <p className="text-gray-400 text-[11px]">
+              Set <code className="text-gray-300">DISCORD_WEBHOOK_URL</code> in environment variables to receive channel pings.
+            </p>
+          </div>
+        </div>
+
+        {reminderError && (
+          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-300 font-mono">
+            <strong>Error:</strong> {reminderError}
+          </div>
+        )}
+
+        {reminderResult && (
+          <div className="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <span className="text-xs font-bold text-emerald-400 block font-mono">
+              ✓ Reminder Dispatch Executed
+            </span>
+            <pre className="text-[11px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap">
+              {JSON.stringify(reminderResult.reminder, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,8 +1,16 @@
 {
   "crons": [
     {
+      "path": "/api/cron/adjudicate",
+      "schedule": "0 16 * * 2"
+    },
+    {
       "path": "/api/cron/dispatch?reporter=marty",
       "schedule": "0 19 * * 2"
+    },
+    {
+      "path": "/api/cron/baseline-reminder",
+      "schedule": "0 16 * * 3"
     },
     {
       "path": "/api/cron/dispatch?reporter=chloe",

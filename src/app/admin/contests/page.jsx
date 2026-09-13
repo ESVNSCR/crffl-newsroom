@@ -8,7 +8,42 @@ export default function AdminContestsPage() {
   const [loading, setLoading] = useState(true);
   const [activeWeek, setActiveWeek] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [adjudicating, setAdjudicating] = useState(false);
   const [message, setMessage] = useState('');
+  const [adjudicationDetail, setAdjudicationDetail] = useState('');
+
+  const runAutoAdjudication = async (weekNumber) => {
+    setAdjudicating(true);
+    setMessage('');
+    setAdjudicationDetail('');
+
+    try {
+      const res = await fetch(`/api/cron/adjudicate?week=${weekNumber}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-commissioner-auth': 'authorized',
+        },
+      });
+      const data = await res.json();
+
+      if (data.success && data.adjudication?.success) {
+        const adj = data.adjudication;
+        updateContest(weekNumber, 'winner_manager', adj.winner_manager);
+        updateContest(weekNumber, 'winner_team', adj.winner_team);
+        updateContest(weekNumber, 'winning_score', adj.winning_score);
+        updateContest(weekNumber, 'status', 'completed');
+        setMessage(`Week ${weekNumber} Auto-Adjudication Completed! Winner: ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}`);
+        setAdjudicationDetail(adj.explanation || '');
+      } else {
+        setMessage(`Adjudication notice: ${data.adjudication?.reason || data.error || 'Could not adjudicate week.'}`);
+      }
+    } catch (err) {
+      setMessage(`Network error during adjudication: ${err.message}`);
+    } finally {
+      setAdjudicating(false);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/admin/contests')
@@ -116,14 +151,31 @@ export default function AdminContestsPage() {
 
         return (
           <div className="bg-[#121824] border border-gray-800 rounded-2xl p-6 sm:p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
-              <h2 className="text-xl font-bold text-white">
-                Week {c.week_number} Contest Details
-              </h2>
-              <span className="text-xs uppercase font-mono px-2.5 py-1 rounded bg-gray-900 text-[#d4af37] border border-gray-800">
-                Prize: {c.prize || '$10'}
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Week {c.week_number} Contest Details
+                </h2>
+                <span className="text-xs uppercase font-mono text-[#d4af37]">
+                  Prize: {c.prize || '$10'}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => runAutoAdjudication(c.week_number)}
+                disabled={adjudicating}
+                className="px-4 py-2 rounded-xl bg-blue-600/25 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto disabled:opacity-50"
+              >
+                {adjudicating ? 'Calculating from Sleeper...' : `Auto-Adjudicate Week ${c.week_number} via Sleeper`}
+              </button>
             </div>
+
+            {adjudicationDetail && (
+              <div className="p-4 rounded-xl bg-blue-950/40 border border-blue-800 text-xs text-blue-200 font-mono">
+                <strong>Adjudication Breakdown:</strong> {adjudicationDetail}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
