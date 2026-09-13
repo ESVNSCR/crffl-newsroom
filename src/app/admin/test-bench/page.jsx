@@ -48,6 +48,43 @@ export default function AdminTestBenchPage() {
   const [reminderResult, setReminderResult] = useState(null);
   const [reminderError, setReminderError] = useState(null);
 
+  // Web Push Broadcast States
+  const [pushTitle, setPushTitle] = useState('CRFFL Times-Herald Breaking Alert');
+  const [pushBody, setPushBody] = useState('Dr. Marcus Vance has published the Week 1 Apex Power Index!');
+  const [pushCategory, setPushCategory] = useState('');
+  const [pushBroadcasting, setPushBroadcasting] = useState(false);
+  const [pushResult, setPushResult] = useState(null);
+  const [pushError, setPushError] = useState(null);
+
+  const broadcastPushAlert = async () => {
+    setPushBroadcasting(true);
+    setPushError(null);
+    setPushResult(null);
+
+    try {
+      const res = await fetch('/api/alerts/test-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: pushTitle,
+          body: pushBody,
+          category: pushCategory || null,
+          url: '/',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      setPushResult(data);
+    } catch (err) {
+      setPushError(err.message);
+    } finally {
+      setPushBroadcasting(false);
+    }
+  };
+
   const runReporter = async () => {
     setRunning(true);
     setError(null);
@@ -375,6 +412,90 @@ export default function AdminTestBenchPage() {
             </span>
             <pre className="text-[11px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap">
               {JSON.stringify(reminderResult.reminder, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+
+      {/* Web Push Notification Broadcast Card */}
+      <div className="bg-[#121824] border border-[#d4af37]/40 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] text-[10px] font-mono font-bold uppercase">
+              <span>Web Push Engine</span>
+              <span>•</span>
+              <span>RFC 8291 / 8292</span>
+            </div>
+            <h2 className="text-xl font-bold text-white mt-1">
+              Browser Push Notification Broadcast Console
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Broadcast instant push alerts to enrolled desktop & mobile subscriber devices (lock screen banners, notification center pings).
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={broadcastPushAlert}
+            disabled={pushBroadcasting}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 text-xs font-black transition shadow-lg flex items-center gap-2 self-start sm:self-auto disabled:opacity-50"
+          >
+            {pushBroadcasting ? 'Broadcasting...' : 'Broadcast Push Alert Now'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-gray-300">Alert Title</label>
+            <input
+              type="text"
+              value={pushTitle}
+              onChange={(e) => setPushTitle(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#d4af37]"
+            />
+          </div>
+
+          <div className="space-y-1.5 sm:col-span-2">
+            <label className="text-xs font-semibold text-gray-300">Message Body</label>
+            <input
+              type="text"
+              value={pushBody}
+              onChange={(e) => setPushBody(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#d4af37]"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-gray-300 block">Target Category</label>
+            <select
+              value={pushCategory}
+              onChange={(e) => setPushCategory(e.target.value)}
+              className="bg-gray-900 border border-gray-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-[#d4af37]"
+            >
+              <option value="">Broadcast to All Subscribers</option>
+              <option value="articles">Articles & Beats Only</option>
+              <option value="rankings">Power Rankings Only</option>
+              <option value="bets">New Sportsbook Lines Only</option>
+              <option value="payouts">Wager Payouts Only</option>
+            </select>
+          </div>
+        </div>
+
+        {pushError && (
+          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-300 font-mono">
+            <strong>Error:</strong> {pushError}
+          </div>
+        )}
+
+        {pushResult && (
+          <div className="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
+            <span className="text-xs font-bold text-emerald-400 block font-mono">
+              ✓ Broadcast Result: {pushResult.message}
+            </span>
+            <pre className="text-[11px] font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap">
+              {JSON.stringify(pushResult.details || pushResult, null, 2)}
             </pre>
           </div>
         )}

@@ -1,0 +1,18 @@
+{
+  "name": "CRFFL Times-Herald",
+  "short_name": "CRFFL News",
+  "description": "Columbia River Fantasy Football League Official Newsroom, Power Rankings, Contests & Dispatches",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f18",
+  "theme_color": "#121824",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logos/league.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

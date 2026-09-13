@@ -5,6 +5,12 @@ import HeaderNav from '@/components/HeaderNav';
 export const metadata = {
   title: 'CRFFL Times-Herald | Official Newsroom of the CRFFL',
   description: 'The Official Columbia River Fantasy Football League Newsroom, Dispatches, Power Rankings, and Pro Shop.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'CRFFL Times-Herald',
+  },
 };
 
 export default function RootLayout({ children }) {
