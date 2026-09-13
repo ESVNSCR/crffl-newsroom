@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const EXPECTED_PIN = process.env.NEXT_PUBLIC_COMMISSIONER_PIN || '2026';
+const EXPECTED_PIN = (process.env.NEXT_PUBLIC_COMMISSIONER_PIN || '5014').trim();
 
 export default function AdminLayout({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,7 +22,7 @@ export default function AdminLayout({ children }) {
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    if (pin === EXPECTED_PIN) {
+    if (pin.trim() === EXPECTED_PIN) {
       sessionStorage.setItem('crffl_admin_auth', 'authorized');
       setIsAuthenticated(true);
       setError(false);
