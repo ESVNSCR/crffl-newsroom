@@ -6,10 +6,10 @@ import { COLUMNISTS } from '@/lib/columnists';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Dispatches' },
-  { id: 'Power Rankings', label: '📊 Power Rankings' },
-  { id: 'The Grit Desk', label: '🏈 The Grit Desk' },
-  { id: 'The Spin Room', label: '🔍 The Spin Room' },
-  { id: 'The Tuesday Recap', label: '📋 The Tuesday Recap' },
+  { id: 'Power Rankings', label: 'Power Rankings' },
+  { id: 'The Grit Desk', label: 'The Grit Desk' },
+  { id: 'The Spin Room', label: 'The Spin Room' },
+  { id: 'The Tuesday Recap', label: 'The Tuesday Recap' },
 ];
 
 export default function DispatchesClient({ articles = [], featuredArticle = null }) {

@@ -242,7 +242,7 @@ export default function SchedulePage() {
         {/* Header Masthead */}
         <div className="text-center space-y-3 no-print">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] text-xs font-mono font-bold tracking-wider uppercase">
-            <span>📅 Official League Calendar</span>
+            <span>Official League Calendar</span>
             <span>•</span>
             <span>Season 2026</span>
           </div>
@@ -320,7 +320,7 @@ export default function SchedulePage() {
                   onClick={() => window.print()}
                   className="px-4 py-2 rounded-xl bg-[#d4af37] hover:bg-[#e6c24d] text-gray-950 text-xs font-black transition shadow-lg flex items-center gap-1.5"
                 >
-                  🖨️ Print Team Schedule
+                  Print Team Schedule
                 </button>
               </div>
             </div>

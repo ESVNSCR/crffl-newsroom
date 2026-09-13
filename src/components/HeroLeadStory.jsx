@@ -78,7 +78,7 @@ export default function HeroLeadStory({ leadArticle }) {
                 href="/power-rankings"
                 className="inline-flex items-center gap-2 bg-gray-900/80 text-gray-200 border border-white/15 px-5 py-3 rounded-xl font-semibold hover:bg-gray-800 hover:text-white transition text-sm"
               >
-                📊 Power Rankings Board
+                Power Rankings Board
               </Link>
             </div>
           </div>

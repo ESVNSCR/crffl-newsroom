@@ -36,18 +36,6 @@ export default function MastheadMotto() {
       <span className="text-amber-200/90 italic font-sans font-medium group-hover:text-[#d4af37] transition-colors duration-200">
         &ldquo;{saying}&rdquo;
       </span>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleNext();
-        }}
-        className="opacity-60 group-hover:opacity-100 hover:text-[#d4af37] transition text-xs ml-0.5"
-        aria-label="New random blurb"
-        title="Roll another motto"
-      >
-        🎲
-      </button>
     </div>
   );
 }

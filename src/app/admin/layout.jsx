@@ -50,8 +50,10 @@ export default function AdminLayout({ children }) {
     return (
       <div className="min-h-screen bg-[#0b0f17] flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full rounded-2xl bg-[#121824] border border-gray-800 p-8 space-y-6 shadow-2xl text-center">
-          <div className="w-16 h-16 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center mx-auto text-2xl">
-            🔒
+          <div className="w-16 h-16 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center mx-auto text-[#d4af37]">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
           </div>
 
           <div className="space-y-2">
@@ -84,7 +86,7 @@ export default function AdminLayout({ children }) {
 
             {error && (
               <p className="text-xs text-rose-400 font-semibold font-mono animate-shake">
-                ⚠️ Invalid Commissioner PIN. Access denied.
+                Invalid Commissioner PIN. Access denied.
               </p>
             )}
 
@@ -117,7 +119,7 @@ export default function AdminLayout({ children }) {
       <div className="bg-[#0e1420] border-b border-gray-800 px-4 py-2 text-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3 text-gray-400 font-mono">
-            <span className="text-[#d4af37] font-bold">⚡ COMMISSIONER CLEARANCE ACTIVE</span>
+            <span className="text-[#d4af37] font-bold">COMMISSIONER CLEARANCE ACTIVE</span>
             <span>•</span>
             <Link href="/admin/test-bench" className="hover:text-white transition">Test Bench</Link>
             <span>•</span>
@@ -131,7 +133,6 @@ export default function AdminLayout({ children }) {
             className="text-[11px] font-mono font-bold text-rose-400 hover:text-rose-300 transition flex items-center gap-1"
           >
             <span>Lock & Exit</span>
-            <span>🔒</span>
           </button>
         </div>
       </div>

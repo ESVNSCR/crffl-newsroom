@@ -84,7 +84,7 @@ export default function StaffDirectoryPage() {
         {/* Header Masthead */}
         <div className="text-center space-y-4 border-b border-gray-800 pb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] text-xs font-mono font-bold tracking-wider uppercase">
-            <span>📰 Editorial Staff Directory</span>
+            <span>Editorial Staff Directory</span>
             <span>•</span>
             <span>CRFFL Times-Herald</span>
           </div>

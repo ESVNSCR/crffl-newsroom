@@ -167,7 +167,6 @@ export default async function HomePage() {
           {/* Card 1: Official Team Shop Banner */}
           <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-amber-950/40 via-[#161d2b] to-[#0e1420] border border-[#d4af37]/40 p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-2">
-              <span className="text-xl">🛍️</span>
               <span className="text-xs uppercase font-mono font-bold tracking-wider text-[#d4af37]">
                 Official League Pro Shop
               </span>
@@ -181,19 +180,18 @@ export default async function HomePage() {
               Order official custom franchise apparel, championship commemorative hoodies, sideline caps, and league collectibles.
             </p>
 
-            <Link
-              href="/shop"
+            <a
+              href="https://store.crffl.org/shop/"
               className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-[#d4af37] text-gray-950 font-bold hover:bg-[#e6c24d] transition shadow-lg text-xs"
             >
               Shop Official Gear at CRFFL.org/shop →
-            </Link>
+            </a>
           </div>
 
           {/* Card 2: Apex Power Rankings Snapshot */}
           <div className="rounded-2xl bg-[#121824] border border-gray-800 p-6 space-y-4 shadow-lg">
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">📊</span>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                   Apex Power Index
                 </h3>
@@ -247,7 +245,6 @@ export default async function HomePage() {
           <div className="rounded-2xl bg-[#121824] border border-gray-800 p-6 space-y-4 shadow-lg">
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">🏆</span>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                   Weekly $10 Contest
                 </h3>
@@ -273,7 +270,6 @@ export default async function HomePage() {
           {/* Card 4: Hall of Fame Pavilion Banner */}
           <div className="rounded-2xl bg-gradient-to-br from-[#121824] to-[#1a2336] border border-white/10 p-6 space-y-3 shadow-lg">
             <div className="flex items-center space-x-2">
-              <span className="text-lg">🏛️</span>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 CRFFL Hall of Fame
               </h3>
@@ -295,7 +291,6 @@ export default async function HomePage() {
           <div className="rounded-2xl bg-gradient-to-br from-amber-950/20 via-[#121824] to-[#121824] border border-amber-500/30 p-6 space-y-3 shadow-lg">
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">🎲</span>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                   CRFFL Sportsbook
                 </h3>
@@ -323,7 +318,6 @@ export default async function HomePage() {
           <div className="rounded-2xl bg-gradient-to-br from-cyan-950/20 via-[#121824] to-[#121824] border border-cyan-500/30 p-6 space-y-3 shadow-lg">
             <div className="flex items-center justify-between border-b border-gray-800 pb-3">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">🎯</span>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                   Weekly Pick'em
                 </h3>
@@ -352,7 +346,7 @@ export default async function HomePage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center py-2 px-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold transition text-xs border border-gray-700 text-center"
               >
-                Scoreboard 📟
+                Scoreboard
               </a>
             </div>
           </div>
@@ -360,7 +354,6 @@ export default async function HomePage() {
           {/* Card 7: 2026 Matchup Slate & Schedule */}
           <div className="rounded-2xl bg-[#121824] border border-gray-800 p-6 space-y-3 shadow-lg">
             <div className="flex items-center space-x-2">
-              <span className="text-lg">📅</span>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 2026 Schedule
               </h3>

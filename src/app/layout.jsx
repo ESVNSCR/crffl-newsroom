@@ -71,25 +71,25 @@ export default function RootLayout({ children }) {
                 href="/"
                 className="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
               >
-                📰 Dispatches
+                Dispatches
               </Link>
               <Link
                 href="/power-rankings"
                 className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300 whitespace-nowrap"
               >
-                📊 Power Rankings
+                Power Rankings
               </Link>
               <Link
                 href="/schedule"
                 className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300"
               >
-                📅 Schedule
+                Schedule
               </Link>
               <Link
                 href="/hof"
                 className="px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-gray-800/80 transition text-gray-300"
               >
-                🏆 Hall of Fame
+                Hall of Fame
               </Link>
               <a
                 href="https://crffl-sportsbook.vercel.app"
@@ -97,7 +97,7 @@ export default function RootLayout({ children }) {
                 rel="noopener noreferrer"
                 className="px-2.5 py-1.5 rounded-lg hover:text-amber-400 hover:bg-gray-800/80 transition text-gray-300 hidden md:inline-block"
               >
-                🎲 Sportsbook
+                Sportsbook
               </a>
               <a
                 href="https://crffl-pickem.vercel.app"
@@ -105,19 +105,19 @@ export default function RootLayout({ children }) {
                 rel="noopener noreferrer"
                 className="px-2.5 py-1.5 rounded-lg hover:text-cyan-400 hover:bg-gray-800/80 transition text-gray-300 hidden md:inline-block"
               >
-                🎯 Pick'em
+                Pick'em
               </a>
               <Link
                 href="/staff"
                 className="px-2.5 py-1.5 rounded-lg hover:text-[#d4af37] hover:bg-gray-800/80 transition text-gray-300 hidden lg:inline-block"
               >
-                👥 Staff
+                Staff
               </Link>
               <a
                 href="https://store.crffl.org/shop/"
                 className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold transition shadow-md flex items-center gap-1"
               >
-                🛍️ <span>Shop</span>
+                <span>Shop</span>
               </a>
             </nav>
           </div>

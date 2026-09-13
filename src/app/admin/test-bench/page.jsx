@@ -132,7 +132,7 @@ export default function AdminTestBenchPage() {
               />
               <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#d4af37]"></div>
               <span className="ml-3 text-sm font-semibold text-gray-200">
-                {dryRun ? '🛡️ Dry Run Mode (Preview Only)' : '🚀 Live Mode (Publish to WordPress + DB)'}
+                {dryRun ? 'Dry Run Mode (Preview Only)' : 'Live Mode (Publish to WordPress + DB)'}
               </span>
             </label>
           </div>
@@ -168,7 +168,7 @@ export default function AdminTestBenchPage() {
                 Generating Column with Gemini...
               </>
             ) : (
-              `Run ${REPORTERS.find((r) => r.id === selectedReporter)?.name} ⚡`
+              `Run ${REPORTERS.find((r) => r.id === selectedReporter)?.name}`
             )}
           </button>
         </div>
@@ -229,7 +229,7 @@ export default function AdminTestBenchPage() {
             <div className="space-y-4">
               {result.result?.wordpress?.link && (
                 <div className="p-3 bg-green-950/40 border border-green-800 rounded-xl text-xs text-green-300">
-                  🎉 Published to WordPress:{' '}
+                  Published to WordPress:{' '}
                   <a
                     href={result.result.wordpress.link}
                     target="_blank"

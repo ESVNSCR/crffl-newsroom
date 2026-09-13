@@ -258,7 +258,7 @@ Apply your secret directive to Rebel Scum.`;
     const wpExcerpt = parsed.intro_blurb.replace(/\n+/g, ' ').slice(0, 300) + '...';
     const wpContent = `
       <p>${parsed.intro_blurb.replace(/\n\n/g, '</p><p>')}</p>
-      <p><strong><a href="/power-rankings" style="color: #d4af37; font-weight: bold; text-decoration: underline;">👉 View the Complete Interactive 10-Team Power Rankings Board Here</a></strong></p>
+      <p><strong><a href="/power-rankings" style="color: #d4af37; font-weight: bold; text-decoration: underline;">View the Complete Interactive 10-Team Power Rankings Board Here</a></strong></p>
     `;
 
     try {

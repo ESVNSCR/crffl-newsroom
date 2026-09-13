@@ -64,12 +64,12 @@ export default function AdminContestsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage(`✅ Week ${weekNumber} contest saved successfully!`);
+        setMessage(`Week ${weekNumber} contest saved successfully!`);
       } else {
-        setMessage(`❌ Error: ${data.error}`);
+        setMessage(`Error: ${data.error}`);
       }
     } catch (err) {
-      setMessage(`❌ Network Error: ${err.message}`);
+      setMessage(`Network Error: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -197,7 +197,7 @@ export default function AdminContestsPage() {
                 disabled={saving}
                 className="bg-[#d4af37] text-gray-950 font-bold px-6 py-2.5 rounded-xl hover:bg-[#e6c24d] transition disabled:opacity-50"
               >
-                {saving ? 'Saving...' : `Save Week ${c.week_number} Contest 💾`}
+                {saving ? 'Saving...' : `Save Week ${c.week_number} Contest`}
               </button>
             </div>
           </div>

@@ -98,12 +98,12 @@ export default function AdminRankingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage('✅ Baseline rankings saved successfully! Dr. Vance will utilize these Wednesday at 2:00 PM.');
+        setMessage('Baseline rankings saved successfully! Dr. Vance will utilize these Wednesday at 2:00 PM.');
       } else {
-        setMessage(`❌ Error: ${data.error}`);
+        setMessage(`Error: ${data.error}`);
       }
     } catch (err) {
-      setMessage(`❌ Network Error: ${err.message}`);
+      setMessage(`Network Error: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -204,7 +204,7 @@ export default function AdminRankingsPage() {
           disabled={saving}
           className="bg-[#d4af37] text-gray-950 font-bold px-6 py-3 rounded-xl hover:bg-[#e6c24d] transition disabled:opacity-50"
         >
-          {saving ? 'Saving...' : `Submit Baseline for Week ${currentWeek} 💾`}
+          {saving ? 'Saving...' : `Submit Baseline for Week ${currentWeek}`}
         </button>
       </div>
     </div>
