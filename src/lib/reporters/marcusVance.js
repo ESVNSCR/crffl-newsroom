@@ -115,6 +115,19 @@ ${JSON.stringify(previousMatchups, null, 2)}
 PREVIOUS WEEK'S RANKINGS FOR TREND COMPUTATION:
 ${JSON.stringify(lastWeekRankMap, null, 2)}
 
+CRFFL ROSTER & MANAGER TRANSLATION KEY:
+- [XWINGBLUE] = Eric | Team: Rebel Scum
+- [coreycash] = Corey | Team: Team coreycash
+- [mikef5630] = Mike F. | Team: Stars & Stripes
+- [Wangieii] = KC | Team: Shortbus Superstars
+- [RaiderRose510] = Ed | Team: Team RaiderRose510
+- [rkelsoscudder] = Randy | Team: Generic Football Team
+- [JeffsSodoMojo] = Jeff | Team: Hickory Huskers
+- [KillaMC] = Marcus | Team: Team KillaMC
+- [iammichael2u] = Mike M. | Team: Moore Better
+- [GardenGoddess] = Pam | Team: Team GardenGoddess
+CRITICAL: NEVER use generic placeholder names like "Team 10", "Team 4", "Team 8", or "Team 2". Always use their official team names and actual human manager names.
+
 ${rivalInfo.promptContext}
 
 ---
@@ -133,12 +146,15 @@ Format your response as valid JSON with NO markdown code fences (raw JSON string
       "record": "1-0",
       "points_for": "135.4",
       "blurb": "4-5 sentence breakdown. Mention who they beat/lost to based on the matchup data, analyze their advanced metrics, and explain their rank with witty statistical precision.",
-      "trend": "▲ +1"
+      "trend": "▬"
     }
   ]
 }
 
-Ensure all 10 league teams are included in rankings, ordered from #1 (best) down to #10 (worst). For trend, compare their new rank to the previous week's rank: use "▲ +X" if improved, "▼ -X" if dropped, or "▬" if unchanged. Apply your secret directive to Rebel Scum.`;
+Ensure all 10 league teams are included in rankings, ordered from #1 (best) down to #10 (worst).
+CRITICAL ON TREND:
+${currentWeek === 1 || Object.keys(lastWeekRankMap).length === 0 ? '- This is Week 1 (opening week), so there is NO prior week movement. Every single team MUST have trend "▬".' : '- Compare their new rank to the previous week\'s rank: use "▲ +X" if improved, "▼ -X" if dropped, or "▬" if unchanged.'}
+Apply your secret directive to Rebel Scum.`;
 
   const response = await ai.models.generateContent({
     model: DEFAULT_MODEL,
@@ -150,12 +166,24 @@ Ensure all 10 league teams are included in rankings, ordered from #1 (best) down
 
   const parsed = JSON.parse(response.text.trim());
 
-  // Attach logo URLs to each team
+  // Enforce canonical manager details, team names, logos, and blurb replacements
   const enrichedRankings = parsed.rankings.map((r) => {
-    const preset = MANAGERS[r.username] || {};
+    const preset = MANAGERS[r.username] || MANAGERS[r.manager_name] || {};
+
+    let cleanBlurb = r.blurb || '';
+    cleanBlurb = cleanBlurb
+      .replace(/\bTeam 10\b/g, 'Team KillaMC')
+      .replace(/\bTeam 4\b/g, 'Team RaiderRose510')
+      .replace(/\bTeam 8\b/g, 'Team coreycash')
+      .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
+
     return {
       ...r,
+      team_name: preset.teamName || r.team_name,
+      manager_name: preset.managerName || r.manager_name,
       logo_url: preset.logo || 'https://crffl.org/wp-content/uploads/2026/08/League-Logo-1.png',
+      blurb: cleanBlurb,
+      trend: currentWeek === 1 || Object.keys(lastWeekRankMap).length === 0 ? '▬' : (r.trend || '▬'),
     };
   });
 

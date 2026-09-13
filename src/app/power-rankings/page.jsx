@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { MANAGERS } from '@/lib/sleeper';
 
 export const revalidate = 60;
 
@@ -27,6 +28,39 @@ export default async function PowerRankingsPage({ searchParams }) {
 
   const weekList = Array.from(new Set(allWeeks?.map((w) => w.week_number) || []));
 
+  // Process, normalize names, clean blurbs, and sort from #10 down to #1
+  const isWeekOne = (currentRankings?.week_number || 1) === 1;
+
+  const displayRankings = [...(currentRankings?.rankings || [])]
+    .map((team) => {
+      const preset =
+        MANAGERS[team.username] ||
+        MANAGERS[team.manager_name] ||
+        Object.values(MANAGERS).find(
+          (m) =>
+            m.teamName?.toLowerCase() === team.team_name?.toLowerCase() ||
+            m.managerName?.toLowerCase() === team.manager_name?.toLowerCase()
+        ) ||
+        {};
+
+      let cleanBlurb = team.blurb || '';
+      cleanBlurb = cleanBlurb
+        .replace(/\bTeam 10\b/g, 'Team KillaMC')
+        .replace(/\bTeam 4\b/g, 'Team RaiderRose510')
+        .replace(/\bTeam 8\b/g, 'Team coreycash')
+        .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
+
+      return {
+        ...team,
+        team_name: preset.teamName || team.team_name,
+        manager_name: preset.managerName || team.manager_name,
+        logo_url: preset.logo || team.logo_url,
+        blurb: cleanBlurb,
+        trend: isWeekOne ? '▬' : team.trend || '▬',
+      };
+    })
+    .sort((a, b) => b.rank - a.rank); // Sort 10 at the top, down to 1 at the bottom
+
   return (
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed relative"
@@ -50,7 +84,8 @@ export default async function PowerRankingsPage({ searchParams }) {
                   By <span className="gold-text font-bold">Dr. Marcus Vance</span> •{' '}
                   <span className="text-white font-semibold">
                     Week {currentRankings?.week_number || 1}
-                  </span>
+                  </span>{' '}
+                  <span className="text-gray-400 text-xs">(Revealing #10 down to #1)</span>
                 </p>
               </div>
 
@@ -91,9 +126,9 @@ export default async function PowerRankingsPage({ searchParams }) {
             </div>
           </div>
 
-          {/* Rankings List */}
+          {/* Rankings List (Counting Down: #10 at top down to #1 at bottom) */}
           <div className="space-y-6">
-            {currentRankings?.rankings?.map((team) => {
+            {displayRankings.map((team) => {
               const isNumberOne = team.rank === 1;
               const trend = team.trend || '▬';
               const trendClass = trend.includes('▲')
@@ -105,7 +140,7 @@ export default async function PowerRankingsPage({ searchParams }) {
               return (
                 <div
                   key={team.rank}
-                  className={`glass-panel p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 transition relative ${
+                  className={`glass-panel p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 sm:gap-8 transition relative ${
                     isNumberOne ? 'rank-1-glow' : 'hover:border-white/30'
                   }`}
                 >
@@ -115,26 +150,28 @@ export default async function PowerRankingsPage({ searchParams }) {
                       #{team.rank}
                     </span>
                     {isNumberOne && (
-                      <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#d4af37] mt-1 bg-[#d4af37]/10 px-2 py-0.5 rounded border border-[#d4af37]/30">
-                        Top Seed
+                      <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#d4af37] mt-1 bg-[#d4af37]/10 px-2.5 py-0.5 rounded border border-[#d4af37]/30 whitespace-nowrap">
+                        Apex #1
                       </span>
                     )}
                   </div>
 
-                  {/* Team Logo */}
-                  <div className="flex-shrink-0">
+                  {/* Team Logo: Doubled in size */}
+                  <div className="flex-shrink-0 flex items-center justify-center min-w-[200px] sm:min-w-[240px]">
                     <img
                       src={team.logo_url}
                       alt={`${team.team_name} logo`}
-                      className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)] rounded-xl"
+                      className="w-48 h-48 sm:w-60 sm:h-60 md:w-64 md:h-64 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.85)] rounded-2xl"
                     />
                   </div>
 
                   {/* Team Info & Blurb */}
                   <div className="flex-grow text-center md:text-left space-y-2">
                     <div className="flex flex-wrap items-baseline gap-2 justify-center md:justify-start">
-                      <h2 className="text-2xl font-bold text-white">{team.team_name}</h2>
-                      <span className="text-sm font-medium text-gray-400">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                        {team.team_name}
+                      </h2>
+                      <span className="text-base font-semibold text-gray-300">
                         ({team.manager_name})
                       </span>
                     </div>
@@ -143,7 +180,7 @@ export default async function PowerRankingsPage({ searchParams }) {
                       Record: {team.record || '0-0'} &nbsp;|&nbsp; PF: {team.points_for || '0.0'}
                     </div>
 
-                    <p className="text-sm text-gray-300 leading-relaxed pt-1">
+                    <p className="text-sm sm:text-base text-gray-200 leading-relaxed pt-2">
                       {team.blurb}
                     </p>
                   </div>
@@ -161,4 +198,3 @@ export default async function PowerRankingsPage({ searchParams }) {
     </div>
   );
 }
-
