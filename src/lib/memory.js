@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabase.js';
 
 const ALL_REPORTERS = [
   { id: 'buck_callahan', name: 'Buck Callahan', role: 'Look-Ahead Preview' },

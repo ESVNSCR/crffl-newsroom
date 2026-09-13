@@ -1,11 +1,16 @@
 import { supabase } from '@/lib/supabase';
 import { MANAGERS } from '@/lib/sleeper';
+import { getSleeperPlayerMap } from '@/lib/sleeperPlayers';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function PowerRankingsPage({ searchParams }) {
   const sp = await searchParams;
   const requestedWeek = sp?.week ? Number(sp.week) : null;
+
+  // Query player map to ensure no raw player IDs ever leak to display
+  const playerMap = await getSleeperPlayerMap();
 
   // Query latest or requested week
   let query = supabase
@@ -50,11 +55,21 @@ export default async function PowerRankingsPage({ searchParams }) {
         .replace(/\bTeam 8\b/g, 'Team coreycash')
         .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
 
+      // Resolve any player IDs in blurb to actual player names
+      cleanBlurb = cleanBlurb.replace(/(?:player\s*#?|#)(\d{3,6})\b/gi, (match, id) => {
+        if (playerMap && playerMap[id]) {
+          return playerMap[id].name;
+        }
+        return match;
+      });
+
       return {
         ...team,
         team_name: preset.teamName || team.team_name,
         manager_name: preset.managerName || team.manager_name,
         logo_url: preset.logo || team.logo_url,
+        record: isWeekOne ? '0-0' : team.record || '0-0',
+        points_for: isWeekOne ? '0.0' : team.points_for || '0.0',
         blurb: cleanBlurb,
         trend: isWeekOne ? '▬' : team.trend || '▬',
       };
@@ -156,12 +171,12 @@ export default async function PowerRankingsPage({ searchParams }) {
                     )}
                   </div>
 
-                  {/* Team Logo: Doubled in size */}
-                  <div className="flex-shrink-0 flex items-center justify-center min-w-[200px] sm:min-w-[240px]">
+                  {/* Team Logo: Cropped transparent margins & maximized size */}
+                  <div className="flex-shrink-0 flex items-center justify-center w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 overflow-hidden rounded-2xl bg-black/40 border border-white/10 shadow-inner">
                     <img
                       src={team.logo_url}
                       alt={`${team.team_name} logo`}
-                      className="w-48 h-48 sm:w-60 sm:h-60 md:w-64 md:h-64 object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.85)] rounded-2xl"
+                      className="w-full h-full object-cover scale-105 drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] transition-transform duration-300 hover:scale-110"
                     />
                   </div>
 

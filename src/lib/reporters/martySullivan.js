@@ -1,23 +1,35 @@
-import { ai, DEFAULT_MODEL } from '../gemini';
-import { supabase } from '../supabase';
-import { getNflState, getLeagueOverview, getLeagueMatchups } from '../sleeper';
-import { getPffNews } from '../pff';
-import { getAuthorMemory, getDynamicRival } from '../memory';
-import { publishToWordpress, parseModelOutput } from '../wordpress';
+import { ai, DEFAULT_MODEL } from '../gemini.js';
+import { supabase } from '../supabase.js';
+import { getNflState, getLeagueOverview, getLeagueMatchups } from '../sleeper.js';
+import { getPffNews } from '../pff.js';
+import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { publishToWordpress, parseModelOutput } from '../wordpress.js';
+import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds } from '../sleeperPlayers.js';
 
 export async function generateMartyRecap({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, playerMap] = await Promise.all([
     getLeagueOverview(),
     getPffNews(3),
     getAuthorMemory('marty_sullivan', 3),
     getDynamicRival('marty_sullivan'),
+    getSleeperPlayerMap(),
   ]);
 
   const currentWeek = overview.state.week || 1;
   const previousWeek = Math.max(1, currentWeek - 1);
 
-  // Fetch previous week's matchups to recap
-  const previousMatchups = await getLeagueMatchups(previousWeek);
+  // Enrich rosters with named starters
+  const namedRosters = {};
+  for (const [id, r] of Object.entries(overview.rosters)) {
+    namedRosters[id] = {
+      ...r,
+      starters_named: (r.starters || []).map((pid) => resolvePlayerName(pid, playerMap)),
+    };
+  }
+
+  // Fetch previous week's matchups to recap (enriched with human player names)
+  const rawMatchups = await getLeagueMatchups(previousWeek);
+  const previousMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap);
 
   // Fetch contest data from Supabase
   const { data: contestData } = await supabase
@@ -99,8 +111,8 @@ ${contestSummary}
 
 RAW SLEEPER DATA:
 Current Week: Week ${currentWeek} (Recapping Week ${previousWeek})
-League Rosters & Standings:
-${JSON.stringify(overview.rosters, null, 2)}
+League Rosters & Named Starters:
+${JSON.stringify(namedRosters, null, 2)}
 
 Completed Matchups (Week ${previousWeek}):
 ${JSON.stringify(previousMatchups, null, 2)}
@@ -112,7 +124,9 @@ ${JSON.stringify(previousMatchups, null, 2)}
   });
 
   const rawText = response.text?.trim() || '';
-  const { title, cleanHtml } = parseModelOutput(rawText);
+  const parsed = parseModelOutput(rawText);
+  const title = sanitizeTextPlayerIds(parsed.title, playerMap);
+  const cleanHtml = sanitizeTextPlayerIds(parsed.cleanHtml, playerMap);
 
   let wpResult = null;
   if (!dryRun) {

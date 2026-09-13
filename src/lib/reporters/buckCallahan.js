@@ -1,24 +1,36 @@
-import { ai, DEFAULT_MODEL } from '../gemini';
-import { supabase } from '../supabase';
-import { getLeagueOverview, getLeagueMatchups } from '../sleeper';
-import { getPffNews } from '../pff';
-import { getAuthorMemory, getDynamicRival } from '../memory';
-import { publishToWordpress, parseModelOutput } from '../wordpress';
+import { ai, DEFAULT_MODEL } from '../gemini.js';
+import { supabase } from '../supabase.js';
+import { getLeagueOverview, getLeagueMatchups } from '../sleeper.js';
+import { getPffNews } from '../pff.js';
+import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { publishToWordpress, parseModelOutput } from '../wordpress.js';
+import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds } from '../sleeperPlayers.js';
 
 export async function generateBuckPreview({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, playerMap] = await Promise.all([
     getLeagueOverview(),
     getPffNews(4),
     getAuthorMemory('buck_callahan', 3),
     getDynamicRival('buck_callahan'),
+    getSleeperPlayerMap(),
   ]);
 
   const currentWeek = overview.state.week || 1;
 
-  // Upcoming matchups for the upcoming weekend
+  // Enrich rosters with named starters
+  const namedRosters = {};
+  for (const [id, r] of Object.entries(overview.rosters)) {
+    namedRosters[id] = {
+      ...r,
+      starters_named: (r.starters || []).map((pid) => resolvePlayerName(pid, playerMap)),
+    };
+  }
+
+  // Upcoming matchups for the upcoming weekend (enriched with player names)
   let upcomingMatchups = [];
   try {
-    upcomingMatchups = await getLeagueMatchups(currentWeek);
+    const rawM = await getLeagueMatchups(currentWeek);
+    upcomingMatchups = enrichMatchupsWithPlayerNames(rawM, playerMap);
   } catch (err) {
     console.error(`Failed to fetch upcoming matchups for week ${currentWeek}:`, err);
   }
@@ -85,8 +97,8 @@ ${rivalInfo.promptContext}
 
 RAW SLEEPER DATA:
 Current Week: Week ${currentWeek}
-League Rosters & Standings:
-${JSON.stringify(overview.rosters, null, 2)}
+League Rosters & Named Starters:
+${JSON.stringify(namedRosters, null, 2)}
 
 Upcoming Matchups (Week ${currentWeek}):
 ${JSON.stringify(upcomingMatchups, null, 2)}
@@ -98,7 +110,9 @@ ${JSON.stringify(upcomingMatchups, null, 2)}
   });
 
   const rawText = response.text?.trim() || '';
-  const { title, cleanHtml } = parseModelOutput(rawText);
+  const parsed = parseModelOutput(rawText);
+  const title = sanitizeTextPlayerIds(parsed.title, playerMap);
+  const cleanHtml = sanitizeTextPlayerIds(parsed.cleanHtml, playerMap);
 
   let wpResult = null;
   if (!dryRun) {

@@ -10,7 +10,7 @@ export const maxDuration = 60;
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { reporter, dryRun = true } = body;
+    const { reporter, dryRun = true, forcePreseason } = body;
 
     let result;
     switch (reporter?.toLowerCase()) {
@@ -24,7 +24,7 @@ export async function POST(request) {
         break;
       case 'marcus':
       case 'marcus_vance':
-        result = await generateMarcusPowerRankings({ dryRun });
+        result = await generateMarcusPowerRankings({ dryRun, forcePreseason });
         break;
       case 'buck':
       case 'buck_callahan':

@@ -145,11 +145,13 @@ export default function AdminRankingsPage() {
                 #{team.rank}
               </span>
               {team.logoUrl && (
-                <img
-                  src={team.logoUrl}
-                  alt={team.teamName}
-                  className="w-10 h-10 object-contain rounded"
-                />
+                <div className="w-11 h-11 overflow-hidden rounded-lg bg-black/40 border border-white/10 flex items-center justify-center flex-shrink-0">
+                  <img
+                    src={team.logoUrl}
+                    alt={team.teamName}
+                    className="w-full h-full object-cover scale-105"
+                  />
+                </div>
               )}
               <div>
                 <h3 className="text-base font-bold text-white">{team.teamName}</h3>

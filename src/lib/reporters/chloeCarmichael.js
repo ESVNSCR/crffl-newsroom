@@ -1,35 +1,49 @@
-import { ai, DEFAULT_MODEL } from '../gemini';
-import { supabase } from '../supabase';
-import { getLeagueOverview, getLeagueTransactions, getLeagueMatchups } from '../sleeper';
-import { getPffNews } from '../pff';
-import { getAuthorMemory, getDynamicRival } from '../memory';
-import { publishToWordpress, parseModelOutput } from '../wordpress';
+import { ai, DEFAULT_MODEL } from '../gemini.js';
+import { supabase } from '../supabase.js';
+import { getLeagueOverview, getLeagueTransactions, getLeagueMatchups } from '../sleeper.js';
+import { getPffNews } from '../pff.js';
+import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { publishToWordpress, parseModelOutput } from '../wordpress.js';
+import { getSleeperPlayerMap, resolvePlayerName, enrichTransactionsWithPlayerNames, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds } from '../sleeperPlayers.js';
 
 export async function generateChloeTransactions({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, playerMap] = await Promise.all([
     getLeagueOverview(),
     getPffNews(4),
     getAuthorMemory('chloe_carmichael', 3),
     getDynamicRival('chloe_carmichael'),
+    getSleeperPlayerMap(),
   ]);
 
   const currentWeek = overview.state.week || 1;
 
+  // Enrich rosters with named starters
+  const namedRosters = {};
+  for (const [id, r] of Object.entries(overview.rosters)) {
+    namedRosters[id] = {
+      ...r,
+      starters_named: (r.starters || []).map((pid) => resolvePlayerName(pid, playerMap)),
+    };
+  }
+
   // Fetch recent transactions (waivers, trades, free agents) for the current week/round
   let transactions = [];
   try {
-    transactions = await getLeagueTransactions(currentWeek);
+    const rawTx = await getLeagueTransactions(currentWeek);
+    transactions = enrichTransactionsWithPlayerNames(rawTx, playerMap);
   } catch (e) {
     console.warn(`Failed fetching transactions for week ${currentWeek}, checking round 1:`, e.message);
     try {
-      transactions = await getLeagueTransactions(1);
+      const rawTx = await getLeagueTransactions(1);
+      transactions = enrichTransactionsWithPlayerNames(rawTx, playerMap);
     } catch {}
   }
 
   // Fetch current matchups
   let matchups = [];
   try {
-    matchups = await getLeagueMatchups(currentWeek);
+    const rawM = await getLeagueMatchups(currentWeek);
+    matchups = enrichMatchupsWithPlayerNames(rawM, playerMap);
   } catch {}
 
   const newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n') || 'NFL transactions and waiver wire churning.';
@@ -94,8 +108,8 @@ ${rivalInfo.promptContext}
 
 RAW SLEEPER DATA:
 Current Week: ${currentWeek}
-League Rosters & Standings:
-${JSON.stringify(overview.rosters, null, 2)}
+League Rosters & Named Starters:
+${JSON.stringify(namedRosters, null, 2)}
 
 Recent League Transactions (Waivers, Trades, Drops, FAAB):
 ${JSON.stringify(transactions.slice(0, 30), null, 2)}
@@ -110,7 +124,9 @@ ${JSON.stringify(matchups, null, 2)}
   });
 
   const rawText = response.text?.trim() || '';
-  const { title, cleanHtml } = parseModelOutput(rawText);
+  const parsed = parseModelOutput(rawText);
+  const title = sanitizeTextPlayerIds(parsed.title, playerMap);
+  const cleanHtml = sanitizeTextPlayerIds(parsed.cleanHtml, playerMap);
 
   let wpResult = null;
   if (!dryRun) {
