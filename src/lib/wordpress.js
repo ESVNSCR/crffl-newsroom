@@ -96,3 +96,4 @@ export async function publishToWordpress({
     status: data.status,
   };
 }
+

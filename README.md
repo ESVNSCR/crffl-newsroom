@@ -29,3 +29,4 @@ The automated journalism engine and editorial desk for the **Columbia River Fant
 - **Database**: Supabase (`newsroom_articles`, `power_rankings`, `weekly_contests`, `rankings_submissions`)
 - **CMS**: WordPress REST API (`crffl.org`)
 - **Hosting**: Vercel & GitHub
+

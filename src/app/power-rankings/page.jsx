@@ -161,3 +161,4 @@ export default async function PowerRankingsPage({ searchParams }) {
     </div>
   );
 }
+
