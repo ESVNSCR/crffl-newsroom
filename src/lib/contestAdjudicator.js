@@ -688,7 +688,9 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       winner_manager: winnerManager,
       winner_team: winnerTeam,
       winning_score: winningScore,
-      explanation: `[LIVE TRACKER - IN PROGRESS]: Week ${week} games are still underway (Monday Night Football remains). Current contest leader: ${winnerManager} (${winnerTeam}) with ${winningScore}. Official winner locks Tuesday morning.`,
+      detail: explanation,
+      explanation: `${explanation} (Live in-progress leader — official winner locks Tuesday morning).`,
+      notice: `Unofficial standing. Games are still underway (Monday Night Football remains). Official winner locks Tuesday morning after MNF.`,
       record: null,
     };
   }

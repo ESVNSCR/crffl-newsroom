@@ -2,6 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { LEAGUE_PAYOUTS, TOTAL_PRIZE_PURSE, WEEKLY_CONTESTS_MASTER } from '@/lib/contests';
+import { getNflState } from '@/lib/sleeper';
+import { adjudicateWeekContest } from '@/lib/contestAdjudicator';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,24 +14,50 @@ export const metadata = {
 };
 
 export default async function ContestsPage() {
-  // Query Supabase for latest contest statuses and logged winners
-  const { data: dbContests } = await supabase
-    .from('weekly_contests')
-    .select('*')
-    .order('week_number', { ascending: true });
+  // Query Supabase for latest contest statuses and logged winners, and get current NFL state
+  const [{ data: dbContests }, nflState] = await Promise.all([
+    supabase
+      .from('weekly_contests')
+      .select('*')
+      .order('week_number', { ascending: true }),
+    getNflState().catch(() => ({ week: 1 })),
+  ]);
+
+  const currentNflWeek = nflState?.week || 1;
 
   const contestMap = {};
   (dbContests || []).forEach((c) => {
     contestMap[c.week_number] = c;
   });
 
-  // Merge master static rules with live DB records
+  // Calculate live in-progress tracker for the active week(s)
+  const liveTrackers = {};
+  const currentWeekDb = contestMap[currentNflWeek];
+
+  // If current week is not completed, fetch real-time in-progress standing
+  if (currentWeekDb?.status !== 'completed') {
+    try {
+      const trackerResult = await adjudicateWeekContest(currentNflWeek, { preview: true });
+      if (trackerResult && trackerResult.success && trackerResult.winner_manager) {
+        liveTrackers[currentNflWeek] = trackerResult;
+      }
+    } catch (err) {
+      console.warn(`Could not calculate live tracker for week ${currentNflWeek}:`, err.message);
+    }
+  }
+
+  // Merge master static rules with live DB records and live tracker
   const contests = WEEKLY_CONTESTS_MASTER.map((master) => {
     const db = contestMap[master.week_number];
+    const tracker = liveTrackers[master.week_number] || null;
+    const isCurrent = master.week_number === currentNflWeek;
+
     return {
       ...master,
       ...(db || {}),
       adjudication_date: master.adjudication_date, // preserve curated date
+      tracker,
+      isCurrent,
     };
   });
 
@@ -165,20 +193,22 @@ export default async function ContestsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {contests.map((c) => {
               const hasWinner = Boolean(c.winner_manager || c.winner_team);
-              const isActive = c.status === 'active';
+              const isCompleted = c.status === 'completed' && hasWinner;
+              const hasTracker = Boolean(c.tracker && c.tracker.winner_manager);
+              const isActive = c.status === 'active' || c.isCurrent;
 
               return (
                 <div
                   key={c.week_number}
-                  className={`p-6 rounded-2xl bg-[#121824] border transition flex flex-col justify-between space-y-4 shadow-lg ${
-                    isActive
-                      ? 'border-[#d4af37] shadow-[#d4af37]/10'
-                      : hasWinner
+                  className={`p-6 rounded-2xl bg-[#121824] border transition flex flex-col justify-between space-y-5 shadow-lg ${
+                    hasTracker
+                      ? 'border-[#d4af37] shadow-[#d4af37]/15 ring-1 ring-[#d4af37]/40'
+                      : isCompleted
                       ? 'border-emerald-900/60'
                       : 'border-gray-800 hover:border-gray-700'
                   }`}
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     {/* Header bar */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -191,14 +221,23 @@ export default async function ContestsPage() {
                       </div>
 
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        {isActive && (
-                          <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-[#d4af37]/20 border border-[#d4af37] text-[#d4af37] animate-pulse">
-                            Active This Week
+                        {hasTracker && (
+                          <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full bg-[#d4af37]/20 border border-[#d4af37] text-[#d4af37] flex items-center gap-1.5 shadow-sm">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d4af37] opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#d4af37]"></span>
+                            </span>
+                            Active Tracker
                           </span>
                         )}
-                        {hasWinner && (
+                        {isCompleted && (
                           <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300">
                             Winner Logged
+                          </span>
+                        )}
+                        {!hasTracker && !isCompleted && isActive && (
+                          <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-blue-950/60 border border-blue-800 text-blue-300">
+                            Active Week
                           </span>
                         )}
                         <span className="text-sm font-black font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded border border-emerald-800">
@@ -220,19 +259,79 @@ export default async function ContestsPage() {
                     </p>
                   </div>
 
-                  {/* Footer / Winner Card */}
+                  {/* Contest Tracker Box */}
                   <div className="pt-3 border-t border-gray-800/80">
-                    {hasWinner ? (
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">Winner:</span>
-                        <span className="font-bold text-[#d4af37]">
-                          {c.winner_manager} ({c.winner_team}) {c.winning_score ? `• ${c.winning_score} pts` : ''}
-                        </span>
+                    {isCompleted ? (
+                      /* 1. Official Completed Winner */
+                      <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-mono uppercase font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-700">
+                            Official Winner
+                          </span>
+                          <span className="font-bold text-[#d4af37]">
+                            {c.winner_manager} ({c.winner_team})
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs pt-1.5 border-t border-emerald-900/40 text-gray-300">
+                          <span className="text-gray-400 text-[11px]">Winning Mark:</span>
+                          <span className="font-mono font-bold text-emerald-400 text-xs">{c.winning_score}</span>
+                        </div>
+                      </div>
+                    ) : hasTracker ? (
+                      /* 2. Live In-Progress Tracker (Unofficial) */
+                      <div className="p-3.5 rounded-xl bg-gradient-to-br from-amber-950/30 via-[#141b27] to-[#0f1520] border border-[#d4af37]/45 space-y-2.5 shadow-md">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#d4af37]"></span>
+                            </span>
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#d4af37]">
+                              Live Contest Tracker
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono uppercase font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 tracking-wider">
+                            Unofficial
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Current Leader:</span>
+                          <span className="font-bold text-white">
+                            {c.tracker.winner_manager} <span className="text-gray-400 font-normal">({c.tracker.winner_team})</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Current Margin / Score:</span>
+                          <span className="font-mono font-bold text-[#d4af37]">
+                            {c.tracker.winning_score}
+                          </span>
+                        </div>
+
+                        {c.tracker.detail && (
+                          <div className="text-[11px] text-gray-300 font-mono bg-black/50 p-2 rounded-lg border border-white/5 leading-relaxed">
+                            {c.tracker.detail}
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] text-amber-300/80 font-mono">
+                          <span>*Not official yet — games in progress</span>
+                          <span className="text-gray-400">Locks Tuesday AM after MNF</span>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between text-[11px] text-gray-400">
-                        <span className="font-mono">Adjudicated by Marty Sullivan</span>
-                        <span className="text-gray-300 font-semibold">Tuesdays at Noon</span>
+                      /* 3. Upcoming Contest */
+                      <div className="p-3 rounded-xl bg-gray-900/40 border border-gray-800/80 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                          <span className="text-[10px] font-mono uppercase text-gray-400">
+                            Tracker: Awaiting Kickoff
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-gray-400 font-mono">
+                          Adjudicated Tuesdays
+                        </span>
                       </div>
                     )}
                   </div>
