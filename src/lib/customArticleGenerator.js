@@ -1,10 +1,34 @@
 import { ai, DEFAULT_MODEL } from './gemini.js';
-import { getNflState, getLeagueOverview } from './sleeper.js';
+import { supabase } from './supabase.js';
+import { getNflState, getLeagueOverview, getLeagueMatchups, getLeagueTransactions } from './sleeper.js';
 import { getAuthorMemory } from './memory.js';
 import { parseModelOutput } from './wordpress.js';
-import { sanitizeManagerNames } from './sleeperPlayers.js';
+import { getPffNews } from './pff.js';
+import {
+  getSleeperPlayerMap,
+  enrichMatchupsWithPlayerNames,
+  enrichTransactionsWithPlayerNames,
+  sanitizeManagerNames,
+} from './sleeperPlayers.js';
 
 export const REPORTER_PERSONAS = {
+  commissioner: {
+    id: 'commissioner',
+    name: 'Eric Vaughan',
+    desk: 'The Front Office',
+    category: "Commissioner's Corner",
+    avatar: '/logos/league.png',
+    banner: '/commissioner-banner.png',
+    tagline: 'CRFFL Commissioner & League Founder',
+    bio: 'Authoritative, constitutional, protective of league integrity, dryly humorous, and benevolent ruler of the Columbia River Fantasy Football League since 2021.',
+    promptGuidelines: `
+You are Eric Vaughan, the founding Commissioner of the Columbia River Fantasy Football League (CRFFL) penning an official executive dispatch for "Commissioner's Corner" on crffl.org.
+* VOICE & TONE: Authoritative, constitutional, statesmanlike, and dryly witty. You speak with the executive gravitas of a league commissioner addressing his franchise owners ("From the Front Office", "Owners and Managers", "Pursuant to the League Charter"). You can be stern when rules, lineup effort, or sportsmanship are challenged, but you possess genuine affection for this league, its tradition, and its 10 managers.
+* PERSPECTIVE ON FRANCHISES: You are the ultimate arbitrator, constitutional custodian, and historian of the league. You know every manager's quirks, tendencies, and championship or heartbreak history. When discussing your own franchise, Eric (Rebel Scum), maintain an air of dignified executive modesty ("The Front Office notes with quiet satisfaction..."), but never shy away from competitive reality.
+* INTEGRITY & HUMOR: Balance serious constitutional decrees with dry, sarcastic observations about bad trade proposals, waiver wire panic, excuse-making in the league group chat, and blown bench decisions.
+* STYLE: Presidential executive address, official front-office memorandum, or candid commissioner review. Formatted with dignified prose (<p>), occasional sub-headers (<h3>), and official rulings or quotations (<blockquote>).
+    `.trim(),
+  },
   marty_sullivan: {
     id: 'marty_sullivan',
     name: 'Marty Sullivan',
@@ -68,46 +92,197 @@ You are Buck Callahan, Bureau Chief and Senior Trench Correspondent for the CRFF
 };
 
 /**
- * Generates an on-demand custom article using any reporter persona and a custom topic prompt.
+ * Generates an on-demand custom article using any reporter persona or the Commissioner,
+ * fully integrated with live Sleeper API data (matchups, box scores, standings, transactions).
  */
 export async function generateCustomReporterArticle({
-  reporterId = 'marty_sullivan',
+  reporterId = 'commissioner',
   customPrompt = '',
   targetManager = '',
   category = '',
   week = null,
+  includeSleeperData = true,
 } = {}) {
-  const persona = REPORTER_PERSONAS[reporterId] || REPORTER_PERSONAS.marty_sullivan;
+  const persona = REPORTER_PERSONAS[reporterId] || REPORTER_PERSONAS.commissioner;
 
-  // 1. Fetch live league overview and recent memory
-  const [overview, nflState, pastArticles] = await Promise.all([
-    getLeagueOverview().catch(() => ({ rosters: {}, users: [] })),
+  // 1. Fetch live league overview, NFL state, player map, memory, and PFF news in parallel
+  const [overview, nflState, playerMap, pastArticles, nflNews] = await Promise.all([
+    getLeagueOverview().catch(() => ({ rosters: {}, users: [], state: { week: 1 } })),
     getNflState().catch(() => ({ week: 1, season: 2026 })),
-    getAuthorMemory(reporterId, 2).catch(() => []),
+    includeSleeperData ? getSleeperPlayerMap().catch(() => ({})) : Promise.resolve({}),
+    getAuthorMemory(reporterId, 3).catch(() => []),
+    getPffNews(3).catch(() => []),
   ]);
 
-  const activeWeek = week ? Number(week) : Number(nflState.week || 1);
+  const activeWeek = week ? Number(week) : Number(nflState?.week || overview?.state?.week || 1);
   const categoryName = category?.trim() || persona.category || 'Special Dispatch';
 
-  // 2. Build manager roster dossier
-  const managerLines = Object.values(overview.rosters || {}).map((r) => {
-    return `- ${r.managerName} ("${r.teamName}"): Record ${r.record || '0-0'}, Points: ${r.pointsFor || 0}`;
-  }).join('\n');
+  // 2. Fetch week-specific matchups, transactions, and weekly contest in parallel
+  let rawMatchups = [];
+  let rawTransactions = [];
+  let contestData = null;
 
+  if (includeSleeperData) {
+    const [mRes, txRes, cRes] = await Promise.all([
+      getLeagueMatchups(activeWeek).catch(() => []),
+      getLeagueTransactions(activeWeek).catch(() => []),
+      (async () => {
+        try {
+          const res = await supabase
+            .from('weekly_contests')
+            .select('*')
+            .eq('week_number', activeWeek)
+            .maybeSingle();
+          return res;
+        } catch {
+          return { data: null };
+        }
+      })(),
+    ]);
+    rawMatchups = mRes || [];
+    rawTransactions = txRes || [];
+    contestData = cRes?.data || null;
+
+    if (rawTransactions.length === 0 && activeWeek > 1) {
+      try {
+        rawTransactions = await getLeagueTransactions(1);
+      } catch {}
+    }
+  }
+
+  // 3. Standings & Roster Lines
+  const sortedRosters = Object.values(overview.rosters || {}).sort((a, b) => {
+    const winsA = a.settings?.wins || 0;
+    const winsB = b.settings?.wins || 0;
+    if (winsB !== winsA) return winsB - winsA;
+    return (b.pointsFor || 0) - (a.pointsFor || 0);
+  });
+
+  const standingsLines = sortedRosters.length > 0
+    ? sortedRosters.map((r, idx) => {
+        const wins = r.settings?.wins || 0;
+        const losses = r.settings?.losses || 0;
+        const ties = r.settings?.ties || 0;
+        const recStr = ties > 0 ? `${wins}-${losses}-${ties}` : `${wins}-${losses}`;
+        return `${idx + 1}. ${r.managerName} ("${r.teamName}"): Record ${recStr}, Points For: ${(r.pointsFor || 0).toFixed(2)}`;
+      }).join('\n')
+    : Object.values(overview.rosters || {}).map((r) => {
+        return `- ${r.managerName} ("${r.teamName}"): Record ${r.record || '0-0'}, Points: ${r.pointsFor || 0}`;
+      }).join('\n');
+
+  // 4. Matchup Pairings & Box Scores
+  let matchupSection = 'Matchup data not included or pending.';
+  if (includeSleeperData && rawMatchups.length > 0) {
+    const enrichedMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap, overview.rosters);
+    const matchupPairs = {};
+    for (const m of enrichedMatchups) {
+      if (!m.matchup_id) continue;
+      if (!matchupPairs[m.matchup_id]) matchupPairs[m.matchup_id] = [];
+      matchupPairs[m.matchup_id].push(m);
+    }
+
+    const mLines = Object.entries(matchupPairs).map(([mid, teams]) => {
+      if (teams.length < 2) {
+        const t = teams[0];
+        return `• Matchup ${mid}: ${t.manager_name} (${t.team_name}) — ${(t.points || 0).toFixed(2)} pts`;
+      }
+      const [t1, t2] = teams;
+      const diff = Math.abs((t1.points || 0) - (t2.points || 0)).toFixed(2);
+      let statusText = '';
+      if ((t1.points || 0) > 0 || (t2.points || 0) > 0) {
+        const leader = (t1.points || 0) > (t2.points || 0) ? t1.manager_name : ((t2.points || 0) > (t1.points || 0) ? t2.manager_name : 'Tied');
+        statusText = `[Leader/Winner: ${leader} by ${diff} pts]`;
+      } else {
+        statusText = '[Pending / 0.00 pts]';
+      }
+
+      const topScorersT1 = Object.entries(t1.scoring_breakdown || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([name, pts]) => `${name} (${pts.toFixed(1)} pts)`)
+        .join(', ');
+
+      const topScorersT2 = Object.entries(t2.scoring_breakdown || {})
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([name, pts]) => `${name} (${pts.toFixed(1)} pts)`)
+        .join(', ');
+
+      let line = `• ${t1.manager_name} (${t1.team_name}) ${(t1.points || 0).toFixed(2)} vs ${t2.manager_name} (${t2.team_name}) ${(t2.points || 0).toFixed(2)} ${statusText}`;
+      if (topScorersT1) line += `\n    - ${t1.manager_name} top weapons: ${topScorersT1}`;
+      if (topScorersT2) line += `\n    - ${t2.manager_name} top weapons: ${topScorersT2}`;
+      return line;
+    });
+
+    if (mLines.length > 0) {
+      matchupSection = mLines.join('\n');
+    }
+  }
+
+  // 5. Transactions & Waivers
+  let txSection = 'No recent transactions recorded.';
+  if (includeSleeperData && rawTransactions.length > 0) {
+    const enrichedTx = enrichTransactionsWithPlayerNames(rawTransactions, playerMap);
+    const txLines = (enrichedTx || []).slice(0, 8).map((tx) => {
+      const addsStr = Object.entries(tx.adds || {})
+        .map(([player, rId]) => {
+          const mgr = overview.rosters?.[rId]?.managerName || `Team ${rId}`;
+          return `${mgr} added ${player}`;
+        }).join('; ');
+
+      const dropsStr = Object.entries(tx.drops || {})
+        .map(([player, rId]) => {
+          const mgr = overview.rosters?.[rId]?.managerName || `Team ${rId}`;
+          return `${mgr} dropped ${player}`;
+        }).join('; ');
+
+      const bid = tx.waiver_budget?.[0]?.amount ? ` ($${tx.waiver_budget[0].amount} FAAB)` : '';
+      const parts = [addsStr, dropsStr].filter(Boolean).join(' | ');
+      return `• [${tx.type.toUpperCase()}${bid}]: ${parts || 'Roster transaction processed'}`;
+    });
+
+    if (txLines.length > 0) {
+      txSection = txLines.join('\n');
+    }
+  }
+
+  // 6. Weekly Contest
+  const contestSummary = contestData
+    ? `• Week ${activeWeek} Contest: "${contestData.contest_name}" (Prize: ${contestData.prize || '$10'})\n  Description: ${contestData.description || 'N/A'}\n  Current Status/Winner: ${contestData.winner_manager ? `${contestData.winner_manager} (${contestData.winning_score} pts)` : 'In progress / TBD'}`
+    : `• Week ${activeWeek} Contest: Standard weekly challenge.`;
+
+  // 7. Real NFL Newswire
+  const newsSummary = (nflNews || []).map((n) => `• ${n.title}: ${n.description}`).join('\n') || 'NFL wire quiet.';
+
+  // 8. Memory
   const pastMemoryText = typeof pastArticles === 'string'
     ? pastArticles
     : (Array.isArray(pastArticles) && pastArticles.length > 0
       ? pastArticles.map((a) => `• "${a.title}": ${a.summary}`).join('\n')
       : 'No recent columns recorded.');
 
-  // 3. Assemble complete system prompt
+  // 9. Assemble System Instruction
   const systemInstruction = `
 ${persona.promptGuidelines}
 
-### CRFFL LEAGUE CONTEXT (SEASON VI - 2026)
-Current Week: Week ${activeWeek}
-Official Active League Managers:
-${managerLines}
+### CRFFL LEAGUE CONTEXT & SLEEPER DATA (SEASON VI - 2026, WEEK ${activeWeek})
+Official League Standings & Records:
+${standingsLines}
+
+Head-to-Head Matchups & Player Box Scores (Week ${activeWeek}):
+${matchupSection}
+
+Recent Transactions & Waiver Wire Moves:
+${txSection}
+
+Weekly Contest:
+${contestSummary}
+
+Real-World NFL Newswire (PFF):
+${newsSummary}
+
+Your Prior Columns (Continuity):
+${pastMemoryText}
 
 ### EDITORIAL RULES & CONTINUITY:
 1. STRICT HUMAN NAMES & FRANCHISE NAMES (MANDATORY):
@@ -115,7 +290,10 @@ ${managerLines}
    - NEVER use raw internet usernames (e.g. NEVER write "mikef5630", "coreycash", "XWINGBLUE", "RaiderRose510", "GardenGoddess", "iammichael2u", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "KillaMC").
    - Pair managers with their official team names: Eric (Rebel Scum), Mike F. (Stars & Stripes), Randy (Generic Football Team), Corey (Team CoreyCash), KC (Shortbus Superstars), Marcus (Team Killa MC), Mike M. (Moore Better), Jeff (Hickory Huskers), Ed (Team RaiderRose510), Pam (Team GardenGoddess).
 
-2. OUTPUT FORMAT (MANDATORY):
+2. SLEEPER DATA GROUNDING:
+   - When discussing games or roster moves, reference real scores, point totals, margins, player names, and transactions from the official data above.
+
+3. OUTPUT FORMAT (MANDATORY):
    Your output MUST begin with exactly four lines of bracketed shortcodes so our CMS can parse the article metadata:
    [title Compelling Headline in Character]
    [author ${persona.name}]
@@ -127,10 +305,18 @@ ${managerLines}
    Target length: 500 – 800 words of rich, entertaining writing fully in character.
   `.trim();
 
-  let userPrompt = `ASSIGNMENT FROM THE COMMISSIONER'S DESK:
+  let userPrompt = '';
+  if (persona.id === 'commissioner') {
+    userPrompt = `EXECUTIVE DIRECTIVE FROM THE COMMISSIONER'S DESK:
+Write an official Commissioner's Corner address on the following directive:
+"${customPrompt || 'Deliver an official State of the League address evaluating current standings, matchup results, and league decorum.'}"
+`;
+  } else {
+    userPrompt = `ASSIGNMENT FROM THE COMMISSIONER'S DESK:
 Write a custom column on the following topic:
 "${customPrompt || 'Give your unfiltered perspective on the current state of the league and its managers.'}"
 `;
+  }
 
   if (targetManager) {
     userPrompt += `\nSpecial Focus / Focal Target: Make sure to give significant, targeted coverage to manager ${targetManager} in your analysis.\n`;
@@ -138,7 +324,7 @@ Write a custom column on the following topic:
 
   userPrompt += `\nRemember to stay completely in your persona as ${persona.name} (${persona.tagline}). Bring your unique worldview, biases, and comedic voice to this topic.`;
 
-  // 4. Call Gemini API
+  // 10. Call Gemini API
   const response = await ai.models.generateContent({
     model: DEFAULT_MODEL,
     contents: [
@@ -176,5 +362,6 @@ Write a custom column on the following topic:
     categoryName,
     weekNumber: activeWeek,
     reporterPersona: persona,
+    bannerUrl: persona.banner || (persona.id === 'commissioner' ? '/commissioner-banner.png' : null),
   };
 }

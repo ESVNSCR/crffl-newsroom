@@ -16,7 +16,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { reporterId, customPrompt, targetManager, category, week } = body;
+    const { reporterId, customPrompt, targetManager, category, week, includeSleeperData = true } = body;
 
     if (!reporterId || !REPORTER_PERSONAS[reporterId]) {
       return NextResponse.json(
@@ -31,6 +31,7 @@ export async function POST(request) {
       targetManager,
       category,
       week,
+      includeSleeperData,
     });
 
     return NextResponse.json({

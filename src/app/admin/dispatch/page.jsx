@@ -20,6 +20,12 @@ const MANAGERS_LIST = [
 ];
 
 const PROMPT_SUGGESTIONS = {
+  commissioner: [
+    "State of the League Address: Evaluating current standings, Week 1 results, and expectations for the season.",
+    "Official Executive Ruling on trade decorum, sportsmanship, and waiver priority disputes.",
+    "Congratulating the week's highest scoring franchise while sternly warning the bottom tier against bench apathy.",
+    "Constitutional decree: Reminding all managers of the league by-laws and reverence for the CRFFL record books.",
+  ],
   marty_sullivan: [
     "Explain why Randy calling his team 'Generic Football Team' is an insult to football.",
     "A grumpy rant about managers who obsess over projections instead of watching the actual game tape.",
@@ -62,10 +68,19 @@ export default function AdminDispatchPage() {
   const [broadcastPush, setBroadcastPush] = useState(false);
   const [bannerUrl, setBannerUrl] = useState('/commissioner-banner.png');
 
+  // Commissioner Executive AI Speechwriter state
+  const [commishAiOpen, setCommishAiOpen] = useState(true);
+  const [commishAiPrompt, setCommishAiPrompt] = useState('');
+  const [commishTargetManager, setCommishTargetManager] = useState('General League');
+  const [commishIncludeSleeper, setCommishIncludeSleeper] = useState(true);
+  const [commishGenerating, setCommishGenerating] = useState(false);
+  const [commishGenError, setCommishGenError] = useState(null);
+
   // Custom reporter generation state
   const [selectedReporter, setSelectedReporter] = useState('marty_sullivan');
   const [reporterPrompt, setReporterPrompt] = useState('');
   const [targetManager, setTargetManager] = useState('General League');
+  const [reporterIncludeSleeper, setReporterIncludeSleeper] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState(null);
 
@@ -136,6 +151,52 @@ export default function AdminDispatchPage() {
     setActiveTab('commissioner');
   };
 
+  // Run Commissioner Executive AI Speechwriter
+  const handleGenerateCommissioner = async (customDirective = null) => {
+    const promptToUse = (typeof customDirective === 'string' ? customDirective : commishAiPrompt).trim();
+    if (!promptToUse) return;
+
+    setCommishGenerating(true);
+    setCommishGenError(null);
+
+    try {
+      const res = await fetch('/api/admin/generate-custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reporterId: 'commissioner',
+          customPrompt: promptToUse,
+          targetManager: commishTargetManager === 'General League' ? '' : commishTargetManager,
+          week: weekNumber,
+          category: categoryName || "Commissioner's Corner",
+          includeSleeperData: commishIncludeSleeper,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Generation failed.');
+      }
+
+      const art = data.article;
+      setTitle(art.title);
+      setSummary(art.summary);
+      setContentHtml(art.contentHtml);
+      setAuthorId('commissioner');
+      setAuthorName('Eric Vaughan');
+      setCategoryName(art.categoryName || "Commissioner's Corner");
+      setWeekNumber(art.weekNumber || weekNumber || 1);
+      setBannerUrl('/commissioner-banner.png');
+
+      // Switch straight to the live reader preview
+      setEditorMode('preview');
+    } catch (err) {
+      setCommishGenError(err.message);
+    } finally {
+      setCommishGenerating(false);
+    }
+  };
+
   // Run AI Reporter Generator
   const handleGenerateReporter = async () => {
     if (!reporterPrompt.trim()) return;
@@ -152,6 +213,7 @@ export default function AdminDispatchPage() {
           customPrompt: reporterPrompt.trim(),
           targetManager: targetManager === 'General League' ? '' : targetManager,
           week: weekNumber,
+          includeSleeperData: reporterIncludeSleeper,
         }),
       });
 
@@ -168,7 +230,7 @@ export default function AdminDispatchPage() {
       setAuthorName(art.authorName);
       setCategoryName(art.categoryName);
       setWeekNumber(art.weekNumber || 1);
-      setBannerUrl(null);
+      setBannerUrl(art.bannerUrl || (art.authorId === 'commissioner' ? '/commissioner-banner.png' : null));
 
       // Switch straight to the editor so user can review and tweak
       setActiveTab('commissioner');
@@ -440,6 +502,128 @@ export default function AdminDispatchPage() {
               </div>
             </div>
 
+            {/* Executive AI Speechwriter Panel */}
+            <div className="rounded-2xl border border-[#d4af37]/40 bg-gradient-to-b from-[#161f30] to-[#0f1420] p-5 sm:p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#d4af37]/20 border border-[#d4af37]/40 flex items-center justify-center text-xl shadow flex-shrink-0">
+                    🏛
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2 font-serif flex-wrap">
+                      <span>Executive AI Speechwriter &amp; Co-Author</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/30 uppercase font-sans font-bold">
+                        ⚡ Sleeper API Connected
+                      </span>
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Draft an official Commissioner's Corner address powered by Gemini with live Sleeper matchups, box scores, standings, and transaction data.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCommishAiOpen(!commishAiOpen)}
+                  className="text-xs font-mono text-gray-400 hover:text-white px-2.5 py-1.5 rounded-lg bg-gray-900 border border-gray-800 transition flex-shrink-0"
+                >
+                  {commishAiOpen ? '▲ Collapse' : '▼ Expand Assistant'}
+                </button>
+              </div>
+
+              {commishAiOpen && (
+                <div className="space-y-4 pt-3 border-t border-gray-800/80">
+                  {/* Quick Suggestions */}
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-mono text-gray-400 block font-semibold">
+                      Quick Executive Directives:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {(PROMPT_SUGGESTIONS.commissioner || []).map((sug, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setCommishAiPrompt(sug)}
+                          className="px-2.5 py-1 rounded-lg bg-gray-900/90 border border-gray-800 hover:border-[#d4af37]/50 text-gray-300 hover:text-white text-xs text-left transition shadow-sm"
+                        >
+                          💡 "{sug}"
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Directive Textarea */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs uppercase font-mono font-bold tracking-wider text-[#d4af37]">
+                      Executive Directive / Speech Directive
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={commishAiPrompt}
+                      onChange={(e) => setCommishAiPrompt(e.target.value)}
+                      placeholder="e.g., Deliver a State of the Union address reviewing Week 1 results, congratulate high scorer, and warn managers about illegal roster hoarding..."
+                      className="w-full bg-gray-900/90 border border-gray-800 rounded-xl p-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[#d4af37]"
+                    />
+                  </div>
+
+                  {/* Controls row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
+                    <div className="space-y-1">
+                      <label className="text-xs uppercase font-mono font-bold tracking-wider text-gray-400">
+                        Focal Manager / Target (Optional)
+                      </label>
+                      <select
+                        value={commishTargetManager}
+                        onChange={(e) => setCommishTargetManager(e.target.value)}
+                        className="w-full bg-gray-900 border border-gray-800 rounded-xl p-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#d4af37]"
+                      >
+                        {MANAGERS_LIST.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:pt-4">
+                      <label className="flex items-center gap-2 text-xs font-mono text-gray-300 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={commishIncludeSleeper}
+                          onChange={(e) => setCommishIncludeSleeper(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none"
+                        />
+                        <span>Include Live Sleeper Data (Matchups, Scores &amp; Waivers)</span>
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end sm:pt-4">
+                      <button
+                        type="button"
+                        disabled={commishGenerating || !commishAiPrompt.trim()}
+                        onClick={() => handleGenerateCommissioner()}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 font-black text-xs uppercase tracking-wider transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {commishGenerating ? (
+                          <>
+                            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-950 border-t-transparent" />
+                            <span>Drafting Address with Gemini...</span>
+                          </>
+                        ) : (
+                          <span>🎙 Draft Address with Executive AI</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {commishGenError && (
+                    <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-300">
+                      ⚠️ {commishGenError}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Headline Input */}
             <div className="space-y-1.5">
               <label className="text-xs uppercase font-mono font-bold tracking-wider text-[#d4af37]">
@@ -663,8 +847,8 @@ export default function AdminDispatchPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {Object.values(COLUMNISTS).filter(c => c.id !== 'commissioner').map((col) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {Object.values(COLUMNISTS).map((col) => {
                   const isSelected = selectedReporter === col.id;
                   return (
                     <button
@@ -753,8 +937,8 @@ export default function AdminDispatchPage() {
                 />
               </div>
 
-              {/* Optional Focal Manager & Week */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Optional Focal Manager, Week & Sleeper Data Toggle */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
                 <div className="space-y-1.5">
                   <label className="text-xs uppercase font-mono font-bold tracking-wider text-gray-400">
                     Focal Manager / Target (Optional)
@@ -787,6 +971,18 @@ export default function AdminDispatchPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="space-y-1.5 sm:pt-4">
+                  <label className="flex items-center gap-2 text-xs font-mono text-gray-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={reporterIncludeSleeper}
+                      onChange={(e) => setReporterIncludeSleeper(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none"
+                    />
+                    <span>Include Live Sleeper Data (Matchups, Scores &amp; Waivers)</span>
+                  </label>
                 </div>
               </div>
 
