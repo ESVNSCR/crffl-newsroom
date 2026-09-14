@@ -93,7 +93,7 @@ You are Buck Callahan, Bureau Chief and Senior Trench Correspondent for the CRFF
 
 /**
  * Generates an on-demand custom article using any reporter persona or the Commissioner,
- * fully integrated with live Sleeper API data (matchups, box scores, standings, transactions).
+ * fully integrated with live Sleeper API data and granular data source selections.
  */
 export async function generateCustomReporterArticle({
   reporterId = 'commissioner',
@@ -102,52 +102,79 @@ export async function generateCustomReporterArticle({
   category = '',
   week = null,
   includeSleeperData = true,
+  sleeperOptions = null,
 } = {}) {
   const persona = REPORTER_PERSONAS[reporterId] || REPORTER_PERSONAS.commissioner;
+
+  // Resolve granular Sleeper & league data options
+  const options = sleeperOptions || {
+    matchups: includeSleeperData !== false,
+    boxScores: includeSleeperData !== false,
+    standings: includeSleeperData !== false,
+    transactions: includeSleeperData !== false,
+    contests: includeSleeperData !== false,
+    nflNews: includeSleeperData !== false,
+  };
+
+  const needPlayerMap = options.matchups || options.boxScores || options.transactions;
+  const needMatchups = options.matchups || options.boxScores;
+  const needTransactions = options.transactions;
+  const needContests = options.contests;
+  const needNflNews = options.nflNews;
 
   // 1. Fetch live league overview, NFL state, player map, memory, and PFF news in parallel
   const [overview, nflState, playerMap, pastArticles, nflNews] = await Promise.all([
     getLeagueOverview().catch(() => ({ rosters: {}, users: [], state: { week: 1 } })),
     getNflState().catch(() => ({ week: 1, season: 2026 })),
-    includeSleeperData ? getSleeperPlayerMap().catch(() => ({})) : Promise.resolve({}),
+    needPlayerMap ? getSleeperPlayerMap().catch(() => ({})) : Promise.resolve({}),
     getAuthorMemory(reporterId, 3).catch(() => []),
-    getPffNews(3).catch(() => []),
+    needNflNews ? getPffNews(3).catch(() => []) : Promise.resolve([]),
   ]);
 
   const activeWeek = week ? Number(week) : Number(nflState?.week || overview?.state?.week || 1);
   const categoryName = category?.trim() || persona.category || 'Special Dispatch';
 
   // 2. Fetch week-specific matchups, transactions, and weekly contest in parallel
-  let rawMatchups = [];
-  let rawTransactions = [];
-  let contestData = null;
+  const weekFetches = [];
+  if (needMatchups) {
+    weekFetches.push(getLeagueMatchups(activeWeek).catch(() => []));
+  } else {
+    weekFetches.push(Promise.resolve([]));
+  }
 
-  if (includeSleeperData) {
-    const [mRes, txRes, cRes] = await Promise.all([
-      getLeagueMatchups(activeWeek).catch(() => []),
-      getLeagueTransactions(activeWeek).catch(() => []),
+  if (needTransactions) {
+    weekFetches.push(getLeagueTransactions(activeWeek).catch(() => []));
+  } else {
+    weekFetches.push(Promise.resolve([]));
+  }
+
+  if (needContests) {
+    weekFetches.push(
       (async () => {
         try {
-          const res = await supabase
+          return await supabase
             .from('weekly_contests')
             .select('*')
             .eq('week_number', activeWeek)
             .maybeSingle();
-          return res;
         } catch {
           return { data: null };
         }
-      })(),
-    ]);
-    rawMatchups = mRes || [];
-    rawTransactions = txRes || [];
-    contestData = cRes?.data || null;
+      })()
+    );
+  } else {
+    weekFetches.push(Promise.resolve({ data: null }));
+  }
 
-    if (rawTransactions.length === 0 && activeWeek > 1) {
-      try {
-        rawTransactions = await getLeagueTransactions(1);
-      } catch {}
-    }
+  const [mRes, txRes, cRes] = await Promise.all(weekFetches);
+  const rawMatchups = mRes || [];
+  let rawTransactions = txRes || [];
+  const contestData = cRes?.data || null;
+
+  if (needTransactions && rawTransactions.length === 0 && activeWeek > 1) {
+    try {
+      rawTransactions = await getLeagueTransactions(1);
+    } catch {}
   }
 
   // 3. Standings & Roster Lines
@@ -158,21 +185,24 @@ export async function generateCustomReporterArticle({
     return (b.pointsFor || 0) - (a.pointsFor || 0);
   });
 
-  const standingsLines = sortedRosters.length > 0
-    ? sortedRosters.map((r, idx) => {
-        const wins = r.settings?.wins || 0;
-        const losses = r.settings?.losses || 0;
-        const ties = r.settings?.ties || 0;
-        const recStr = ties > 0 ? `${wins}-${losses}-${ties}` : `${wins}-${losses}`;
-        return `${idx + 1}. ${r.managerName} ("${r.teamName}"): Record ${recStr}, Points For: ${(r.pointsFor || 0).toFixed(2)}`;
-      }).join('\n')
-    : Object.values(overview.rosters || {}).map((r) => {
-        return `- ${r.managerName} ("${r.teamName}"): Record ${r.record || '0-0'}, Points: ${r.pointsFor || 0}`;
-      }).join('\n');
+  let standingsSection = '';
+  if (options.standings && sortedRosters.length > 0) {
+    standingsSection = `Official League Standings & Records (Week ${activeWeek}):\n` + sortedRosters.map((r, idx) => {
+      const wins = r.settings?.wins || 0;
+      const losses = r.settings?.losses || 0;
+      const ties = r.settings?.ties || 0;
+      const recStr = ties > 0 ? `${wins}-${losses}-${ties}` : `${wins}-${losses}`;
+      return `${idx + 1}. ${r.managerName} ("${r.teamName}"): Record ${recStr}, Points For: ${(r.pointsFor || 0).toFixed(2)}`;
+    }).join('\n');
+  } else {
+    standingsSection = `Official League Franchises & Managers:\n` + Object.values(overview.rosters || {}).map((r) => {
+      return `- ${r.managerName} ("${r.teamName}")`;
+    }).join('\n');
+  }
 
   // 4. Matchup Pairings & Box Scores
-  let matchupSection = 'Matchup data not included or pending.';
-  if (includeSleeperData && rawMatchups.length > 0) {
+  let matchupSection = '';
+  if ((options.matchups || options.boxScores) && rawMatchups.length > 0) {
     const enrichedMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap, overview.rosters);
     const matchupPairs = {};
     for (const m of enrichedMatchups) {
@@ -196,21 +226,33 @@ export async function generateCustomReporterArticle({
         statusText = '[Pending / 0.00 pts]';
       }
 
-      const topScorersT1 = Object.entries(t1.scoring_breakdown || {})
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(([name, pts]) => `${name} (${pts.toFixed(1)} pts)`)
-        .join(', ');
+      const topScorersT1 = options.boxScores
+        ? Object.entries(t1.scoring_breakdown || {})
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2)
+            .map(([name, pts]) => `${name} (${pts.toFixed(1)} pts)`)
+            .join(', ')
+        : '';
 
-      const topScorersT2 = Object.entries(t2.scoring_breakdown || {})
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(([name, pts]) => `${name} (${pts.toFixed(1)} pts)`)
-        .join(', ');
+      const topScorersT2 = options.boxScores
+        ? Object.entries(t2.scoring_breakdown || {})
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2)
+            .map(([name, pts]) => `${name} (${pts.toFixed(1)} pts)`)
+            .join(', ')
+        : '';
 
-      let line = `• ${t1.manager_name} (${t1.team_name}) ${(t1.points || 0).toFixed(2)} vs ${t2.manager_name} (${t2.team_name}) ${(t2.points || 0).toFixed(2)} ${statusText}`;
-      if (topScorersT1) line += `\n    - ${t1.manager_name} top weapons: ${topScorersT1}`;
-      if (topScorersT2) line += `\n    - ${t2.manager_name} top weapons: ${topScorersT2}`;
+      let line = '';
+      if (options.matchups) {
+        line = `• ${t1.manager_name} (${t1.team_name}) ${(t1.points || 0).toFixed(2)} vs ${t2.manager_name} (${t2.team_name}) ${(t2.points || 0).toFixed(2)} ${statusText}`;
+      } else {
+        line = `• ${t1.manager_name} (${t1.team_name}) vs ${t2.manager_name} (${t2.team_name})`;
+      }
+
+      if (options.boxScores) {
+        if (topScorersT1) line += `\n    - ${t1.manager_name} top weapons: ${topScorersT1}`;
+        if (topScorersT2) line += `\n    - ${t2.manager_name} top weapons: ${topScorersT2}`;
+      }
       return line;
     });
 
@@ -220,8 +262,8 @@ export async function generateCustomReporterArticle({
   }
 
   // 5. Transactions & Waivers
-  let txSection = 'No recent transactions recorded.';
-  if (includeSleeperData && rawTransactions.length > 0) {
+  let txSection = '';
+  if (options.transactions && rawTransactions.length > 0) {
     const enrichedTx = enrichTransactionsWithPlayerNames(rawTransactions, playerMap);
     const txLines = (enrichedTx || []).slice(0, 8).map((tx) => {
       const addsStr = Object.entries(tx.adds || {})
@@ -247,12 +289,16 @@ export async function generateCustomReporterArticle({
   }
 
   // 6. Weekly Contest
-  const contestSummary = contestData
-    ? `• Week ${activeWeek} Contest: "${contestData.contest_name}" (Prize: ${contestData.prize || '$10'})\n  Description: ${contestData.description || 'N/A'}\n  Current Status/Winner: ${contestData.winner_manager ? `${contestData.winner_manager} (${contestData.winning_score} pts)` : 'In progress / TBD'}`
-    : `• Week ${activeWeek} Contest: Standard weekly challenge.`;
+  let contestSummary = '';
+  if (options.contests && contestData) {
+    contestSummary = `• Week ${activeWeek} Contest: "${contestData.contest_name}" (Prize: ${contestData.prize || '$10'})\n  Description: ${contestData.description || 'N/A'}\n  Current Status/Winner: ${contestData.winner_manager ? `${contestData.winner_manager} (${contestData.winning_score} pts)` : 'In progress / TBD'}`;
+  }
 
   // 7. Real NFL Newswire
-  const newsSummary = (nflNews || []).map((n) => `• ${n.title}: ${n.description}`).join('\n') || 'NFL wire quiet.';
+  let newsSummary = '';
+  if (options.nflNews && nflNews.length > 0) {
+    newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n');
+  }
 
   // 8. Memory
   const pastMemoryText = typeof pastArticles === 'string'
@@ -261,28 +307,33 @@ export async function generateCustomReporterArticle({
       ? pastArticles.map((a) => `• "${a.title}": ${a.summary}`).join('\n')
       : 'No recent columns recorded.');
 
-  // 9. Assemble System Instruction
+  // 9. Assemble Context Blocks
+  const contextBlocks = [];
+  if (standingsSection) {
+    contextBlocks.push(standingsSection);
+  }
+  if (matchupSection) {
+    contextBlocks.push(`Head-to-Head Matchups & Box Scores (Week ${activeWeek}):\n${matchupSection}`);
+  }
+  if (txSection) {
+    contextBlocks.push(`Recent Transactions & Waiver Wire Moves:\n${txSection}`);
+  }
+  if (contestSummary) {
+    contextBlocks.push(`Weekly Contest:\n${contestSummary}`);
+  }
+  if (newsSummary) {
+    contextBlocks.push(`Real-World NFL Newswire (PFF):\n${newsSummary}`);
+  }
+  if (pastMemoryText) {
+    contextBlocks.push(`Your Prior Columns (Continuity):\n${pastMemoryText}`);
+  }
+
+  // 10. Assemble System Instruction
   const systemInstruction = `
 ${persona.promptGuidelines}
 
 ### CRFFL LEAGUE CONTEXT & SLEEPER DATA (SEASON VI - 2026, WEEK ${activeWeek})
-Official League Standings & Records:
-${standingsLines}
-
-Head-to-Head Matchups & Player Box Scores (Week ${activeWeek}):
-${matchupSection}
-
-Recent Transactions & Waiver Wire Moves:
-${txSection}
-
-Weekly Contest:
-${contestSummary}
-
-Real-World NFL Newswire (PFF):
-${newsSummary}
-
-Your Prior Columns (Continuity):
-${pastMemoryText}
+${contextBlocks.join('\n\n')}
 
 ### EDITORIAL RULES & CONTINUITY:
 1. STRICT HUMAN NAMES & FRANCHISE NAMES (MANDATORY):
@@ -291,7 +342,7 @@ ${pastMemoryText}
    - Pair managers with their official team names: Eric (Rebel Scum), Mike F. (Stars & Stripes), Randy (Generic Football Team), Corey (Team CoreyCash), KC (Shortbus Superstars), Marcus (Team Killa MC), Mike M. (Moore Better), Jeff (Hickory Huskers), Ed (Team RaiderRose510), Pam (Team GardenGoddess).
 
 2. SLEEPER DATA GROUNDING:
-   - When discussing games or roster moves, reference real scores, point totals, margins, player names, and transactions from the official data above.
+   - Ground your article in the official league data provided above. If a specific data category (e.g. transactions, matchups, or box scores) was omitted from the prompt, do not invent or hallucinate statistics for it.
 
 3. OUTPUT FORMAT (MANDATORY):
    Your output MUST begin with exactly four lines of bracketed shortcodes so our CMS can parse the article metadata:
@@ -324,7 +375,7 @@ Write a custom column on the following topic:
 
   userPrompt += `\nRemember to stay completely in your persona as ${persona.name} (${persona.tagline}). Bring your unique worldview, biases, and comedic voice to this topic.`;
 
-  // 10. Call Gemini API
+  // 11. Call Gemini API
   const response = await ai.models.generateContent({
     model: DEFAULT_MODEL,
     contents: [

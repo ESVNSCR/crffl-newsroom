@@ -19,6 +19,54 @@ const MANAGERS_LIST = [
   'Randy (Generic Football Team)',
 ];
 
+const SLEEPER_DATA_SOURCES = [
+  {
+    key: 'matchups',
+    label: 'Matchup Scores & Margins',
+    desc: 'Head-to-head pairings, live/final scores, margin of victory',
+    icon: '🏈',
+  },
+  {
+    key: 'boxScores',
+    label: 'Player Box Scores & Weapons',
+    desc: 'Individual fantasy points, starters & top scoring players',
+    icon: '⚡',
+  },
+  {
+    key: 'standings',
+    label: 'Standings & Win/Loss Records',
+    desc: 'Official standings table, records, and total points scored',
+    icon: '📊',
+  },
+  {
+    key: 'transactions',
+    label: 'Transactions & Waivers',
+    desc: 'Recent trades, waiver claims with FAAB bids, and drops',
+    icon: '🔄',
+  },
+  {
+    key: 'contests',
+    label: 'Weekly Contest',
+    desc: 'Active weekly side challenge, prize & current winner',
+    icon: '🏆',
+  },
+  {
+    key: 'nflNews',
+    label: 'Real-World NFL News',
+    desc: 'PFF news wire on real injuries, performance & roster context',
+    icon: '📰',
+  },
+];
+
+const DEFAULT_SLEEPER_OPTIONS = {
+  matchups: true,
+  boxScores: true,
+  standings: true,
+  transactions: true,
+  contests: true,
+  nflNews: true,
+};
+
 const PROMPT_SUGGESTIONS = {
   commissioner: [
     "State of the League Address: Evaluating current standings, Week 1 results, and expectations for the season.",
@@ -72,7 +120,7 @@ export default function AdminDispatchPage() {
   const [commishAiOpen, setCommishAiOpen] = useState(true);
   const [commishAiPrompt, setCommishAiPrompt] = useState('');
   const [commishTargetManager, setCommishTargetManager] = useState('General League');
-  const [commishIncludeSleeper, setCommishIncludeSleeper] = useState(true);
+  const [commishSleeperOptions, setCommishSleeperOptions] = useState(DEFAULT_SLEEPER_OPTIONS);
   const [commishGenerating, setCommishGenerating] = useState(false);
   const [commishGenError, setCommishGenError] = useState(null);
 
@@ -80,9 +128,12 @@ export default function AdminDispatchPage() {
   const [selectedReporter, setSelectedReporter] = useState('marty_sullivan');
   const [reporterPrompt, setReporterPrompt] = useState('');
   const [targetManager, setTargetManager] = useState('General League');
-  const [reporterIncludeSleeper, setReporterIncludeSleeper] = useState(true);
+  const [reporterSleeperOptions, setReporterSleeperOptions] = useState(DEFAULT_SLEEPER_OPTIONS);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState(null);
+
+  // Draft review & feedback state
+  const [draftNotice, setDraftNotice] = useState(null);
 
   // Editor preview mode
   const [editorMode, setEditorMode] = useState('edit'); // 'edit' | 'preview'
@@ -142,6 +193,55 @@ export default function AdminDispatchPage() {
     }, 50);
   };
 
+  // Granular Sleeper Options Helpers
+  const toggleCommishOption = (key) => {
+    setCommishSleeperOptions((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const setAllCommishOptions = (val) => {
+    setCommishSleeperOptions({
+      matchups: val,
+      boxScores: val,
+      standings: val,
+      transactions: val,
+      contests: val,
+      nflNews: val,
+    });
+  };
+
+  const toggleReporterOption = (key) => {
+    setReporterSleeperOptions((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const setAllReporterOptions = (val) => {
+    setReporterSleeperOptions({
+      matchups: val,
+      boxScores: val,
+      standings: val,
+      transactions: val,
+      contests: val,
+      nflNews: val,
+    });
+  };
+
+  // Trash / Discard Current Draft
+  const handleTrashDraft = () => {
+    if (
+      (title || contentHtml) &&
+      !window.confirm('Are you sure you want to discard and trash this draft? All unsaved text will be cleared.')
+    ) {
+      return;
+    }
+
+    setTitle('');
+    setSummary('');
+    setContentHtml('');
+    setDraftNotice(null);
+    setSaveSuccess(null);
+    setSaveError(null);
+    setEditorMode('edit');
+  };
+
   // Switch to Commissioner mode
   const switchToCommissioner = () => {
     setAuthorId('commissioner');
@@ -158,6 +258,7 @@ export default function AdminDispatchPage() {
 
     setCommishGenerating(true);
     setCommishGenError(null);
+    setDraftNotice(null);
 
     try {
       const res = await fetch('/api/admin/generate-custom', {
@@ -169,7 +270,7 @@ export default function AdminDispatchPage() {
           targetManager: commishTargetManager === 'General League' ? '' : commishTargetManager,
           week: weekNumber,
           category: categoryName || "Commissioner's Corner",
-          includeSleeperData: commishIncludeSleeper,
+          sleeperOptions: commishSleeperOptions,
         }),
       });
 
@@ -188,6 +289,11 @@ export default function AdminDispatchPage() {
       setWeekNumber(art.weekNumber || weekNumber || 1);
       setBannerUrl('/commissioner-banner.png');
 
+      setDraftNotice({
+        type: 'success',
+        message: 'Draft successfully generated! Review the live preview below, switch to the HTML Editor to make changes, or trash it if you want to start over.',
+      });
+
       // Switch straight to the live reader preview
       setEditorMode('preview');
     } catch (err) {
@@ -203,6 +309,7 @@ export default function AdminDispatchPage() {
 
     setGenerating(true);
     setGenerateError(null);
+    setDraftNotice(null);
 
     try {
       const res = await fetch('/api/admin/generate-custom', {
@@ -213,7 +320,7 @@ export default function AdminDispatchPage() {
           customPrompt: reporterPrompt.trim(),
           targetManager: targetManager === 'General League' ? '' : targetManager,
           week: weekNumber,
-          includeSleeperData: reporterIncludeSleeper,
+          sleeperOptions: reporterSleeperOptions,
         }),
       });
 
@@ -232,7 +339,12 @@ export default function AdminDispatchPage() {
       setWeekNumber(art.weekNumber || 1);
       setBannerUrl(art.bannerUrl || (art.authorId === 'commissioner' ? '/commissioner-banner.png' : null));
 
-      // Switch straight to the editor so user can review and tweak
+      setDraftNotice({
+        type: 'success',
+        message: `Draft successfully generated in character as ${art.authorName}! Review below, edit text, or trash draft.`,
+      });
+
+      // Switch straight to Tab 1 editor/preview so user can review and tweak
       setActiveTab('commissioner');
       setEditorMode('preview');
     } catch (err) {
@@ -565,9 +677,9 @@ export default function AdminDispatchPage() {
                     />
                   </div>
 
-                  {/* Controls row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
-                    <div className="space-y-1">
+                  {/* Focal Manager & Generate Button */}
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-1">
+                    <div className="space-y-1 sm:w-72">
                       <label className="text-xs uppercase font-mono font-bold tracking-wider text-gray-400">
                         Focal Manager / Target (Optional)
                       </label>
@@ -584,24 +696,12 @@ export default function AdminDispatchPage() {
                       </select>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:pt-4">
-                      <label className="flex items-center gap-2 text-xs font-mono text-gray-300 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={commishIncludeSleeper}
-                          onChange={(e) => setCommishIncludeSleeper(e.target.checked)}
-                          className="w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none"
-                        />
-                        <span>Include Live Sleeper Data (Matchups, Scores &amp; Waivers)</span>
-                      </label>
-                    </div>
-
-                    <div className="flex justify-end sm:pt-4">
+                    <div>
                       <button
                         type="button"
                         disabled={commishGenerating || !commishAiPrompt.trim()}
                         onClick={() => handleGenerateCommissioner()}
-                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 font-black text-xs uppercase tracking-wider transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 font-black text-xs uppercase tracking-wider transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         {commishGenerating ? (
                           <>
@@ -615,6 +715,69 @@ export default function AdminDispatchPage() {
                     </div>
                   </div>
 
+                  {/* Granular Sleeper Data Sources Checkboxes */}
+                  <div className="space-y-2 pt-3 border-t border-gray-800/80">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs uppercase font-mono font-bold tracking-wider text-[#d4af37]">
+                          Sleeper API &amp; League Data Sources to Feed AI
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 font-bold">
+                          {Object.values(commishSleeperOptions).filter(Boolean).length} of 6 active
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-mono">
+                        <button
+                          type="button"
+                          onClick={() => setAllCommishOptions(true)}
+                          className="text-[#d4af37] hover:underline"
+                        >
+                          Select All
+                        </button>
+                        <span className="text-gray-600">•</span>
+                        <button
+                          type="button"
+                          onClick={() => setAllCommishOptions(false)}
+                          className="text-gray-400 hover:text-white hover:underline"
+                        >
+                          Deselect All
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                      {SLEEPER_DATA_SOURCES.map((src) => {
+                        const isChecked = Boolean(commishSleeperOptions[src.key]);
+                        return (
+                          <div
+                            key={src.key}
+                            onClick={() => toggleCommishOption(src.key)}
+                            className={`p-3 rounded-xl border cursor-pointer transition flex items-start gap-3 select-none ${
+                              isChecked
+                                ? 'bg-[#d4af37]/10 border-[#d4af37]/50 text-white shadow-sm'
+                                : 'bg-gray-900/60 border-gray-800/80 text-gray-400 hover:border-gray-700'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {}} // handled by parent div click
+                              className="mt-0.5 w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none accent-[#d4af37] cursor-pointer"
+                            />
+                            <div className="space-y-0.5 flex-1 min-w-0">
+                              <span className="text-xs font-bold block text-white truncate">
+                                {src.label}
+                              </span>
+                              <span className="text-[10px] text-gray-400 block leading-tight">
+                                {src.desc}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {commishGenError && (
                     <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-300">
                       ⚠️ {commishGenError}
@@ -623,6 +786,94 @@ export default function AdminDispatchPage() {
                 </div>
               )}
             </div>
+
+            {/* Draft Generated Feedback Banner */}
+            {draftNotice && (
+              <div className="p-4 rounded-2xl bg-[#d4af37]/15 border border-[#d4af37]/40 text-amber-200 text-sm space-y-2.5 animate-fadeIn shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-[#d4af37]">
+                    <span>✓</span>
+                    <span>{draftNotice.message}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDraftNotice(null)}
+                    className="text-xs text-amber-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {editorMode === 'preview' ? (
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode('edit')}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#d4af37] text-gray-950 font-bold text-xs hover:bg-[#e6c24d] transition shadow flex items-center gap-1.5"
+                    >
+                      <span>✏️ Switch to HTML Editor to Make Changes</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode('preview')}
+                      className="px-3.5 py-1.5 rounded-xl bg-gray-800 text-white border border-gray-700 font-bold text-xs hover:bg-gray-700 transition flex items-center gap-1.5"
+                    >
+                      <span>👁 View Live Reader Preview</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleTrashDraft}
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-300 font-bold text-xs hover:bg-rose-900 hover:text-white transition flex items-center gap-1.5"
+                  >
+                    <span>🗑 Trash This Draft</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Active Draft Status Bar */}
+            {(title || contentHtml) && !draftNotice && (
+              <div className="p-3.5 rounded-2xl bg-[#161f30] border border-gray-800 shadow-md flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-mono font-bold text-white">
+                    Active Draft in Composer
+                  </span>
+                  <span className="text-[11px] font-mono text-gray-400">
+                    • {contentHtml ? `${contentHtml.split(/\s+/).filter(Boolean).length} words` : '0 words'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {editorMode === 'preview' ? (
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode('edit')}
+                      className="px-3 py-1.5 rounded-xl bg-[#d4af37] text-gray-950 font-bold text-xs hover:bg-[#e6c24d] transition shadow flex items-center gap-1.5"
+                    >
+                      <span>✏️ Edit Content</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode('preview')}
+                      className="px-3 py-1.5 rounded-xl bg-gray-800 text-white border border-gray-700 font-bold text-xs hover:bg-gray-700 transition flex items-center gap-1.5"
+                    >
+                      <span>👁 Reader Preview</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleTrashDraft}
+                    className="px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-800/80 text-rose-300 font-bold text-xs hover:bg-rose-900 hover:text-white transition flex items-center gap-1.5"
+                  >
+                    <span>🗑 Trash Draft</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Headline Input */}
             <div className="space-y-1.5">
@@ -799,7 +1050,17 @@ export default function AdminDispatchPage() {
                 </label>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {(title || contentHtml) && (
+                  <button
+                    type="button"
+                    onClick={handleTrashDraft}
+                    className="px-4 py-2.5 rounded-xl border border-rose-900/60 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5"
+                  >
+                    <span>🗑 Trash Draft</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   disabled={saving}
@@ -937,8 +1198,8 @@ export default function AdminDispatchPage() {
                 />
               </div>
 
-              {/* Optional Focal Manager, Week & Sleeper Data Toggle */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
+              {/* Optional Focal Manager & Week */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs uppercase font-mono font-bold tracking-wider text-gray-400">
                     Focal Manager / Target (Optional)
@@ -972,17 +1233,68 @@ export default function AdminDispatchPage() {
                     ))}
                   </select>
                 </div>
+              </div>
 
-                <div className="space-y-1.5 sm:pt-4">
-                  <label className="flex items-center gap-2 text-xs font-mono text-gray-300 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={reporterIncludeSleeper}
-                      onChange={(e) => setReporterIncludeSleeper(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none"
-                    />
-                    <span>Include Live Sleeper Data (Matchups, Scores &amp; Waivers)</span>
-                  </label>
+              {/* Granular Sleeper Data Sources Checkboxes */}
+              <div className="space-y-2 pt-3 border-t border-gray-800/80">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase font-mono font-bold tracking-wider text-[#d4af37]">
+                      Sleeper API &amp; League Data Sources to Feed Reporter
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 font-bold">
+                      {Object.values(reporterSleeperOptions).filter(Boolean).length} of 6 active
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <button
+                      type="button"
+                      onClick={() => setAllReporterOptions(true)}
+                      className="text-[#d4af37] hover:underline"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-gray-600">•</span>
+                    <button
+                      type="button"
+                      onClick={() => setAllReporterOptions(false)}
+                      className="text-gray-400 hover:text-white hover:underline"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {SLEEPER_DATA_SOURCES.map((src) => {
+                    const isChecked = Boolean(reporterSleeperOptions[src.key]);
+                    return (
+                      <div
+                        key={src.key}
+                        onClick={() => toggleReporterOption(src.key)}
+                        className={`p-3 rounded-xl border cursor-pointer transition flex items-start gap-3 select-none ${
+                          isChecked
+                            ? 'bg-[#d4af37]/10 border-[#d4af37]/50 text-white shadow-sm'
+                            : 'bg-gray-900/60 border-gray-800/80 text-gray-400 hover:border-gray-700'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {}} // handled by parent div click
+                          className="mt-0.5 w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none accent-[#d4af37] cursor-pointer"
+                        />
+                        <div className="space-y-0.5 flex-1 min-w-0">
+                          <span className="text-xs font-bold block text-white truncate">
+                            {src.label}
+                          </span>
+                          <span className="text-[10px] text-gray-400 block leading-tight">
+                            {src.desc}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
