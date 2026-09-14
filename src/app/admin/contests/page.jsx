@@ -12,13 +12,14 @@ export default function AdminContestsPage() {
   const [message, setMessage] = useState('');
   const [adjudicationDetail, setAdjudicationDetail] = useState('');
 
-  const runAutoAdjudication = async (weekNumber) => {
+  const runAutoAdjudication = async (weekNumber, { force = false } = {}) => {
     setAdjudicating(true);
     setMessage('');
     setAdjudicationDetail('');
 
     try {
-      const res = await fetch(`/api/cron/adjudicate?week=${weekNumber}`, {
+      const url = `/api/cron/adjudicate?week=${weekNumber}${force ? '&force=true' : ''}`;
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,8 +33,15 @@ export default function AdminContestsPage() {
         updateContest(weekNumber, 'winner_manager', adj.winner_manager);
         updateContest(weekNumber, 'winner_team', adj.winner_team);
         updateContest(weekNumber, 'winning_score', adj.winning_score);
-        updateContest(weekNumber, 'status', 'completed');
-        setMessage(`Week ${weekNumber} Auto-Adjudication Completed! Winner: ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}`);
+
+        if (adj.isFinal) {
+          updateContest(weekNumber, 'status', 'completed');
+          setMessage(`Week ${weekNumber} Contest Officially Finalized & Locked! Winner: ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}`);
+        } else {
+          // Status stays active - games are in progress
+          updateContest(weekNumber, 'status', 'active');
+          setMessage(`[LIVE PREVIEW - IN PROGRESS]: Current leader is ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}. Contests do not lock until Tuesday morning Pacific Time.`);
+        }
         setAdjudicationDetail(adj.explanation || '');
       } else {
         setMessage(`Adjudication notice: ${data.adjudication?.reason || data.error || 'Could not adjudicate week.'}`);
@@ -161,14 +169,29 @@ export default function AdminContestsPage() {
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => runAutoAdjudication(c.week_number)}
-                disabled={adjudicating}
-                className="px-4 py-2 rounded-xl bg-blue-600/25 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto disabled:opacity-50"
-              >
-                {adjudicating ? 'Calculating from Sleeper...' : `Auto-Adjudicate Week ${c.week_number} via Sleeper`}
-              </button>
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => runAutoAdjudication(c.week_number, { force: false })}
+                  disabled={adjudicating}
+                  className="px-4 py-2 rounded-xl bg-blue-600/25 hover:bg-blue-600/40 text-blue-300 border border-blue-500/40 text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {adjudicating ? 'Calculating from Sleeper...' : `Live Leader / Auto-Adjudicate W${c.week_number}`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to FORCE lock Week ${c.week_number} right now before Tuesday morning?`)) {
+                      runAutoAdjudication(c.week_number, { force: true });
+                    }
+                  }}
+                  disabled={adjudicating}
+                  title="Override Tuesday morning gate and write status=completed immediately"
+                  className="px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-xs font-semibold transition flex items-center gap-1 disabled:opacity-50"
+                >
+                  Force Lock Winner
+                </button>
+              </div>
             </div>
 
             {adjudicationDetail && (

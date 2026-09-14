@@ -1,6 +1,15 @@
 import { supabase } from './supabase.js';
-import { getLeagueOverview, getLeagueMatchups } from './sleeper.js';
+import { getLeagueOverview, getLeagueMatchups, getNflState } from './sleeper.js';
 import { getSleeperPlayerMap, resolvePlayerName } from './sleeperPlayers.js';
+
+function isTuesdayOrLaterPacific() {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    weekday: 'long',
+  });
+  const pacificDay = formatter.format(new Date());
+  return ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].includes(pacificDay);
+}
 
 /**
  * Fetch Sleeper player statistics for a regular season week
@@ -85,17 +94,18 @@ function calculateOptimalScore(matchup, playerMap) {
  * Evaluates and adjudicates the weekly regular season contest for a given week.
  * Updates the Supabase weekly_contests table upon completion.
  */
-export async function adjudicateWeekContest(weekNumber) {
+export async function adjudicateWeekContest(weekNumber, { force = false, preview = false } = {}) {
   const week = Number(weekNumber);
   if (!week || week < 1 || week > 14) {
     throw new Error(`Invalid week number for contest adjudication: ${weekNumber}`);
   }
 
-  // 1. Fetch overview, matchups, and player map
-  const [overview, rawMatchups, playerMap] = await Promise.all([
+  // 1. Fetch overview, matchups, player map, and NFL state
+  const [overview, rawMatchups, playerMap, nflState] = await Promise.all([
     getLeagueOverview(),
     getLeagueMatchups(week),
     getSleeperPlayerMap(),
+    getNflState(),
   ]);
 
   if (!rawMatchups || rawMatchups.length === 0) {
@@ -662,7 +672,28 @@ export async function adjudicateWeekContest(weekNumber) {
     };
   }
 
-  // Save / update in Supabase weekly_contests table
+  // Determine whether the week can officially lock
+  const currentNflWeek = nflState?.week || 1;
+  const isPastWeek = week < currentNflWeek;
+  const isTuesdayOrLater = isTuesdayOrLaterPacific();
+  const shouldFinalize = (isPastWeek || isTuesdayOrLater || force) && !preview;
+
+  // If games are still active (Sunday / Monday) and not forced, return in-progress tracking without locking DB
+  if (!shouldFinalize) {
+    return {
+      success: true,
+      week,
+      status: 'in_progress',
+      isFinal: false,
+      winner_manager: winnerManager,
+      winner_team: winnerTeam,
+      winning_score: winningScore,
+      explanation: `[LIVE TRACKER - IN PROGRESS]: Week ${week} games are still underway (Monday Night Football remains). Current contest leader: ${winnerManager} (${winnerTeam}) with ${winningScore}. Official winner locks Tuesday morning.`,
+      record: null,
+    };
+  }
+
+  // Save / update in Supabase weekly_contests table (only when officially finalized on Tuesday morning or later)
   const { data: updatedRecord, error } = await supabase
     .from('weekly_contests')
     .update({
@@ -683,6 +714,8 @@ export async function adjudicateWeekContest(weekNumber) {
   return {
     success: true,
     week,
+    status: 'completed',
+    isFinal: true,
     winner_manager: winnerManager,
     winner_team: winnerTeam,
     winning_score: winningScore,

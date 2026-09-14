@@ -15,8 +15,14 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
     getSleeperPlayerMap(),
   ]);
 
-  const currentWeek = overview.state.week || 1;
-  const previousWeek = Math.max(1, currentWeek - 1);
+  const stateWeek = overview.state.week || 1;
+  const currentWeekRaw = await getLeagueMatchups(stateWeek);
+  const currentWeekPoints = (currentWeekRaw || []).reduce((sum, m) => sum + (m.points || 0), 0);
+
+  // If the current Sleeper state week already has points scored, that is the week that just completed.
+  // If current state week has 0 points, then the completed week is stateWeek - 1.
+  const weekToRecap = currentWeekPoints > 0 ? stateWeek : Math.max(1, stateWeek - 1);
+  const upcomingWeek = weekToRecap + 1;
 
   // Enrich rosters with named starters
   const namedRosters = {};
@@ -27,22 +33,24 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
     };
   }
 
-  // Fetch previous week's matchups to recap (enriched with human player names and manager/team names)
-  const rawMatchups = await getLeagueMatchups(previousWeek);
+  // Fetch matchups to recap (enriched with human player names and manager/team names)
+  const rawMatchups = weekToRecap === stateWeek ? currentWeekRaw : await getLeagueMatchups(weekToRecap);
+  const totalPointsRecapped = (rawMatchups || []).reduce((sum, m) => sum + (m.points || 0), 0);
+  const isPreSeason = totalPointsRecapped === 0;
   const previousMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap, overview.rosters);
 
   // Fetch contest data from Supabase
   const { data: contestData } = await supabase
     .from('weekly_contests')
     .select('*')
-    .in('week_number', [previousWeek, currentWeek]);
+    .in('week_number', [weekToRecap, upcomingWeek]);
 
-  const lastWeekContest = contestData?.find((c) => c.week_number === previousWeek);
-  const thisWeekContest = contestData?.find((c) => c.week_number === currentWeek);
+  const lastWeekContest = contestData?.find((c) => c.week_number === weekToRecap);
+  const thisWeekContest = contestData?.find((c) => c.week_number === upcomingWeek);
 
   const contestSummary = `
-- Completed Week ${previousWeek} Contest: ${lastWeekContest ? `"${lastWeekContest.contest_name}" (Winner: ${lastWeekContest.winner_manager || 'TBD'} with score ${lastWeekContest.winning_score || 'N/A'})` : 'No contest logged for last week.'}
-- Upcoming Week ${currentWeek} Contest On Deck: ${thisWeekContest ? `"${thisWeekContest.contest_name}" (Prize: ${thisWeekContest.prize || '$10'} - Description: ${thisWeekContest.description || 'N/A'})` : `Standard $10 Week ${currentWeek} Challenge on deck.`}
+- Completed Week ${weekToRecap} Contest: ${lastWeekContest ? `"${lastWeekContest.contest_name}" (Winner: ${lastWeekContest.winner_manager || 'TBD'} with score ${lastWeekContest.winning_score || 'N/A'})` : 'No contest logged.'}
+- Upcoming Week ${upcomingWeek} Contest On Deck: ${thisWeekContest ? `"${thisWeekContest.contest_name}" (Prize: ${thisWeekContest.prize || '$10'} - Description: ${thisWeekContest.description || 'N/A'})` : `Standard $10 Week ${upcomingWeek} Challenge on deck.`}
   `.trim();
 
   const newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n') || 'NFL week wrapped up with heavy physical play.';
@@ -69,7 +77,7 @@ You work alongside several other columnists at the paper:
 ### 3. YOUR BEAT: TUESDAY POST-GAME RECAP, AWARDS & WEEKLY CONTEST
 Your specific assignment is the Tuesday Post-Game Recap (published Tuesdays at Noon). 
 * PHASE A: PRE-SEASON (Rosters empty or 0 points): Focus on evaluating draft results, grading team toughness, and highlighting the pre-season contest winner.
-* PHASE B/C: IN-SEASON & PLAYOFFS: Look BACK at the weekend's completed matchups (Week ${previousWeek}) using Sleeper box scores and match data. Break down the gritty wins and the soft, embarrassing losses. Announce and discuss the winner of the weekly league contest using the latest contest data, and preview what contest is on deck for next week. You may look ahead to next week's regular fantasy matchups if it serves the narrative of looking back at the results.
+* PHASE B/C: IN-SEASON & PLAYOFFS: Look BACK at the weekend's completed matchups (Week ${weekToRecap}) using Sleeper box scores and match data. Break down the gritty wins and the soft, embarrassing losses. Announce and discuss the winner of the weekly league contest using the latest contest data, and preview what contest is on deck for next week. You may look ahead to next week's regular fantasy matchups if it serves the narrative of looking back at the results.
 
 ---
 
@@ -123,11 +131,11 @@ WEEKLY CONTEST DATA (Current & Upcoming):
 ${contestSummary}
 
 RAW SLEEPER DATA:
-Current Week: Week ${currentWeek} (Recapping Week ${previousWeek})
+Recapping Week: Week ${weekToRecap} (Pre-Season: ${isPreSeason})
 League Rosters & Named Starters:
 ${JSON.stringify(namedRosters, null, 2)}
 
-Completed Matchups (Week ${previousWeek}):
+Completed Matchups (Week ${weekToRecap}):
 ${JSON.stringify(previousMatchups, null, 2)}
 `;
 
@@ -178,7 +186,7 @@ ${JSON.stringify(previousMatchups, null, 2)}
       {
         author_id: 'marty_sullivan',
         author_name: 'Marty Sullivan',
-        week_number: currentWeek,
+        week_number: isPreSeason ? 0 : weekToRecap,
         season: 2026,
         title,
         slug: wpResult?.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),

@@ -9,6 +9,8 @@ async function handleAdjudication(request) {
   const { searchParams } = new URL(request.url);
   const requestedWeek = searchParams.get('week');
   const secret = searchParams.get('secret');
+  const force = searchParams.get('force') === 'true';
+  const preview = searchParams.get('preview') === 'true';
 
   // Verify Cron Secret if set
   const authHeader = request.headers.get('authorization');
@@ -34,7 +36,7 @@ async function handleAdjudication(request) {
   }
 
   try {
-    const result = await adjudicateWeekContest(weekToAdjudicate);
+    const result = await adjudicateWeekContest(weekToAdjudicate, { force, preview });
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
