@@ -169,6 +169,8 @@ export default function AdminLayout({ children }) {
             <span>•</span>
             <Link href="/admin/dispatch" className="text-amber-400 font-bold hover:text-white transition">Dispatch Desk</Link>
             <span>•</span>
+            <Link href="/admin/dispatch?tab=prompts" className="hover:text-white transition">Reporter Prompts</Link>
+            <span>•</span>
             <Link href="/admin/test-bench" className="hover:text-white transition">Test Bench</Link>
             <span>•</span>
             <Link href="/admin/rankings" className="hover:text-white transition">Rankings</Link>

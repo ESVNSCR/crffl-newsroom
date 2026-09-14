@@ -45,6 +45,12 @@ const SLEEPER_DATA_SOURCES = [
     icon: '🔄',
   },
   {
+    key: 'benchBlunders',
+    label: 'Bench Points & Blunder Matrix',
+    desc: 'Lineup optimizer audit, points left on bench, and fatal starting errors',
+    icon: '🪑',
+  },
+  {
     key: 'contests',
     label: 'Weekly Contest',
     desc: 'Active weekly side challenge, prize & current winner',
@@ -63,6 +69,7 @@ const DEFAULT_SLEEPER_OPTIONS = {
   boxScores: true,
   standings: true,
   transactions: true,
+  benchBlunders: true,
   contests: true,
   nflNews: true,
 };
@@ -173,6 +180,122 @@ export default function AdminDispatchPage() {
     }
   }, [activeTab]);
 
+  // Reporter Prompts management state
+  const [reporterPrompts, setReporterPrompts] = useState({});
+  const [loadingPrompts, setLoadingPrompts] = useState(false);
+  const [promptError, setPromptError] = useState(null);
+  const [promptSuccess, setPromptSuccess] = useState(null);
+  const [selectedPromptId, setSelectedPromptId] = useState('marty_sullivan');
+  const [promptEditText, setPromptEditText] = useState('');
+  const [savingPrompt, setSavingPrompt] = useState(false);
+  const [resettingPrompt, setResettingPrompt] = useState(false);
+
+  // Check URL search parameters on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'prompts') {
+        setActiveTab('prompts');
+      } else if (tabParam === 'reporter') {
+        setActiveTab('reporter');
+      } else if (tabParam === 'archive') {
+        setActiveTab('archive');
+      }
+    }
+  }, []);
+
+  // Fetch prompts list from API
+  const fetchPrompts = async () => {
+    setLoadingPrompts(true);
+    setPromptError(null);
+    try {
+      const res = await fetch('/api/admin/prompts');
+      const data = await res.json();
+      if (res.ok && data.prompts) {
+        setReporterPrompts(data.prompts);
+        // Sync selected prompt text
+        const target = data.prompts[selectedPromptId] || Object.values(data.prompts)[0];
+        if (target) {
+          setPromptEditText(target.effectivePrompt || '');
+        }
+      } else {
+        setPromptError(data.error || 'Failed to load reporter prompts.');
+      }
+    } catch (err) {
+      setPromptError(err.message);
+    } finally {
+      setLoadingPrompts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'prompts') {
+      fetchPrompts();
+    }
+  }, [activeTab]);
+
+  const handleSelectPromptReporter = (id) => {
+    setSelectedPromptId(id);
+    setPromptSuccess(null);
+    setPromptError(null);
+    if (reporterPrompts[id]) {
+      setPromptEditText(reporterPrompts[id].effectivePrompt || '');
+    }
+  };
+
+  const handleSavePrompt = async () => {
+    if (!promptEditText.trim()) return;
+    setSavingPrompt(true);
+    setPromptError(null);
+    setPromptSuccess(null);
+    try {
+      const res = await fetch('/api/admin/prompts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reporter_id: selectedPromptId,
+          prompt_guidelines: promptEditText.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to save prompt override.');
+      }
+      setPromptSuccess(`Successfully saved custom prompt guidelines for ${reporterPrompts[selectedPromptId]?.name || selectedPromptId}!`);
+      await fetchPrompts();
+    } catch (err) {
+      setPromptError(err.message);
+    } finally {
+      setSavingPrompt(false);
+    }
+  };
+
+  const handleResetPrompt = async () => {
+    const reporterName = reporterPrompts[selectedPromptId]?.name || selectedPromptId;
+    if (!window.confirm(`Reset prompt for ${reporterName} to system default? Any custom instructions will be removed.`)) {
+      return;
+    }
+    setResettingPrompt(true);
+    setPromptError(null);
+    setPromptSuccess(null);
+    try {
+      const res = await fetch(`/api/admin/prompts?reporter_id=${selectedPromptId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to reset prompt.');
+      }
+      setPromptSuccess(`Reset ${reporterName} prompt to system defaults.`);
+      await fetchPrompts();
+    } catch (err) {
+      setPromptError(err.message);
+    } finally {
+      setResettingPrompt(false);
+    }
+  };
+
   // Insert HTML helper tags
   const insertTag = (openTag, closeTag = '') => {
     const textarea = document.getElementById('article-content-input');
@@ -204,6 +327,7 @@ export default function AdminDispatchPage() {
       boxScores: val,
       standings: val,
       transactions: val,
+      benchBlunders: val,
       contests: val,
       nflNews: val,
     });
@@ -219,6 +343,7 @@ export default function AdminDispatchPage() {
       boxScores: val,
       standings: val,
       transactions: val,
+      benchBlunders: val,
       contests: val,
       nflNews: val,
     });
@@ -497,6 +622,18 @@ export default function AdminDispatchPage() {
             }`}
           >
             <span>📂 Published Dispatches &amp; Drafts</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('prompts')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+              activeTab === 'prompts'
+                ? 'bg-[#d4af37] text-gray-950 shadow-lg shadow-[#d4af37]/20 font-extrabold'
+                : 'bg-gray-900/80 text-gray-300 hover:bg-gray-800 border border-gray-800'
+            }`}
+          >
+            <span>⚙️ Reporter Prompts</span>
           </button>
         </div>
 
@@ -1433,6 +1570,275 @@ export default function AdminDispatchPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 4: REPORTER PERSONA PROMPTS LAB                       */}
+        {/* ========================================================= */}
+        {activeTab === 'prompts' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header Banner Card */}
+            <div className="p-6 rounded-2xl bg-[#121824] border border-gray-800 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1 max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] text-[10px] font-mono font-bold uppercase tracking-wider">
+                    <span>AI Newsroom Lab</span>
+                    <span>•</span>
+                    <span>Persona Prompt Manager</span>
+                  </div>
+                  <h2 className="text-xl font-black text-white uppercase tracking-tight">
+                    Reporter Prompts &amp; Beat Directives
+                  </h2>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    View, tune, and customize the foundational instructions and editorial biases for each CRFFL columnist. Custom prompts saved here are safely stored in Supabase and automatically applied to both weekly scheduled columns and on-demand custom dispatches.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={fetchPrompts}
+                    disabled={loadingPrompts}
+                    className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-700 hover:border-gray-500 text-xs font-mono text-gray-300 hover:text-white transition flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    <span>{loadingPrompts ? '↻ Refreshing...' : '↻ Reload Prompts'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Prompt Feedback Alerts */}
+            {promptSuccess && (
+              <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-800 text-emerald-300 text-xs flex items-center justify-between animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">✓</span>
+                  <span>{promptSuccess}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPromptSuccess(null)}
+                  className="text-emerald-400 hover:text-white font-mono"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {promptError && (
+              <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800 text-rose-300 text-xs flex items-center justify-between animate-shake">
+                <div className="flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>{promptError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPromptError(null)}
+                  className="text-rose-400 hover:text-white font-mono"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {loadingPrompts && Object.keys(reporterPrompts).length === 0 ? (
+              <div className="p-12 text-center text-gray-500 font-mono text-xs rounded-2xl bg-[#121824] border border-gray-800">
+                Loading reporter prompts from database...
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left Column: Columnist Selector */}
+                <div className="lg:col-span-4 space-y-2">
+                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-gray-400 block px-1">
+                    Select Columnist Persona
+                  </label>
+                  <div className="space-y-2">
+                    {Object.values(reporterPrompts).map((persona) => {
+                      const isSelected = selectedPromptId === persona.id;
+                      return (
+                        <button
+                          key={persona.id}
+                          type="button"
+                          onClick={() => handleSelectPromptReporter(persona.id)}
+                          className={`w-full text-left p-3.5 rounded-xl border transition flex items-center gap-3 ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-[#172033] to-[#121824] border-[#d4af37] shadow-lg shadow-[#d4af37]/10'
+                              : 'bg-[#121824] border-gray-800 hover:border-gray-700 hover:bg-[#151c2b]'
+                          }`}
+                        >
+                          <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/20 bg-black/50 flex-shrink-0 shadow">
+                            <img
+                              src={persona.avatar || '/logos/league.png'}
+                              alt={persona.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h3 className="text-sm font-bold text-white truncate">
+                                {persona.name}
+                              </h3>
+                              {persona.isCustom ? (
+                                <span className="text-[9px] font-mono font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 whitespace-nowrap">
+                                  Customized
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700 whitespace-nowrap">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-[#d4af37] truncate mt-0.5">
+                              {persona.desk}
+                            </p>
+                            <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                              {persona.tagline}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Quick Tip Card for Bench Audit */}
+                  <div className="mt-4 p-4 rounded-xl bg-gray-900/60 border border-gray-800 text-gray-400 text-xs space-y-2">
+                    <div className="flex items-center gap-2 text-amber-300 font-bold font-mono">
+                      <span>💡</span>
+                      <span>Bench Matrix for Marty:</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-gray-400">
+                      Marty Sullivan is equipped with the CRFFL Lineup Optimization &amp; Bench Audit Matrix. His default prompt commands him to roast managers who suffered Fatal Bench Blunders (sitting players who would have won the matchup).
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Column: Prompt Editor */}
+                <div className="lg:col-span-8 space-y-4">
+                  {reporterPrompts[selectedPromptId] && (
+                    <div className="p-6 rounded-2xl bg-[#121824] border border-gray-800 space-y-4 shadow-xl">
+                      {/* Persona Header in Editor */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#d4af37] bg-black/60 shadow flex-shrink-0">
+                            <img
+                              src={reporterPrompts[selectedPromptId].avatar || '/logos/league.png'}
+                              alt={reporterPrompts[selectedPromptId].name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-bold text-white">
+                                {reporterPrompts[selectedPromptId].name}
+                              </h3>
+                              <span className="text-xs text-[#d4af37] font-mono">
+                                • {reporterPrompts[selectedPromptId].desk}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400">
+                              {reporterPrompts[selectedPromptId].isCustom ? (
+                                <span className="text-amber-300">
+                                  ★ Custom prompt saved in database
+                                  {reporterPrompts[selectedPromptId].updatedAt && (
+                                    <> (Last updated {formatDatePacific(reporterPrompts[selectedPromptId].updatedAt, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})</>
+                                  )}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">
+                                  Currently using standard factory prompt guidelines.
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Status tag */}
+                        <div className="flex items-center gap-2">
+                          {reporterPrompts[selectedPromptId].isCustom ? (
+                            <button
+                              type="button"
+                              onClick={handleResetPrompt}
+                              disabled={resettingPrompt}
+                              className="px-3 py-1 rounded-xl bg-rose-950/40 border border-rose-800/80 hover:bg-rose-900/60 text-xs font-mono font-bold text-rose-300 hover:text-white transition disabled:opacity-50"
+                            >
+                              {resettingPrompt ? 'Resetting...' : '↺ Reset to Default'}
+                            </button>
+                          ) : (
+                            <span className="text-xs font-mono text-gray-500 italic">
+                              Factory Default
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Textarea for Prompt */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs font-mono text-gray-400">
+                          <span>Persona Directives &amp; Style Prompt:</span>
+                          <span>
+                            {promptEditText.length} characters • {promptEditText.trim().split(/\s+/).filter(Boolean).length} words
+                          </span>
+                        </div>
+                        <textarea
+                          rows={16}
+                          value={promptEditText}
+                          onChange={(e) => setPromptEditText(e.target.value)}
+                          placeholder="Enter customized persona guidelines, biases, tone instructions, and topic rules..."
+                          className="w-full bg-[#0b0f17] border border-gray-700 rounded-xl p-4 font-mono text-xs sm:text-sm text-gray-200 focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] leading-relaxed transition"
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (reporterPrompts[selectedPromptId]) {
+                              setPromptEditText(reporterPrompts[selectedPromptId].effectivePrompt || '');
+                            }
+                          }}
+                          className="px-3 py-2 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-600 text-xs font-mono text-gray-400 hover:text-white transition"
+                        >
+                          Revert Unsaved Edits
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (reporterPrompts[selectedPromptId]?.defaultPrompt) {
+                                setPromptEditText(reporterPrompts[selectedPromptId].defaultPrompt);
+                              }
+                            }}
+                            className="px-3 py-2 rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-600 text-xs font-mono text-gray-300 hover:text-white transition"
+                          >
+                            Load Factory Text
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleSavePrompt}
+                            disabled={savingPrompt || !promptEditText.trim()}
+                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] hover:brightness-110 text-gray-950 font-black text-xs uppercase tracking-wider transition shadow-lg shadow-[#d4af37]/20 disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {savingPrompt ? (
+                              <>
+                                <span className="animate-spin text-sm">↻</span>
+                                <span>Saving Directives...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>💾 Save Custom Guidelines</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

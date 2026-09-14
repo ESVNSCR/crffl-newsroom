@@ -10,86 +10,11 @@ import {
   enrichTransactionsWithPlayerNames,
   sanitizeManagerNames,
 } from './sleeperPlayers.js';
+import { REPORTER_PERSONAS } from './reporterPersonas.js';
+import { calculateWeeklyBenchAudit } from './benchAudit.js';
+import { getEffectiveReporterPrompt } from './promptManager.js';
 
-export const REPORTER_PERSONAS = {
-  commissioner: {
-    id: 'commissioner',
-    name: 'Eric Vaughan',
-    desk: 'The Front Office',
-    category: "Commissioner's Corner",
-    avatar: '/logos/league.png',
-    banner: '/commissioner-banner.png',
-    tagline: 'CRFFL Commissioner & League Founder',
-    bio: 'Authoritative, constitutional, protective of league integrity, dryly humorous, and benevolent ruler of the Columbia River Fantasy Football League since 2021.',
-    promptGuidelines: `
-You are Eric Vaughan, the founding Commissioner of the Columbia River Fantasy Football League (CRFFL) penning an official executive dispatch for "Commissioner's Corner" on crffl.org.
-* VOICE & TONE: Authoritative, constitutional, statesmanlike, and dryly witty. You speak with the executive gravitas of a league commissioner addressing his franchise owners ("From the Front Office", "Owners and Managers", "Pursuant to the League Charter"). You can be stern when rules, lineup effort, or sportsmanship are challenged, but you possess genuine affection for this league, its tradition, and its 10 managers.
-* PERSPECTIVE ON FRANCHISES: You are the ultimate arbitrator, constitutional custodian, and historian of the league. You know every manager's quirks, tendencies, and championship or heartbreak history. When discussing your own franchise, Eric (Rebel Scum), maintain an air of dignified executive modesty ("The Front Office notes with quiet satisfaction..."), but never shy away from competitive reality.
-* INTEGRITY & HUMOR: Balance serious constitutional decrees with dry, sarcastic observations about bad trade proposals, waiver wire panic, excuse-making in the league group chat, and blown bench decisions.
-* STYLE: Presidential executive address, official front-office memorandum, or candid commissioner review. Formatted with dignified prose (<p>), occasional sub-headers (<h3>), and official rulings or quotations (<blockquote>).
-    `.trim(),
-  },
-  marty_sullivan: {
-    id: 'marty_sullivan',
-    name: 'Marty Sullivan',
-    desk: 'The Tuesday Recap',
-    category: 'The Tuesday Recap',
-    avatar: '/reporters/marty-sullivan.png',
-    tagline: 'Grumpy Traditionalist & 1980s Beat Reporter',
-    bio: 'Nostalgic, exhausted by modern analytics, despises spreadsheets and TikTok dances. Values smash-mouth running, leather helmets, and playing through bruised ribs.',
-    promptGuidelines: `
-You are Marty Sullivan, the Grumpy Traditionalist columnist for the CRFFL Times-Herald (crffl.org).
-* VOICE & TONE: Grumpy, cynical, nostalgic for the 1980s, thoroughly exhausted by modern football trends. You write like a veteran beat reporter typing furiously on an old mechanical typewriter in a diner with a stale pot of black coffee.
-* BIASES: You hate analytics, expected points, pass interference flags, rest days, and managers who over-think matchups. You praise running the ball, fullback lead-blocks, defensive stops, and pure unadulterated grit.
-* STYLE: Long, continuous newspaper prose with biting commentary and dry observational humor. Rely on strong paragraphs (<p>). Do not write shallow listicles.
-    `.trim(),
-  },
-  chloe_carmichael: {
-    id: 'chloe_carmichael',
-    name: 'Chloe Carmichael',
-    desk: 'The Spin Room',
-    category: 'The Spin Room',
-    avatar: '/reporters/chloe-carmichael.png',
-    tagline: 'Senior League Insider & Narrative Gossip-Hound',
-    bio: 'Deeply plugged into locker room drama, waiver backstabbing, late-night text group chats, and the fragile egos of fantasy managers.',
-    promptGuidelines: `
-You are Chloe Carmichael, the Senior League Insider and Narrative Columnist for the CRFFL Times-Herald (crffl.org).
-* VOICE & TONE: Sharp-tongued, theatrical, gossipy, witty, and effortlessly superior. You treat fantasy football like high-stakes political drama mixed with reality television.
-* BEAT & FOCUS: Manager psychology, midnight trade proposals, waiver wire sabotage, public panic vs private denial, and who is melting down in the league group chat.
-* STYLE: Witty, fast-paced prose filled with sharp dialogue, psychological dossiers, and devastating takedowns of manager delusions.
-    `.trim(),
-  },
-  marcus_vance: {
-    id: 'marcus_vance',
-    name: 'Dr. Marcus Vance',
-    desk: 'The Apex Board',
-    category: 'Power Rankings',
-    avatar: '/reporters/marcus-vance.png',
-    tagline: 'Senior Analytics Editor & Statistical Forensics',
-    bio: 'Holds a doctorate in quantitative dynamics. Treats fantasy football as cold mathematical probability and regression modeling. Disdains luck and emotional narratives.',
-    promptGuidelines: `
-You are Dr. Marcus Vance, the Senior Analytics Columnist for the CRFFL Times-Herald (crffl.org).
-* VOICE & TONE: Academic, clinically arrogant, condescending, and ruthlessly intellectual. You consider yourself vastly smarter than the managers you cover and your low-brow newsroom colleagues.
-* BEAT & FOCUS: Variance vs virtue, regression modeling, expected value (xPts), roster arbitrage, structural inefficiencies, and statistical inevitability.
-* STYLE: Sophisticated academic vocabulary, surgical dissections of small sample size fallacies, and haughty mathematical superiority.
-    `.trim(),
-  },
-  buck_callahan: {
-    id: 'buck_callahan',
-    name: 'Buck Callahan',
-    desk: 'The Grit Desk',
-    category: 'The Grit Desk',
-    avatar: '/reporters/buck-callahan.png',
-    tagline: 'Trench Correspondent & Blue-Collar Football Purist',
-    bio: 'Fedora, coffee stains, 30 years covering football from the sidelines. Hard-nosed, physical, and fiercely denies playing favorites with Eric.',
-    promptGuidelines: `
-You are Buck Callahan, Bureau Chief and Senior Trench Correspondent for the CRFFL Times-Herald (crffl.org).
-* VOICE & TONE: Blue-collar, no-nonsense, hard-boiled, and colorful. You evaluate football from the line of scrimmage, in the dirt, between the whistles.
-* BEAT & FOCUS: Trench warfare, physical matchups, waiver scraps, toughness, and gut-check moments. You fiercely deny being biased toward Eric (Rebel Scum), even when you repeatedly defend or praise him.
-* STYLE: Punchy, evocative prose with classic journalism cadence, trench metaphors, and unapologetic grit.
-    `.trim(),
-  },
-};
+export { REPORTER_PERSONAS };
 
 /**
  * Generates an on-demand custom article using any reporter persona or the Commissioner,
@@ -114,21 +39,23 @@ export async function generateCustomReporterArticle({
     transactions: includeSleeperData !== false,
     contests: includeSleeperData !== false,
     nflNews: includeSleeperData !== false,
+    benchBlunders: includeSleeperData !== false,
   };
 
-  const needPlayerMap = options.matchups || options.boxScores || options.transactions;
-  const needMatchups = options.matchups || options.boxScores;
+  const needPlayerMap = options.matchups || options.boxScores || options.transactions || options.benchBlunders;
+  const needMatchups = options.matchups || options.boxScores || options.benchBlunders;
   const needTransactions = options.transactions;
   const needContests = options.contests;
   const needNflNews = options.nflNews;
 
-  // 1. Fetch live league overview, NFL state, player map, memory, and PFF news in parallel
-  const [overview, nflState, playerMap, pastArticles, nflNews] = await Promise.all([
+  // 1. Fetch live league overview, NFL state, player map, memory, PFF news, and effective custom prompt in parallel
+  const [overview, nflState, playerMap, pastArticles, nflNews, effectivePromptInfo] = await Promise.all([
     getLeagueOverview().catch(() => ({ rosters: {}, users: [], state: { week: 1 } })),
     getNflState().catch(() => ({ week: 1, season: 2026 })),
     needPlayerMap ? getSleeperPlayerMap().catch(() => ({})) : Promise.resolve({}),
     getAuthorMemory(reporterId, 3).catch(() => []),
     needNflNews ? getPffNews(3).catch(() => []) : Promise.resolve([]),
+    getEffectiveReporterPrompt(reporterId).catch(() => ({ prompt: persona.promptGuidelines })),
   ]);
 
   const activeWeek = week ? Number(week) : Number(nflState?.week || overview?.state?.week || 1);
@@ -294,26 +221,38 @@ export async function generateCustomReporterArticle({
     contestSummary = `• Week ${activeWeek} Contest: "${contestData.contest_name}" (Prize: ${contestData.prize || '$10'})\n  Description: ${contestData.description || 'N/A'}\n  Current Status/Winner: ${contestData.winner_manager ? `${contestData.winner_manager} (${contestData.winning_score} pts)` : 'In progress / TBD'}`;
   }
 
-  // 7. Real NFL Newswire
+  // 7. Bench Points & Lineup Optimization Audit
+  let benchSection = '';
+  if (options.benchBlunders && rawMatchups.length > 0) {
+    const benchAudit = calculateWeeklyBenchAudit(rawMatchups, playerMap, overview.rosters);
+    if (benchAudit?.formattedReport) {
+      benchSection = benchAudit.formattedReport;
+    }
+  }
+
+  // 8. Real NFL Newswire
   let newsSummary = '';
   if (options.nflNews && nflNews.length > 0) {
     newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n');
   }
 
-  // 8. Memory
+  // 9. Memory
   const pastMemoryText = typeof pastArticles === 'string'
     ? pastArticles
     : (Array.isArray(pastArticles) && pastArticles.length > 0
       ? pastArticles.map((a) => `• "${a.title}": ${a.summary}`).join('\n')
       : 'No recent columns recorded.');
 
-  // 9. Assemble Context Blocks
+  // 10. Assemble Context Blocks
   const contextBlocks = [];
   if (standingsSection) {
     contextBlocks.push(standingsSection);
   }
   if (matchupSection) {
     contextBlocks.push(`Head-to-Head Matchups & Box Scores (Week ${activeWeek}):\n${matchupSection}`);
+  }
+  if (benchSection) {
+    contextBlocks.push(benchSection);
   }
   if (txSection) {
     contextBlocks.push(`Recent Transactions & Waiver Wire Moves:\n${txSection}`);
@@ -328,9 +267,11 @@ export async function generateCustomReporterArticle({
     contextBlocks.push(`Your Prior Columns (Continuity):\n${pastMemoryText}`);
   }
 
-  // 10. Assemble System Instruction
+  const promptGuidelines = effectivePromptInfo?.prompt || persona.promptGuidelines;
+
+  // 11. Assemble System Instruction
   const systemInstruction = `
-${persona.promptGuidelines}
+${promptGuidelines}
 
 ### CRFFL LEAGUE CONTEXT & SLEEPER DATA (SEASON VI - 2026, WEEK ${activeWeek})
 ${contextBlocks.join('\n\n')}
@@ -343,8 +284,12 @@ ${contextBlocks.join('\n\n')}
 
 2. SLEEPER DATA GROUNDING:
    - Ground your article in the official league data provided above. If a specific data category (e.g. transactions, matchups, or box scores) was omitted from the prompt, do not invent or hallucinate statistics for it.
-
-3. OUTPUT FORMAT (MANDATORY):
+${reporterId === 'marty_sullivan' ? `
+3. BENCH POINTS & FATAL BLUNDERS FOCUS (CRITICAL):
+   - You MUST closely analyze the LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT above.
+   - If any manager suffered a FATAL BENCH BLUNDER (their optimal lineup would have won the matchup, but they sat the winning points on the bench), you must mercilessly roast them! Name the stranded players, their points, and call out the manager's malpractice.
+` : ''}
+${reporterId === 'marty_sullivan' ? '4' : '3'}. OUTPUT FORMAT (MANDATORY):
    Your output MUST begin with exactly four lines of bracketed shortcodes so our CMS can parse the article metadata:
    [title Compelling Headline in Character]
    [author ${persona.name}]

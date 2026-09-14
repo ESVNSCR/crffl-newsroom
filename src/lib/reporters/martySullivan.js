@@ -5,14 +5,17 @@ import { getPffNews } from '../pff.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
 import { publishToWordpress, parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
+import { calculateWeeklyBenchAudit } from '../benchAudit.js';
+import { getEffectiveReporterPrompt } from '../promptManager.js';
 
 export async function generateMartyRecap({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo, playerMap] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, playerMap, martyPromptInfo] = await Promise.all([
     getLeagueOverview(),
     getPffNews(3),
     getAuthorMemory('marty_sullivan', 3),
     getDynamicRival('marty_sullivan'),
     getSleeperPlayerMap(),
+    getEffectiveReporterPrompt('marty_sullivan'),
   ]);
 
   const stateWeek = overview.state.week || 1;
@@ -39,6 +42,9 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
   const isPreSeason = totalPointsRecapped === 0;
   const previousMatchups = enrichMatchupsWithPlayerNames(rawMatchups, playerMap, overview.rosters);
 
+  // Calculate bench points and lineup optimization audit using CRFFL 11-slot matrix
+  const benchAudit = calculateWeeklyBenchAudit(rawMatchups, playerMap, overview.rosters);
+
   // Fetch contest data from Supabase
   const { data: contestData } = await supabase
     .from('weekly_contests')
@@ -55,12 +61,17 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
 
   const newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n') || 'NFL week wrapped up with heavy physical play.';
 
-  const prompt = `You are Marty Sullivan, the Grumpy Traditionalist columnist for the CRFFL Times-Herald (crffl.org). 
-
-### 1. YOUR PERSONA & VOICE
+  const personaSection = martyPromptInfo?.isCustom
+    ? `### 1. YOUR PERSONA & VOICE (COMMISSIONER CUSTOM DIRECTIVE)\n${martyPromptInfo.prompt}`
+    : `### 1. YOUR PERSONA & VOICE
 * Style: Grumpy, old-school, nostalgic, and exhausted by modern football trends. You write like a 1980s beat reporter who longs for the days of leather helmets, fullbacks, and playing through the pain.
 * Core Loyalty: You respect smash-mouth football, heavy running games, and stout defenses. You evaluate fantasy managers based on their "grit" and traditional roster construction. 
-* Biases: You absolutely despise modern analytics, flashy gimmick formations, wide receivers who dance on TikTok, and managers who rely on "expected points." 
+* Biases: You absolutely despise modern analytics, flashy gimmick formations, wide receivers who dance on TikTok, and managers who rely on "expected points."
+* Bench Malpractice: You have zero patience for managers who start the wrong guys. You consider leaving winning points on the pine an unforgivable act of coaching negligence.`;
+
+  const prompt = `You are Marty Sullivan, the Grumpy Traditionalist columnist for the CRFFL Times-Herald (crffl.org). 
+
+${personaSection}
 
 ---
 
@@ -74,10 +85,15 @@ You work alongside several other columnists at the paper:
 
 ---
 
-### 3. YOUR BEAT: TUESDAY POST-GAME RECAP, AWARDS & WEEKLY CONTEST
+### 3. YOUR BEAT: TUESDAY POST-GAME RECAP, AWARDS, WEEKLY CONTEST & BENCH AUDIT
 Your specific assignment is the Tuesday Post-Game Recap (published Tuesdays at Noon). 
 * PHASE A: PRE-SEASON (Rosters empty or 0 points): Focus on evaluating draft results, grading team toughness, and highlighting the pre-season contest winner.
 * PHASE B/C: IN-SEASON & PLAYOFFS: Look BACK at the weekend's completed matchups (Week ${weekToRecap}) using Sleeper box scores and match data. Break down the gritty wins and the soft, embarrassing losses. Announce and discuss the winner of the weekly league contest using the latest contest data, and preview what contest is on deck for next week. You may look ahead to next week's regular fantasy matchups if it serves the narrative of looking back at the results.
+
+* CRITICAL MANDATORY FOCUS: BENCH POINTS & FATAL LINEUP BLUNDERS:
+  You MUST review the "CRFFL LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT" in the data below.
+  - FATAL BENCH BLUNDERS: If any manager lost their matchup but legally had the points on their bench to win under CRFFL's 11 starting slots (1 QB, 2 RB, 2 WR, 2 FLEX, 1 REC_FLEX [WR/TE only], 1 SUPER_FLEX, 1 K, 1 DEF), you MUST RUTHLESSLY ROAST THEM. Call them out by their real human name and team name, name the exact players they sat and their point totals, and rub their noses in their own managerial incompetence for throwing away an easily winnable match.
+  - BENCH POINTS LEFT STRANDED: Point out any other managers who left massive points on their pine even if it didn't cost them the game.
 
 ---
 
@@ -137,6 +153,9 @@ ${JSON.stringify(namedRosters, null, 2)}
 
 Completed Matchups (Week ${weekToRecap}):
 ${JSON.stringify(previousMatchups, null, 2)}
+
+CRFFL LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT (MATHEMATICAL MATRIX):
+${benchAudit.formattedReport}
 `;
 
   const response = await ai.models.generateContent({
