@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getNflState } from '@/lib/sleeper';
 import { adjudicateWeekContest } from '@/lib/contestAdjudicator';
+import { syncHofWeekMatchups } from '@/lib/hofSync';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -37,10 +38,21 @@ async function handleAdjudication(request) {
 
   try {
     const result = await adjudicateWeekContest(weekToAdjudicate, { force, preview });
+
+    // Automatically synchronize official finalized matchups to Hall of Fame (hof_matchups)
+    let hofSyncResult = null;
+    try {
+      hofSyncResult = await syncHofWeekMatchups(weekToAdjudicate, { force, preview });
+    } catch (hofErr) {
+      console.warn('HOF matchup sync notice:', hofErr.message);
+      hofSyncResult = { success: false, error: hofErr.message };
+    }
+
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
       adjudication: result,
+      hofSync: hofSyncResult,
     });
   } catch (err) {
     console.error('Error during weekly contest adjudication:', err);
