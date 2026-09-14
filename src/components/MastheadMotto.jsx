@@ -28,12 +28,16 @@ export default function MastheadMotto() {
       onClick={handleNext}
       className="inline-flex flex-wrap items-center gap-1.5 sm:gap-2 cursor-pointer group select-none text-xs sm:text-sm font-mono tracking-wide text-gray-300 hover:text-white transition"
       title="Click to roll another headline blurb"
+      suppressHydrationWarning
     >
       <span className="text-gray-400 font-bold uppercase tracking-wider">
         CRFFL TIMES-HERALD
       </span>
       <span className="text-[#d4af37] font-bold">•</span>
-      <span className="text-amber-200/90 italic font-sans font-medium group-hover:text-[#d4af37] transition-colors duration-200">
+      <span
+        suppressHydrationWarning
+        className="text-amber-200/90 italic font-sans font-medium group-hover:text-[#d4af37] transition-colors duration-200"
+      >
         &ldquo;{saying}&rdquo;
       </span>
     </div>

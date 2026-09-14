@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import ArticleModal from './ArticleModal';
 import { COLUMNISTS } from '@/lib/columnists';
-import { decodeHtmlEntities } from '@/lib/formatters';
+import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Dispatches' },
@@ -130,8 +130,8 @@ export default function DispatchesClient({ articles = [], featuredArticle = null
                     <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-[#d4af37] bg-[#d4af37]/10 px-2 py-0.5 rounded border border-[#d4af37]/30">
                       {article.category_name || 'Dispatch'}
                     </span>
-                    <span className="text-gray-400 text-[11px]">
-                      Week {article.week_number} • {new Date(article.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    <span className="text-gray-400 text-[11px]" suppressHydrationWarning>
+                      Week {article.week_number} • {formatDatePacific(article.created_at, { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
 

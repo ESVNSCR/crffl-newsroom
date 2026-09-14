@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import ArticleModal from './ArticleModal';
 import { COLUMNISTS } from '@/lib/columnists';
-import { decodeHtmlEntities } from '@/lib/formatters';
+import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
 
 export default function HeroLeadStory({ leadArticle }) {
   const [openModal, setOpenModal] = useState(false);
@@ -29,8 +29,8 @@ export default function HeroLeadStory({ leadArticle }) {
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] text-xs font-bold uppercase tracking-wider">
               ★ Frontpage Lead Dispatch
             </span>
-            <span className="text-xs text-gray-400 font-mono">
-              Week {leadArticle.week_number} • Published {new Date(leadArticle.created_at).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+            <span className="text-xs text-gray-400 font-mono" suppressHydrationWarning>
+              Week {leadArticle.week_number} • Published {formatDatePacific(leadArticle.created_at, { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>
 

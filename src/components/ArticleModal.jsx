@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { COLUMNISTS } from '@/lib/columnists';
-import { decodeHtmlEntities } from '@/lib/formatters';
+import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
 
 export default function ArticleModal({ article, onClose }) {
   useEffect(() => {
@@ -39,8 +39,8 @@ export default function ArticleModal({ article, onClose }) {
             <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest font-bold text-[#d4af37] bg-[#d4af37]/10 px-2 sm:px-2.5 py-1 rounded border border-[#d4af37]/30">
               {article.category_name || 'CRFFL Dispatch'}
             </span>
-            <span className="text-[11px] sm:text-xs text-gray-400">
-              Week {article.week_number} • {new Date(article.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+            <span className="text-[11px] sm:text-xs text-gray-400" suppressHydrationWarning>
+              Week {article.week_number} • {formatDatePacific(article.created_at, { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
 

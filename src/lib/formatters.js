@@ -26,3 +26,20 @@ export function decodeHtmlEntities(str) {
     .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
+/**
+ * Formats a date or ISO string consistently in Pacific time (America/Los_Angeles)
+ * with en-US locale to prevent server/client hydration mismatches.
+ */
+export function formatDatePacific(dateInput, options = { month: 'short', day: 'numeric' }) {
+  if (!dateInput) return '';
+  const date = typeof dateInput === 'string' || typeof dateInput === 'number'
+    ? new Date(dateInput)
+    : dateInput;
+  if (isNaN(date.getTime())) return '';
+
+  return date.toLocaleDateString('en-US', {
+    timeZone: 'America/Los_Angeles',
+    ...options,
+  });
+}
+

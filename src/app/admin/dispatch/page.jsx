@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { COLUMNISTS } from '@/lib/columnists';
-import { decodeHtmlEntities } from '@/lib/formatters';
+import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
 
 const MANAGERS_LIST = [
   'General League',
@@ -869,7 +869,7 @@ export default function AdminDispatchPage() {
                               {art.category_name}
                             </span>
                             <span className="text-xs font-mono text-gray-500">
-                              Week {art.week_number} • {new Date(art.created_at).toLocaleDateString()}
+                              Week {art.week_number} • {formatDatePacific(art.created_at, { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                             {art.status === 'draft' && (
                               <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
@@ -924,3 +924,4 @@ export default function AdminDispatchPage() {
     </div>
   );
 }
+
