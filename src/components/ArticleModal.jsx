@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { COLUMNISTS } from '@/lib/columnists';
 import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
+import ArticleComments from './ArticleComments';
 
 export default function ArticleModal({ article, onClose }) {
   useEffect(() => {
@@ -104,6 +105,9 @@ export default function ArticleModal({ article, onClose }) {
             className="article-content text-sm sm:text-base"
             dangerouslySetInnerHTML={{ __html: article.content_html || `<p>${article.summary}</p>` }}
           />
+
+          {/* Manager Comment Section */}
+          {article.id && <ArticleComments articleId={article.id} />}
         </div>
 
         {/* Bottom Footer Bar */}

@@ -1,0 +1,347 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { formatDatePacific } from '@/lib/formatters';
+
+const MANAGERS_OPTIONS = [
+  { value: 'Corey', label: 'Corey (Team CoreyCash)' },
+  { value: 'Ed', label: 'Ed (Team RaiderRose510)' },
+  { value: 'Eric', label: 'Eric (Rebel Scum)' },
+  { value: 'Jeff', label: 'Jeff (Hickory Huskers)' },
+  { value: 'KC', label: 'KC (Shortbus Superstars)' },
+  { value: 'Marcus', label: 'Marcus (Team Killa MC)' },
+  { value: 'Mike F.', label: 'Mike F. (Stars & Stripes)' },
+  { value: 'Mike M.', label: 'Mike M. (Moore Better)' },
+  { value: 'Pam', label: 'Pam (Team GardenGoddess)' },
+  { value: 'Randy', label: 'Randy (Generic Football Team)' },
+  { value: 'The Commissioner', label: 'The Commissioner (Office of the Commish)' }
+];
+
+export default function ArticleComments({ articleId }) {
+  const [comments, setComments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [managerName, setManagerName] = useState('');
+  const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Load cached manager credentials from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const cachedManager = sessionStorage.getItem('crffl_manager_name') || sessionStorage.getItem('crffl_auth_manager');
+      const cachedPin = sessionStorage.getItem('crffl_manager_pin') || sessionStorage.getItem('crffl_auth_pin');
+      if (cachedManager) setManagerName(cachedManager);
+      if (cachedPin) setPin(cachedPin);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Fetch comments for this article
+  const fetchComments = useCallback(async () => {
+    if (!articleId) return;
+    try {
+      const res = await fetch(`/api/comments?article_id=${encodeURIComponent(articleId)}`);
+      const data = await res.json();
+      if (data.success) {
+        setComments(data.comments || []);
+      }
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [articleId]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  // Submit comment
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!managerName) {
+      setErrorMsg('Please select your manager identity.');
+      return;
+    }
+
+    if (!pin || pin.trim().length === 0) {
+      setErrorMsg('Please enter your 4-digit security PIN to authenticate.');
+      return;
+    }
+
+    if (!commentText.trim()) {
+      setErrorMsg('Comment text cannot be empty.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          article_id: articleId,
+          manager_name: managerName,
+          pin: pin.trim(),
+          comment: commentText.trim()
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setCommentText('');
+        setSuccessMsg('Comment posted to the dispatch!');
+        // Cache credentials in sessionStorage for smooth banter across articles
+        try {
+          sessionStorage.setItem('crffl_manager_name', managerName);
+          sessionStorage.setItem('crffl_manager_pin', pin.trim());
+        } catch {
+          // ignore
+        }
+        // Refetch comments to get newly inserted row
+        await fetchComments();
+        setTimeout(() => setSuccessMsg(''), 4000);
+      } else {
+        setErrorMsg(data.error || 'Failed to post comment. Check your security PIN.');
+      }
+    } catch {
+      setErrorMsg('Network transmission failure. Mainframe unreachable.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Delete comment
+  const handleDelete = async (commentId) => {
+    if (!confirm('Are you sure you want to retract this comment?')) return;
+    try {
+      const res = await fetch(`/api/comments?id=${encodeURIComponent(commentId)}&manager=${encodeURIComponent(managerName)}&pin=${encodeURIComponent(pin)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setComments(prev => prev.filter(c => c.id !== commentId));
+      } else {
+        alert(data.error || 'Could not delete comment.');
+      }
+    } catch {
+      alert('Failed to connect to server.');
+    }
+  };
+
+  const getManagerBadge = (name) => {
+    const isCommish = (name || '').toLowerCase().includes('commissioner');
+    if (isCommish) {
+      return {
+        label: '👑 Office of the Commissioner',
+        bg: 'bg-[#d4af37]/20 border-[#d4af37]/60 text-[#d4af37]'
+      };
+    }
+    return {
+      label: `👤 ${name}`,
+      bg: 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300'
+    };
+  };
+
+  return (
+    <section className="pt-8 mt-8 border-t border-white/10 space-y-6">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest font-bold text-[#d4af37] bg-[#d4af37]/10 px-2.5 py-0.5 rounded border border-[#d4af37]/30">
+              Press Room
+            </span>
+            <span className="text-xs font-mono text-gray-400">
+              Letters to the Editor
+            </span>
+          </div>
+          <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <span>Manager Commentary</span>
+            <span className="text-sm font-normal text-[#d4af37] font-mono">
+              ({comments.length})
+            </span>
+          </h3>
+        </div>
+
+        <span className="text-[11px] text-gray-400 italic">
+          PIN-authenticated manager responses
+        </span>
+      </div>
+
+      {/* Comment Stream */}
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="py-8 text-center text-gray-400 text-xs font-mono animate-pulse">
+            Retrieving dispatch commentary...
+          </div>
+        ) : comments.length === 0 ? (
+          <div className="p-6 sm:p-8 rounded-xl bg-black/40 border border-white/5 text-center space-y-2">
+            <div className="text-2xl">🗞️</div>
+            <div className="text-sm font-semibold text-gray-300">
+              No manager comments filed yet.
+            </div>
+            <div className="text-xs text-gray-500 max-w-sm mx-auto">
+              Be the first manager to offer your hot take, rebuttal, or congratulations on this dispatch.
+            </div>
+          </div>
+        ) : (
+          comments.map((c) => {
+            const badge = getManagerBadge(c.manager_name);
+            const isAuthor = managerName && c.manager_name.toLowerCase() === managerName.toLowerCase();
+            const isCommish = managerName && managerName.toLowerCase().includes('commissioner');
+
+            return (
+              <div
+                key={c.id}
+                className="p-4 sm:p-4.5 rounded-xl bg-[#0b0f19] border border-white/10 hover:border-white/20 transition space-y-2.5"
+              >
+                {/* Comment Header */}
+                <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${badge.bg}`}>
+                      {badge.label}
+                    </span>
+                    <span className="text-[11px] text-gray-400 font-mono" suppressHydrationWarning>
+                      {formatDatePacific(c.created_at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  {(isAuthor || isCommish) && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(c.id)}
+                      className="text-[11px] text-red-400 hover:text-red-300 transition underline font-mono"
+                      title="Retract comment"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+
+                {/* Comment Body */}
+                <p className="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
+                  {c.comment}
+                </p>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Comment Submission Box */}
+      <form onSubmit={handleSubmit} className="p-4 sm:p-5 rounded-xl bg-[#0b0f19] border border-[#d4af37]/30 shadow-lg space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-white/10">
+          <span className="text-xs font-bold text-white tracking-wide uppercase font-mono flex items-center gap-1.5">
+            <span>✍️</span> File Manager Reaction
+          </span>
+          <span className="text-[11px] text-gray-400">
+            {commentText.length}/1000 chars
+          </span>
+        </div>
+
+        {errorMsg && (
+          <div className="p-2.5 rounded bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono">
+            ⚠️ {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-2.5 rounded bg-emerald-950/50 border border-emerald-500/50 text-emerald-300 text-xs font-mono">
+            ✓ {successMsg}
+          </div>
+        )}
+
+        {/* Identity & PIN Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] font-mono text-gray-300 font-semibold mb-1">
+              MANAGER IDENTITY:
+            </label>
+            <select
+              value={managerName}
+              onChange={(e) => { setManagerName(e.target.value); setErrorMsg(''); }}
+              className="w-full bg-[#121824] border border-gray-700 focus:border-[#d4af37] rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer"
+            >
+              <option value="">-- SELECT YOUR IDENTITY --</option>
+              {MANAGERS_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-mono text-gray-300 font-semibold">
+                SECURITY PIN:
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                className="text-[10px] text-gray-400 hover:text-gray-200 underline"
+              >
+                {showPin ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <input
+              type={showPin ? "text" : "password"}
+              maxLength={6}
+              value={pin}
+              onChange={(e) => { setPin(e.target.value); setErrorMsg(''); }}
+              placeholder="4-digit PIN"
+              className="w-full bg-[#121824] border border-gray-700 focus:border-[#d4af37] rounded-lg px-3 py-2 text-xs text-white outline-none font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Textarea */}
+        <div>
+          <textarea
+            rows={3}
+            maxLength={1000}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Submit your official reaction, banter, rebuttal, or hot take on this dispatch..."
+            className="w-full bg-[#121824] border border-gray-700 focus:border-[#d4af37] rounded-lg p-3 text-xs sm:text-sm text-gray-100 placeholder-gray-500 outline-none resize-y"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+          <span className="text-[11px] text-gray-500 font-mono">
+            PIN authentication prevents impersonation.
+          </span>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !managerName || !pin || !commentText.trim()}
+            className="px-5 py-2.5 rounded-lg bg-[#d4af37] hover:bg-[#c49f2f] text-gray-950 font-bold text-xs sm:text-sm transition disabled:opacity-40 disabled:cursor-not-allowed shadow-md flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="animate-spin inline-block">↻</span>
+                <span>Transmitting...</span>
+              </>
+            ) : (
+              <span>Publish Commentary →</span>
+            )}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
