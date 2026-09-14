@@ -154,44 +154,29 @@ export async function DELETE(request) {
     }
 
     const authManager = resolveAuthManager(managerName);
-    const { data: isValidPin } = await supabase.rpc('verify_manager_pin', {
+
+    // Securely authorize and delete comment via PostgreSQL RPC
+    const { data: result, error: rpcError } = await supabase.rpc('delete_article_comment', {
+      p_comment_id: commentId,
       p_manager: authManager,
-      p_pin: String(pin).trim()
+      p_pin: String(pin).trim(),
     });
 
-    if (!isValidPin) {
-      return NextResponse.json({ error: 'Invalid security PIN.' }, { status: 401 });
+    if (rpcError) {
+      console.error('delete_article_comment RPC error:', rpcError);
+      return NextResponse.json({ error: 'Failed to delete comment.' }, { status: 500 });
     }
 
-    // Check if comment belongs to this manager or if manager is Eric (Commissioner)
-    const { data: existingComment } = await supabase
-      .from('article_comments')
-      .select('*')
-      .eq('id', commentId)
-      .single();
-
-    if (!existingComment) {
-      return NextResponse.json({ error: 'Comment not found.' }, { status: 404 });
+    if (!result?.success) {
+      const status = result?.error === 'Invalid security PIN' ? 401 : (result?.error === 'Permission denied' ? 403 : 400);
+      return NextResponse.json({ error: result?.error || 'Failed to delete comment.' }, { status });
     }
 
-    const isOwner = resolveAuthManager(existingComment.manager_name).toLowerCase() === authManager.toLowerCase();
-    const isCommissioner = authManager.toLowerCase() === 'eric';
-
-    if (!isOwner && !isCommissioner) {
-      return NextResponse.json({ error: 'You do not have permission to delete this comment.' }, { status: 403 });
-    }
-
-    const { error: deleteError } = await supabase
-      .from('article_comments')
-      .delete()
-      .eq('id', commentId);
-
-    if (deleteError) throw deleteError;
-
-    return NextResponse.json({ success: true, message: 'Comment deleted successfully.' });
+    return NextResponse.json({ success: true, message: result.message || 'Comment deleted successfully.' });
   } catch (err) {
     console.error('Error deleting comment:', err);
     return NextResponse.json({ error: 'Failed to delete comment.' }, { status: 500 });
   }
 }
+
 

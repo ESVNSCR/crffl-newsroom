@@ -1,8 +1,9 @@
 import { decodeHtmlEntities } from './formatters.js';
 
 const WP_URL = process.env.WORDPRESS_URL || 'https://store.crffl.org';
-const WP_USER = process.env.WORDPRESS_USERNAME || 'esvnscr@gmail.com';
-const WP_APP_PASSWORD = process.env.WORDPRESS_APP_PASSWORD || 'PI28 01Yl ntDK QNuU 2DlE knW7';
+const WP_USER = process.env.WORDPRESS_USERNAME;
+const WP_APP_PASSWORD = process.env.WORDPRESS_APP_PASSWORD;
+
 
 export const AUTHOR_WP_IDS = {
   buck_callahan: 3,
@@ -66,6 +67,10 @@ export async function publishToWordpress({
 }) {
   const authorId = AUTHOR_WP_IDS[authorSlug];
   const categoryId = CATEGORY_IDS[categoryName];
+
+  if (!WP_USER || !WP_APP_PASSWORD) {
+    throw new Error('WordPress credentials are missing. Please set WORDPRESS_USERNAME and WORDPRESS_APP_PASSWORD.');
+  }
 
   const authString = Buffer.from(`${WP_USER}:${WP_APP_PASSWORD}`).toString('base64');
 

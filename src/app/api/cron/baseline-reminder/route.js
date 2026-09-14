@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getNflState } from '@/lib/sleeper';
 import { sendCommissionerBaselineReminder } from '@/lib/notifications';
+import { verifyAdminSession } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -10,18 +11,17 @@ async function handleReminder(request) {
   const requestedWeek = searchParams.get('week');
   const secret = searchParams.get('secret');
 
-  // Verify Cron Secret if set
+  // Verify Cron Secret or Commissioner Session Cookie
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
+  const isBearerValid = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isQueryValid = cronSecret && secret === cronSecret;
+  const adminCheck = await verifyAdminSession(request);
 
-  if (cronSecret) {
-    const isBearerValid = authHeader === `Bearer ${cronSecret}`;
-    const isQueryValid = secret === cronSecret;
-    const isAdminAuth = request.headers.get('x-commissioner-auth') === 'authorized';
-    if (!isBearerValid && !isQueryValid && !isAdminAuth && process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!isBearerValid && !isQueryValid && !adminCheck.authorized) {
+    return NextResponse.json({ error: 'Unauthorized: Commissioner clearance required' }, { status: 401 });
   }
+
 
   let week;
   if (requestedWeek) {

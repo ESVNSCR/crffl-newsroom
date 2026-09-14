@@ -2,16 +2,14 @@ import crypto from 'crypto';
 
 export const COOKIE_NAME = 'crffl_admin_session';
 
-const COMMISSIONER_PIN = (
-  process.env.COMMISSIONER_PIN ||
-  process.env.NEXT_PUBLIC_COMMISSIONER_PIN ||
-  '5014'
-).trim();
+const COMMISSIONER_PIN = (process.env.COMMISSIONER_PIN || '').trim();
 
-const SESSION_SECRET =
+const SESSION_SECRET = (
   process.env.ADMIN_SESSION_SECRET ||
   process.env.CRON_SECRET ||
-  'crffl-times-herald-admin-key-2026';
+  ''
+).trim();
+
 
 // In-memory sliding window rate limiter for login attempts (15 minutes, 5 attempts)
 const failedAttempts = new Map();
@@ -64,8 +62,12 @@ export function clearRateLimit(ip) {
  */
 export function verifyCommissionerPin(inputPin) {
   if (!inputPin || typeof inputPin !== 'string') return false;
-  const cleanInput = inputPin.trim();
   const target = COMMISSIONER_PIN;
+  if (!target) {
+    console.error('COMMISSIONER_PIN is not configured in server environment.');
+    return false;
+  }
+  const cleanInput = inputPin.trim();
 
   const bufInput = Buffer.from(cleanInput);
   const bufTarget = Buffer.from(target);
@@ -83,6 +85,10 @@ export function verifyCommissionerPin(inputPin) {
  * Create a cryptographically signed session token valid for 7 days
  */
 export function createSessionToken() {
+  if (!SESSION_SECRET) {
+    throw new Error('ADMIN_SESSION_SECRET is not configured in server environment.');
+  }
+
   const payload = JSON.stringify({
     role: 'commissioner',
     exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -102,9 +108,10 @@ export function createSessionToken() {
  * Verify a session token's HMAC signature and expiration
  */
 export function verifySessionToken(token) {
-  if (!token || typeof token !== 'string' || !token.includes('.')) {
+  if (!token || typeof token !== 'string' || !token.includes('.') || !SESSION_SECRET) {
     return false;
   }
+
 
   const [encodedPayload, signature] = token.split('.');
   if (!encodedPayload || !signature) return false;
