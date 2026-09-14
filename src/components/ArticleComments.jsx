@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { formatDatePacific } from '@/lib/formatters';
 
 const MANAGERS_OPTIONS = [
@@ -22,13 +22,21 @@ export default function ArticleComments({ articleId }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Authenticated state / user credentials
   const [managerName, setManagerName] = useState('');
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
-  const [commentText, setCommentText] = useState('');
   
+  // Top-level comment state
+  const [commentText, setCommentText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Reply state
+  const [replyingTo, setReplyingTo] = useState(null); // { commentId, managerName }
+  const [replyText, setReplyText] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  const [replyError, setReplyError] = useState('');
 
   // Load cached manager credentials from sessionStorage on mount
   useEffect(() => {
@@ -62,7 +70,32 @@ export default function ArticleComments({ articleId }) {
     fetchComments();
   }, [fetchComments]);
 
-  // Submit comment
+  // Group comments into root comments and their replies
+  const { rootComments, repliesByParent } = useMemo(() => {
+    const roots = [];
+    const replies = {};
+    comments.forEach(c => {
+      if (c.parent_id) {
+        if (!replies[c.parent_id]) replies[c.parent_id] = [];
+        replies[c.parent_id].push(c);
+      } else {
+        roots.push(c);
+      }
+    });
+    return { rootComments: roots, repliesByParent: replies };
+  }, [comments]);
+
+  // Cache credentials helper
+  const cacheCredentials = (mgr, p) => {
+    try {
+      sessionStorage.setItem('crffl_manager_name', mgr);
+      sessionStorage.setItem('crffl_manager_pin', p.trim());
+    } catch {
+      // ignore
+    }
+  };
+
+  // Submit top-level comment
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -102,14 +135,7 @@ export default function ArticleComments({ articleId }) {
       if (res.ok && data.success) {
         setCommentText('');
         setSuccessMsg('Comment posted to the dispatch!');
-        // Cache credentials in sessionStorage for smooth banter across articles
-        try {
-          sessionStorage.setItem('crffl_manager_name', managerName);
-          sessionStorage.setItem('crffl_manager_pin', pin.trim());
-        } catch {
-          // ignore
-        }
-        // Refetch comments to get newly inserted row
+        cacheCredentials(managerName, pin);
         await fetchComments();
         setTimeout(() => setSuccessMsg(''), 4000);
       } else {
@@ -122,6 +148,58 @@ export default function ArticleComments({ articleId }) {
     }
   };
 
+  // Submit reply to an existing comment
+  const handleReplySubmit = async (e, parentId) => {
+    e.preventDefault();
+    setReplyError('');
+
+    if (!managerName) {
+      setReplyError('Please select your manager identity.');
+      return;
+    }
+
+    if (!pin || pin.trim().length === 0) {
+      setReplyError('Please enter your 4-digit security PIN to authenticate.');
+      return;
+    }
+
+    if (!replyText.trim()) {
+      setReplyError('Reply cannot be empty.');
+      return;
+    }
+
+    setIsSubmittingReply(true);
+
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          article_id: articleId,
+          parent_id: parentId,
+          manager_name: managerName,
+          pin: pin.trim(),
+          comment: replyText.trim()
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setReplyText('');
+        setReplyingTo(null);
+        cacheCredentials(managerName, pin);
+        await fetchComments();
+      } else {
+        setReplyError(data.error || 'Failed to post reply. Check your security PIN.');
+      }
+    } catch {
+      setReplyError('Network transmission failure.');
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
+
   // Delete comment
   const handleDelete = async (commentId) => {
     if (!confirm('Are you sure you want to retract this comment?')) return;
@@ -131,7 +209,7 @@ export default function ArticleComments({ articleId }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setComments(prev => prev.filter(c => c.id !== commentId));
+        setComments(prev => prev.filter(c => c.id !== commentId && c.parent_id !== commentId));
       } else {
         alert(data.error || 'Could not delete comment.');
       }
@@ -152,6 +230,99 @@ export default function ArticleComments({ articleId }) {
       label: `👤 ${name}`,
       bg: 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300'
     };
+  };
+
+  // Helper to render an inline reply composer
+  const renderReplyForm = (targetComment) => {
+    return (
+      <form
+        onSubmit={(e) => handleReplySubmit(e, targetComment.id)}
+        className="mt-3 p-3.5 rounded-lg bg-[#0e1422] border border-[#d4af37]/40 shadow-inner space-y-3"
+      >
+        <div className="flex items-center justify-between text-xs pb-1.5 border-b border-white/10">
+          <span className="font-mono text-[#d4af37] font-bold flex items-center gap-1.5">
+            <span>↩</span> Replying to <strong className="text-white">{targetComment.manager_name}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => { setReplyingTo(null); setReplyText(''); setReplyError(''); }}
+            className="text-gray-400 hover:text-white text-xs underline"
+          >
+            Cancel
+          </button>
+        </div>
+
+        {replyError && (
+          <div className="p-2 rounded bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono">
+            ⚠️ {replyError}
+          </div>
+        )}
+
+        {/* Manager ID & PIN (if not cached) */}
+        {(!managerName || !pin) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div>
+              <label className="block text-[10px] font-mono text-gray-300 mb-1">YOUR IDENTITY:</label>
+              <select
+                value={managerName}
+                onChange={(e) => setManagerName(e.target.value)}
+                className="w-full bg-[#121824] border border-gray-700 rounded px-2 py-1.5 text-xs text-white"
+              >
+                <option value="">-- SELECT IDENTITY --</option>
+                {MANAGERS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-mono text-gray-300 mb-1">SECURITY PIN:</label>
+              <input
+                type="password"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                placeholder="4-digit PIN"
+                className="w-full bg-[#121824] border border-gray-700 rounded px-2 py-1.5 text-xs text-white font-mono"
+              />
+            </div>
+          </div>
+        )}
+
+        {managerName && pin && (
+          <div className="text-[11px] text-gray-400 font-mono flex items-center justify-between">
+            <span>Replying as: <strong className="text-cyan-300">{managerName}</strong></span>
+            <span className="text-gray-500">{replyText.length}/1000 chars</span>
+          </div>
+        )}
+
+        <textarea
+          rows={2}
+          maxLength={1000}
+          value={replyText}
+          onChange={(e) => setReplyText(e.target.value)}
+          placeholder={`Write your response to ${targetComment.manager_name}...`}
+          className="w-full bg-[#121824] border border-gray-700 focus:border-[#d4af37] rounded p-2.5 text-xs sm:text-sm text-gray-100 placeholder-gray-500 outline-none resize-y"
+          autoFocus
+        />
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => { setReplyingTo(null); setReplyText(''); setReplyError(''); }}
+            className="px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold"
+          >
+            Dismiss
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmittingReply || !replyText.trim() || !managerName || !pin}
+            className="px-4 py-1.5 rounded bg-[#d4af37] hover:bg-[#c49f2f] text-gray-950 font-bold text-xs transition disabled:opacity-40"
+          >
+            {isSubmittingReply ? 'Transmitting...' : 'Post Reply →'}
+          </button>
+        </div>
+      </form>
+    );
   };
 
   return (
@@ -176,17 +347,17 @@ export default function ArticleComments({ articleId }) {
         </div>
 
         <span className="text-[11px] text-gray-400 italic">
-          PIN-authenticated manager responses
+          PIN-authenticated manager responses & replies
         </span>
       </div>
 
       {/* Comment Stream */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {isLoading ? (
           <div className="py-8 text-center text-gray-400 text-xs font-mono animate-pulse">
             Retrieving dispatch commentary...
           </div>
-        ) : comments.length === 0 ? (
+        ) : rootComments.length === 0 ? (
           <div className="p-6 sm:p-8 rounded-xl bg-black/40 border border-white/5 text-center space-y-2">
             <div className="text-2xl">🗞️</div>
             <div className="text-sm font-semibold text-gray-300">
@@ -197,50 +368,131 @@ export default function ArticleComments({ articleId }) {
             </div>
           </div>
         ) : (
-          comments.map((c) => {
-            const badge = getManagerBadge(c.manager_name);
-            const isAuthor = managerName && c.manager_name.toLowerCase() === managerName.toLowerCase();
+          rootComments.map((root) => {
+            const rootBadge = getManagerBadge(root.manager_name);
+            const isRootAuthor = managerName && root.manager_name.toLowerCase() === managerName.toLowerCase();
             const isCommish = managerName && managerName.toLowerCase().includes('commissioner');
+            const replies = repliesByParent[root.id] || [];
+            const isReplyingToThisRoot = replyingTo?.commentId === root.id;
 
             return (
-              <div
-                key={c.id}
-                className="p-4 sm:p-4.5 rounded-xl bg-[#0b0f19] border border-white/10 hover:border-white/20 transition space-y-2.5"
-              >
-                {/* Comment Header */}
-                <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${badge.bg}`}>
-                      {badge.label}
-                    </span>
-                    <span className="text-[11px] text-gray-400 font-mono" suppressHydrationWarning>
-                      {formatDatePacific(c.created_at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                    </span>
+              <div key={root.id} className="space-y-2.5">
+                {/* Root Comment Card */}
+                <div className="p-4 sm:p-4.5 rounded-xl bg-[#0b0f19] border border-white/10 hover:border-white/20 transition space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${rootBadge.bg}`}>
+                        {rootBadge.label}
+                      </span>
+                      <span className="text-[11px] text-gray-400 font-mono" suppressHydrationWarning>
+                        {formatDatePacific(root.created_at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplyingTo({ commentId: root.id, managerName: root.manager_name });
+                          setReplyText('');
+                          setReplyError('');
+                        }}
+                        className="text-[11px] text-[#d4af37] hover:text-[#f3d168] transition font-semibold flex items-center gap-1"
+                      >
+                        <span>↩</span> Reply
+                      </button>
+
+                      {(isRootAuthor || isCommish) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(root.id)}
+                          className="text-[11px] text-red-400 hover:text-red-300 transition underline font-mono"
+                          title="Retract comment"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {(isAuthor || isCommish) && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(c.id)}
-                      className="text-[11px] text-red-400 hover:text-red-300 transition underline font-mono"
-                      title="Retract comment"
-                    >
-                      Delete
-                    </button>
-                  )}
+                  {/* Comment Body */}
+                  <p className="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
+                    {root.comment}
+                  </p>
                 </div>
 
-                {/* Comment Body */}
-                <p className="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
-                  {c.comment}
-                </p>
+                {/* Inline Reply Form for Root Comment */}
+                {isReplyingToThisRoot && renderReplyForm(root)}
+
+                {/* Nested Replies Stream */}
+                {replies.length > 0 && (
+                  <div className="ml-4 sm:ml-8 pl-3 sm:pl-4 border-l-2 border-[#d4af37]/30 space-y-2.5">
+                    {replies.map((reply) => {
+                      const replyBadge = getManagerBadge(reply.manager_name);
+                      const isReplyAuthor = managerName && reply.manager_name.toLowerCase() === managerName.toLowerCase();
+                      const isReplyingToThisReply = replyingTo?.commentId === reply.id;
+
+                      return (
+                        <div key={reply.id} className="space-y-2">
+                          <div className="p-3.5 sm:p-4 rounded-xl bg-[#090d16] border border-white/5 hover:border-white/15 transition space-y-2">
+                            <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold border ${replyBadge.bg}`}>
+                                  {replyBadge.label}
+                                </span>
+                                <span className="text-[10px] text-gray-500 font-mono">
+                                  ↳ in reply to @{root.manager_name}
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-mono" suppressHydrationWarning>
+                                  {formatDatePacific(reply.created_at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setReplyingTo({ commentId: root.id, managerName: reply.manager_name });
+                                    setReplyText('');
+                                    setReplyError('');
+                                  }}
+                                  className="text-[11px] text-[#d4af37] hover:text-[#f3d168] transition font-semibold flex items-center gap-1"
+                                >
+                                  <span>↩</span> Reply
+                                </button>
+
+                                {(isReplyAuthor || isCommish) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDelete(reply.id)}
+                                    className="text-[11px] text-red-400 hover:text-red-300 transition underline font-mono"
+                                    title="Retract reply"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            <p className="text-xs sm:text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">
+                              {reply.comment}
+                            </p>
+                          </div>
+
+                          {/* Inline Reply Form for Nested Reply */}
+                          {isReplyingToThisReply && renderReplyForm(reply)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })
         )}
       </div>
 
-      {/* Comment Submission Box */}
+      {/* Main Top-Level Comment Submission Box */}
       <form onSubmit={handleSubmit} className="p-4 sm:p-5 rounded-xl bg-[#0b0f19] border border-[#d4af37]/30 shadow-lg space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-white/10">
           <span className="text-xs font-bold text-white tracking-wide uppercase font-mono flex items-center gap-1.5">
@@ -344,4 +596,3 @@ export default function ArticleComments({ articleId }) {
     </section>
   );
 }
-

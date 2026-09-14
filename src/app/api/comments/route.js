@@ -60,7 +60,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { article_id, manager_name, pin, comment } = body || {};
+    const { article_id, manager_name, pin, comment, parent_id } = body || {};
 
     if (!article_id) {
       return NextResponse.json({ error: 'Article ID is required.' }, { status: 400 });
@@ -105,13 +105,27 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Target article not found.' }, { status: 404 });
     }
 
-    // 3. Insert new comment
+    // 3. If parent_id provided, validate that parent comment exists
+    if (parent_id) {
+      const { data: parentCheck, error: parentError } = await supabase
+        .from('article_comments')
+        .select('id, article_id')
+        .eq('id', parent_id)
+        .single();
+
+      if (parentError || !parentCheck || parentCheck.article_id !== article_id) {
+        return NextResponse.json({ error: 'Parent comment to reply to does not exist.' }, { status: 404 });
+      }
+    }
+
+    // 4. Insert new comment (or reply)
     const { data: newComment, error: insertError } = await supabase
       .from('article_comments')
       .insert({
         article_id,
         manager_name: manager_name.trim(),
-        comment: trimmedComment
+        comment: trimmedComment,
+        parent_id: parent_id || null
       })
       .select()
       .single();
