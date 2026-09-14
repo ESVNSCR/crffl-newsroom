@@ -83,14 +83,21 @@ export async function getLeagueTransactions(round, leagueId = DEFAULT_LEAGUE_ID)
   return await res.json();
 }
 
+export async function getLeagueDetails(leagueId = DEFAULT_LEAGUE_ID) {
+  const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch Sleeper league: ${res.statusText}`);
+  return await res.json();
+}
+
 /**
  * Builds a unified map of roster_id -> Manager Details (name, team, logo, record, points)
  */
 export async function getLeagueOverview(leagueId = DEFAULT_LEAGUE_ID) {
-  const [users, rosters, state] = await Promise.all([
+  const [users, rosters, state, league] = await Promise.all([
     getLeagueUsers(leagueId),
     getLeagueRosters(leagueId),
     getNflState(),
+    getLeagueDetails(leagueId).catch(() => ({})),
   ]);
 
   const userMap = {};
@@ -134,6 +141,7 @@ export async function getLeagueOverview(leagueId = DEFAULT_LEAGUE_ID) {
     state,
     users,
     rosters: rosterMap,
+    scoringSettings: league?.scoring_settings || {},
   };
 }
 

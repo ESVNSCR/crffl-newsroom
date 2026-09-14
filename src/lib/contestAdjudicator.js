@@ -40,6 +40,37 @@ export async function fetchSleeperProjections(season = 2026, week = 1) {
 }
 
 /**
+ * Calculates a player's projected points using league custom scoring settings
+ */
+export function calculatePlayerProjection(playerProjectionStats, scoringSettings = {}) {
+  if (!playerProjectionStats) return 0;
+
+  if (scoringSettings && Object.keys(scoringSettings).length > 0) {
+    let customSum = 0;
+    let matched = 0;
+    for (const [stat, val] of Object.entries(playerProjectionStats)) {
+      if (typeof val === 'number' && scoringSettings[stat] !== undefined) {
+        customSum += val * scoringSettings[stat];
+        matched++;
+      }
+    }
+    if (matched > 0) {
+      return Number(customSum.toFixed(2));
+    }
+  }
+
+  // Fallback to standard points if no custom scoring match
+  return Number(
+    (
+      playerProjectionStats.pts_half_ppr ??
+      playerProjectionStats.pts_ppr ??
+      playerProjectionStats.pts_std ??
+      0
+    ).toFixed(2)
+  );
+}
+
+/**
  * Solves the optimal lineup for a team's full roster
  * Roster spots: 1 QB, 2 RB, 2 WR, 2 FLEX (RB/WR/TE), 1 REC_FLEX (WR/TE), 1 SUPER_FLEX (QB/RB/WR/TE), 1 K, 1 DEF
  */
@@ -143,18 +174,14 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
     // -------------------------------------------------------------
     case 1: {
       const projections = await fetchSleeperProjections(2026, 1);
+      const scoringSettings = overview.scoringSettings || {};
       let maxDiff = -Infinity;
       let topStarter = null;
 
       for (const m of matchups) {
         for (const pid of m.starters || []) {
           const actual = Number(m.players_points?.[pid] || 0);
-          const proj = Number(
-            projections?.[pid]?.stats?.pts_half_ppr ??
-            projections?.[pid]?.stats?.pts_ppr ??
-            projections?.[pid]?.stats?.pts_std ??
-            0
-          );
+          const proj = calculatePlayerProjection(projections?.[pid], scoringSettings);
           const diff = actual - proj;
 
           if (diff > maxDiff) {
@@ -176,7 +203,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
         winnerManager = topStarter.managerName;
         winnerTeam = topStarter.teamName;
         winningScore = `+${topStarter.diff.toFixed(2)} pts`;
-        explanation = `${topStarter.name} scored ${topStarter.actual.toFixed(2)} pts against a ${topStarter.proj.toFixed(1)} projection (+${topStarter.diff.toFixed(2)} margin).`;
+        explanation = `${topStarter.name} scored ${topStarter.actual.toFixed(2)} pts against a ${topStarter.proj.toFixed(2)} projection (+${topStarter.diff.toFixed(2)} margin).`;
       }
       break;
     }
