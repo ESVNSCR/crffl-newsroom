@@ -84,33 +84,37 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      {
-        source: '/hof',
-        destination: 'https://crffl-hof.vercel.app/hof',
-      },
-      {
-        source: '/hof/:path*',
-        destination: 'https://crffl-hof.vercel.app/hof/:path*',
-      },
-      {
-        source: '/logos/:path*',
-        destination: 'https://crffl-hof.vercel.app/logos/:path*',
-      },
-      // Proxy static WordPress uploads/assets and REST API
-      {
-        source: '/wp-content/:path*',
-        destination: 'https://store.crffl.org/wp-content/:path*',
-      },
-      {
-        source: '/wp-includes/:path*',
-        destination: 'https://store.crffl.org/wp-includes/:path*',
-      },
-      {
-        source: '/wp-json/:path*',
-        destination: 'https://store.crffl.org/wp-json/:path*',
-      },
-    ];
+    return {
+      beforeFiles: [
+        {
+          source: '/hof',
+          destination: 'https://crffl-hof.vercel.app/hof',
+        },
+        {
+          source: '/hof/:path*',
+          destination: 'https://crffl-hof.vercel.app/hof/:path*',
+        },
+      ],
+      afterFiles: [
+        {
+          source: '/logos/:path*',
+          destination: 'https://crffl-hof.vercel.app/logos/:path*',
+        },
+        // Proxy static WordPress uploads/assets and REST API
+        {
+          source: '/wp-content/:path*',
+          destination: 'https://store.crffl.org/wp-content/:path*',
+        },
+        {
+          source: '/wp-includes/:path*',
+          destination: 'https://store.crffl.org/wp-includes/:path*',
+        },
+        {
+          source: '/wp-json/:path*',
+          destination: 'https://store.crffl.org/wp-json/:path*',
+        },
+      ],
+    };
   },
 };
 
