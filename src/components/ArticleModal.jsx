@@ -62,7 +62,7 @@ export default function ArticleModal({ article, onClose }) {
               <img
                 src={article.banner_url || '/commissioner-banner.png'}
                 alt="Office of the Commissioner"
-                className="w-full h-auto max-h-72 object-cover object-center"
+                className="w-full h-auto block"
               />
             </div>
           )}

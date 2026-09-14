@@ -100,13 +100,13 @@ export default function StaffDirectoryPage() {
 
         {/* Commissioner Feature Masthead */}
         <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[#161d2b] via-[#121824] to-[#0a0e17] border-2 border-[#d4af37]/40 shadow-2xl relative">
-          <div className="w-full h-48 sm:h-64 relative overflow-hidden bg-black">
+          <div className="w-full relative overflow-hidden bg-black">
             <img
               src="/commissioner-banner.png"
               alt="Office of the Commissioner"
-              className="w-full h-full object-cover object-center"
+              className="w-full h-auto block"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#121824] via-transparent to-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#121824] via-transparent to-black/20" />
             <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3.5 py-1 rounded-full border border-[#d4af37]/40 text-xs font-mono font-bold text-[#d4af37] tracking-wider uppercase shadow-md">
               Executive Publisher &amp; Founder
             </div>

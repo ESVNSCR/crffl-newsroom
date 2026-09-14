@@ -377,7 +377,7 @@ export default function AdminDispatchPage() {
                 <img
                   src={bannerUrl}
                   alt="Office of the Commissioner"
-                  className="w-full h-auto max-h-72 object-cover object-center"
+                  className="w-full h-auto block"
                 />
                 <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-[11px] font-mono font-bold text-[#d4af37]">
                   ★ Official Header Banner
@@ -560,6 +560,15 @@ export default function AdminDispatchPage() {
                 />
               ) : (
                 <div className="p-6 sm:p-10 rounded-2xl bg-[#121824] border border-gray-800 shadow-inner space-y-6">
+                  {bannerUrl && (
+                    <div className="w-full rounded-2xl overflow-hidden border border-[#d4af37]/40 shadow-2xl bg-black/60 relative">
+                      <img
+                        src={bannerUrl}
+                        alt="Office of the Commissioner"
+                        className="w-full h-auto block"
+                      />
+                    </div>
+                  )}
                   <div className="border-b border-gray-800 pb-4">
                     <span className="text-xs font-mono uppercase text-[#d4af37] font-bold">
                       {categoryName} • Week {weekNumber}
