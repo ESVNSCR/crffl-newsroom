@@ -7,6 +7,11 @@ export const metadata = {
   title: 'CRFFL Times-Herald | Official Newsroom of the CRFFL',
   description: 'The Official Columbia River Fantasy Football League Newsroom, Dispatches, Power Rankings, and Pro Shop.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -89,7 +94,7 @@ export default function RootLayout({ children }) {
               <span>•</span>
               <Link href="/staff" className="hover:text-[#d4af37] transition">Staff Directory</Link>
               <span>•</span>
-              <Link href="/hof" className="hover:text-[#d4af37] transition">Hall of Fame</Link>
+              <a href="/hof" className="hover:text-[#d4af37] transition">Hall of Fame</a>
               <span>•</span>
               <a href="https://crffl-sportsbook.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Sportsbook</a>
               <span>•</span>
@@ -97,7 +102,7 @@ export default function RootLayout({ children }) {
               <span>•</span>
               <a href="https://crffl-pickem.vercel.app/scoreboard" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Scoreboard</a>
               <span>•</span>
-              <Link href="/shop" className="hover:text-[#d4af37] transition">Pro Shop</Link>
+              <a href="https://store.crffl.org/shop/" className="hover:text-[#d4af37] transition">Pro Shop</a>
               <span>•</span>
               <Link href="/admin/rankings" className="hover:text-[#d4af37] transition">Commissioner Portal</Link>
             </div>

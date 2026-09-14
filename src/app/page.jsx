@@ -295,12 +295,12 @@ export default async function HomePage({ searchParams }) {
               Explore the Ring Room, championship pedestals, all-time scoring records, and head-to-head manager rivalry timelines.
             </p>
 
-            <Link
+            <a
               href="/hof"
               className="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-semibold transition text-xs border border-white/10"
             >
               Enter Hall of Fame Pavilion →
-            </Link>
+            </a>
           </div>
 
           {/* Card 5: Gameday Sportsbook */}

@@ -77,14 +77,14 @@ export default function HeaderNav() {
             >
               Contests & Payouts
             </Link>
-            <Link
+            <a
               href="/hof"
               className={`px-2.5 py-1.5 rounded-lg transition ${
                 pathname === '/hof' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-800/80'
               }`}
             >
               Hall of Fame
-            </Link>
+            </a>
             <a
               href="https://crffl-sportsbook.vercel.app"
               target="_blank"
@@ -220,7 +220,7 @@ export default function HeaderNav() {
                 <span className="text-xs text-emerald-400 font-mono font-bold">$505 Purse →</span>
               </Link>
 
-              <Link
+              <a
                 href="/hof"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between p-3 rounded-xl border transition ${
@@ -229,7 +229,7 @@ export default function HeaderNav() {
               >
                 <span className="font-semibold text-sm">Hall of Fame</span>
                 <span className="text-xs text-gray-500 font-mono">Ring Room →</span>
-              </Link>
+              </a>
 
               <Link
                 href="/staff"
