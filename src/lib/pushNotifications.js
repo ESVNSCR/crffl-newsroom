@@ -2,8 +2,22 @@ import webpush from 'web-push';
 import { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } from './pushConfig';
 import { supabase } from './supabase';
 
-// Configure Web Push with VAPID keys
-webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+let isVapidConfigured = false;
+function ensureVapidConfigured() {
+  if (isVapidConfigured) return true;
+  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && VAPID_SUBJECT) {
+    try {
+      webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+      isVapidConfigured = true;
+      return true;
+    } catch (e) {
+      console.warn('Failed to configure VAPID details:', e.message);
+      return false;
+    }
+  }
+  return false;
+}
+
 
 /**
  * Format a stored subscription or raw subscription for web-push library
@@ -25,8 +39,14 @@ function formatSubscription(sub) {
  * Send an individual web push notification
  */
 export async function sendPushNotification(subscription, payload) {
+  if (!ensureVapidConfigured()) {
+    console.warn('Cannot send push notification: VAPID keys not configured in environment.');
+    return { success: false, error: 'VAPID keys not configured in environment.' };
+  }
+
   try {
     const formatted = formatSubscription(subscription);
+
     const result = await webpush.sendNotification(
       formatted,
       JSON.stringify(payload)
