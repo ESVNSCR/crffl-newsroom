@@ -279,25 +279,28 @@ Apply your secret directive to Rebel Scum.`;
     }
   }
 
-  // Save to newsroom_articles for continuity/rival memories
-  await supabase.from('newsroom_articles').insert([
-    {
-      author_id: 'marcus_vance',
-      author_name: 'Dr. Marcus Vance',
-      week_number: currentWeek,
-      season: 2026,
-      title: `Week ${currentWeek} Power Rankings`,
-      slug: `week-${currentWeek}-power-rankings`,
-      category_name: 'Power Rankings',
-      category_id: 32,
-      content_html: sanitizedIntroBlurb,
-      summary: sanitizedIntroBlurb.slice(0, 350) + '...',
-      rival_author: rivalInfo.rivalName,
-      wordpress_post_id: wpResult?.id || null,
-      wordpress_url: wpResult?.link || null,
-      status: dryRun ? 'draft' : 'published',
-    },
-  ]);
+  // If dryRun, return results without saving to newsroom_articles
+  if (!dryRun) {
+    // Save to newsroom_articles for continuity/rival memories (only for published live runs)
+    await supabase.from('newsroom_articles').insert([
+      {
+        author_id: 'marcus_vance',
+        author_name: 'Dr. Marcus Vance',
+        week_number: currentWeek,
+        season: 2026,
+        title: `Week ${currentWeek} Power Rankings`,
+        slug: `week-${currentWeek}-power-rankings`,
+        category_name: 'Power Rankings',
+        category_id: 32,
+        content_html: sanitizedIntroBlurb,
+        summary: sanitizedIntroBlurb.slice(0, 350) + '...',
+        rival_author: rivalInfo.rivalName,
+        wordpress_post_id: wpResult?.id || null,
+        wordpress_url: wpResult?.link || null,
+        status: 'published',
+      },
+    ]);
+  }
 
   return {
     success: true,

@@ -14,3 +14,4 @@ export async function GET(request) {
     return NextResponse.json({ authenticated: false }, { status: 500 });
   }
 }
+

@@ -156,7 +156,22 @@ ${JSON.stringify(previousMatchups, null, 2)}
   const plainText = cleanHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const summary = plainText.slice(0, 350) + '...';
 
-  // Save to Supabase
+  // If dryRun, return preview data without saving to Supabase
+  if (dryRun) {
+    return {
+      success: true,
+      author: 'Marty Sullivan',
+      title,
+      content_html: cleanHtml,
+      summary,
+      wordpress: null,
+      article: null,
+      dryRun: true,
+      rawText,
+    };
+  }
+
+  // Save to Supabase (only for published live runs)
   const { data: dbArticle, error: dbError } = await supabase
     .from('newsroom_articles')
     .insert([
@@ -174,7 +189,7 @@ ${JSON.stringify(previousMatchups, null, 2)}
         rival_author: rivalInfo.rivalName,
         wordpress_post_id: wpResult?.id || null,
         wordpress_url: wpResult?.link || null,
-        status: dryRun ? 'draft' : 'published',
+        status: 'published',
       },
     ])
     .select()

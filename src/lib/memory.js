@@ -16,6 +16,7 @@ export async function getAuthorMemory(authorId, limit = 3) {
       .from('newsroom_articles')
       .select('title, summary, week_number, season, created_at')
       .eq('author_id', authorId)
+      .eq('status', 'published')
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -45,6 +46,7 @@ export async function getDynamicRival(currentAuthorId, randomRival = false) {
       .from('newsroom_articles')
       .select('author_id, author_name, title, summary, content_html, week_number, created_at')
       .neq('author_id', currentAuthorId)
+      .eq('status', 'published')
       .order('created_at', { ascending: false })
       .limit(5);
 

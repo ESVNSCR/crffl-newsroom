@@ -13,10 +13,11 @@ export default async function HomePage({ searchParams }) {
   const sp = await searchParams;
   const initialCategory = sp?.category || 'all';
 
-  // 1. Fetch recent articles (up to 50 so desk/category filters can access archived dispatches)
+  // 1. Fetch recent published articles (up to 50 so desk/category filters can access archived dispatches)
   const { data: articles } = await supabase
     .from('newsroom_articles')
     .select('*')
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(50);
 
