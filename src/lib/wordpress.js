@@ -9,6 +9,7 @@ export const AUTHOR_WP_IDS = {
   chloe_carmichael: 2,
   marcus_vance: 4,
   marty_sullivan: 5,
+  commissioner: 6,
 };
 
 export const CATEGORY_IDS = {
@@ -16,6 +17,7 @@ export const CATEGORY_IDS = {
   'The Tuesday Recap': 16,
   'The Spin Room': 108,
   'Power Rankings': 32,
+  "Commissioner's Corner": 109,
 };
 
 /**

@@ -7,6 +7,7 @@ import { decodeHtmlEntities } from '@/lib/formatters';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Dispatches' },
+  { id: "Commissioner's Corner", label: "Commissioner's Corner" },
   { id: 'Power Rankings', label: 'Power Rankings' },
   { id: 'The Grit Desk', label: 'The Grit Desk' },
   { id: 'The Spin Room', label: 'The Spin Room' },
@@ -32,6 +33,7 @@ export default function DispatchesClient({ articles = [], featuredArticle = null
         const matchesCategory =
           activeCategory === 'all' ||
           (a.category_name && a.category_name.toLowerCase() === catLower) ||
+          (catLower === "commissioner's corner" && (a.author_id === 'commissioner' || a.category_id === 109 || a.category_name?.toLowerCase().includes('commissioner'))) ||
           (catLower === 'power rankings' && (a.author_id === 'marcus_vance' || a.title?.toLowerCase().includes('power ranking') || a.category_id === 32)) ||
           (catLower === 'the grit desk' && (a.author_id === 'buck_callahan' || a.category_id === 107)) ||
           (catLower === 'the spin room' && (a.author_id === 'chloe_carmichael' || a.category_id === 108)) ||

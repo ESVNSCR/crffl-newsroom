@@ -56,6 +56,17 @@ export default function ArticleModal({ article, onClose }) {
 
         {/* Scrollable Article Body */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-10 py-6 sm:py-8 space-y-5 sm:space-y-6">
+          {/* Commissioner Banner Image */}
+          {(article.author_id === 'commissioner' || article.category_name === "Commissioner's Corner" || article.banner_url) && (
+            <div className="w-full rounded-2xl overflow-hidden border border-[#d4af37]/40 shadow-2xl bg-black/60 relative">
+              <img
+                src={article.banner_url || '/commissioner-banner.png'}
+                alt="Office of the Commissioner"
+                className="w-full h-auto max-h-72 object-cover object-center"
+              />
+            </div>
+          )}
+
           {/* Article Title */}
           <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
             {decodeHtmlEntities(article.title)}

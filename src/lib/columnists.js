@@ -47,6 +47,18 @@ export const COLUMNISTS = {
     wpAuthorId: 2,
     wpAuthorSlug: 'chloe_carmichael',
   },
+  commissioner: {
+    id: 'commissioner',
+    name: 'Eric Vaughan',
+    title: 'CRFFL Commissioner & League Founder',
+    desk: 'The Front Office',
+    category: "Commissioner's Corner",
+    href: '/?category=Commissioner%27s+Corner#dispatches',
+    avatar: '/logos/league.png',
+    banner: '/commissioner-banner.png',
+    wpAuthorId: 6,
+    wpAuthorSlug: 'the-commissioner',
+  },
 };
 
 export function getColumnist(id) {

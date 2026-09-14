@@ -167,6 +167,8 @@ export default function AdminLayout({ children }) {
           <div className="flex items-center space-x-3 text-gray-400 font-mono">
             <span className="text-[#d4af37] font-bold">COMMISSIONER CLEARANCE ACTIVE</span>
             <span>•</span>
+            <Link href="/admin/dispatch" className="text-amber-400 font-bold hover:text-white transition">Dispatch Desk</Link>
+            <span>•</span>
             <Link href="/admin/test-bench" className="hover:text-white transition">Test Bench</Link>
             <span>•</span>
             <Link href="/admin/rankings" className="hover:text-white transition">Rankings</Link>
