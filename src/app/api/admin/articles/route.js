@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/adminAuth';
 import { supabase } from '@/lib/supabase';
-import { publishToWordpress } from '@/lib/wordpress';
 import { COLUMNISTS } from '@/lib/columnists';
+
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -84,19 +84,7 @@ export async function POST(request) {
     const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
     let wpResult = null;
-    if (publishToWp && status === 'published') {
-      try {
-        wpResult = await publishToWordpress({
-          title: title.trim(),
-          content: contentHtml,
-          authorSlug: authorId,
-          categoryName: finalCategoryName,
-          status: 'publish',
-        });
-      } catch (wpErr) {
-        console.warn('WordPress auto-publishing warning:', wpErr.message);
-      }
-    }
+
 
     const articlePayload = {
       title: title.trim(),

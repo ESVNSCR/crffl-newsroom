@@ -3,7 +3,7 @@ import { supabase } from '../supabase.js';
 import { getNflState, getLeagueOverview, getLeagueMatchups } from '../sleeper.js';
 import { getPffNews } from '../pff.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
-import { publishToWordpress, parseModelOutput } from '../wordpress.js';
+import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 import { calculateWeeklyBenchAudit } from '../benchAudit.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
@@ -169,15 +169,7 @@ ${benchAudit.formattedReport}
   const cleanHtml = sanitizeManagerNames(sanitizeTextPlayerIds(parsed.cleanHtml, playerMap));
 
   let wpResult = null;
-  if (!dryRun) {
-    wpResult = await publishToWordpress({
-      title,
-      content: cleanHtml,
-      authorSlug: 'marty_sullivan',
-      categoryName: 'The Tuesday Recap',
-      status: 'publish',
-    });
-  }
+
 
   // Create a 2-3 sentence summary for memory storage
   const plainText = cleanHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();

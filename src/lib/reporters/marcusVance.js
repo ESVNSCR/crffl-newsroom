@@ -2,8 +2,8 @@ import { ai, DEFAULT_MODEL } from '../gemini.js';
 import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueMatchups, MANAGERS } from '../sleeper.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
-import { publishToWordpress } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeManagerNames } from '../sleeperPlayers.js';
+
 
 /**
  * Calculates algorithmic baseline if manual ranking hasn't been submitted
@@ -258,26 +258,7 @@ Apply your secret directive to Rebel Scum.`;
 
   // Also publish an announcement post to WordPress if not dryRun
   let wpResult = null;
-  if (!dryRun) {
-    const wpTitle = `Week ${currentWeek} Power Rankings: Regression, Residuals, and Rebel Logic`;
-    const wpExcerpt = sanitizedIntroBlurb.replace(/\n+/g, ' ').slice(0, 300) + '...';
-    const wpContent = `
-      <p>${sanitizedIntroBlurb.replace(/\n\n/g, '</p><p>')}</p>
-      <p><strong><a href="/power-rankings" style="color: #d4af37; font-weight: bold; text-decoration: underline;">View the Complete Interactive 10-Team Power Rankings Board Here</a></strong></p>
-    `;
 
-    try {
-      wpResult = await publishToWordpress({
-        title: wpTitle,
-        content: wpContent,
-        authorSlug: 'marcus_vance',
-        categoryName: 'Power Rankings',
-        status: 'publish',
-      });
-    } catch (e) {
-      console.warn('Could not create WordPress announcement for Power Rankings:', e.message);
-    }
-  }
 
   // If dryRun, return results without saving to newsroom_articles
   if (!dryRun) {

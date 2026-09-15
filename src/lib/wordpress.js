@@ -1,10 +1,5 @@
 import { decodeHtmlEntities } from './formatters.js';
 
-const WP_URL = process.env.WORDPRESS_URL || 'https://store.crffl.org';
-const WP_USER = process.env.WORDPRESS_USERNAME;
-const WP_APP_PASSWORD = process.env.WORDPRESS_APP_PASSWORD;
-
-
 export const AUTHOR_WP_IDS = {
   buck_callahan: 3,
   chloe_carmichael: 2,
@@ -56,53 +51,10 @@ export function parseModelOutput(rawText) {
 }
 
 /**
- * Publishes or creates a draft post in WordPress via REST API
+ * Legacy WordPress publishing placeholder (now deactivated: articles are hosted natively on crffl.org via Supabase)
  */
-export async function publishToWordpress({
-  title,
-  content,
-  authorSlug,
-  categoryName,
-  status = 'publish',
-}) {
-  const authorId = AUTHOR_WP_IDS[authorSlug];
-  const categoryId = CATEGORY_IDS[categoryName];
-
-  if (!WP_USER || !WP_APP_PASSWORD) {
-    throw new Error('WordPress credentials are missing. Please set WORDPRESS_USERNAME and WORDPRESS_APP_PASSWORD.');
-  }
-
-  const authString = Buffer.from(`${WP_USER}:${WP_APP_PASSWORD}`).toString('base64');
-
-  const payload = {
-    title,
-    content,
-    status, // 'publish' or 'draft'
-  };
-
-  if (authorId) payload.author = authorId;
-  if (categoryId) payload.categories = [categoryId];
-
-  const res = await fetch(`${WP_URL}/wp-json/wp/v2/posts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${authString}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`WordPress API error (${res.status}): ${errText}`);
-  }
-
-  const data = await res.json();
-  return {
-    id: data.id,
-    link: data.link,
-    slug: data.slug,
-    status: data.status,
-  };
+export async function publishToWordpress() {
+  return null;
 }
+
 

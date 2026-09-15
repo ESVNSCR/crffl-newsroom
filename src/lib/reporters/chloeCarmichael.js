@@ -3,7 +3,7 @@ import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueTransactions, getLeagueMatchups } from '../sleeper.js';
 import { getPffNews } from '../pff.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
-import { publishToWordpress, parseModelOutput } from '../wordpress.js';
+import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichTransactionsWithPlayerNames, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 
 export async function generateChloeTransactions({ dryRun = false } = {}) {
@@ -142,15 +142,7 @@ ${JSON.stringify(matchups, null, 2)}
   const cleanHtml = sanitizeManagerNames(sanitizeTextPlayerIds(parsed.cleanHtml, playerMap));
 
   let wpResult = null;
-  if (!dryRun) {
-    wpResult = await publishToWordpress({
-      title,
-      content: cleanHtml,
-      authorSlug: 'chloe_carmichael',
-      categoryName: 'The Spin Room',
-      status: 'publish',
-    });
-  }
+
 
   const plainText = cleanHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const summary = plainText.slice(0, 350) + '...';

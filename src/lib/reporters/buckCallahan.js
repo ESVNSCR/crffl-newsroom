@@ -3,7 +3,7 @@ import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueMatchups } from '../sleeper.js';
 import { getPffNews } from '../pff.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
-import { publishToWordpress, parseModelOutput } from '../wordpress.js';
+import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 
 export async function generateBuckPreview({ dryRun = false } = {}) {
@@ -128,15 +128,7 @@ ${JSON.stringify(upcomingMatchups, null, 2)}
   const cleanHtml = sanitizeManagerNames(sanitizeTextPlayerIds(parsed.cleanHtml, playerMap));
 
   let wpResult = null;
-  if (!dryRun) {
-    wpResult = await publishToWordpress({
-      title,
-      content: cleanHtml,
-      authorSlug: 'buck_callahan',
-      categoryName: 'The Grit Desk',
-      status: 'publish',
-    });
-  }
+
 
   const plainText = cleanHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const summary = plainText.slice(0, 350) + '...';
