@@ -112,18 +112,7 @@ export default function ArticleModal({ article, onClose }) {
 
         {/* Bottom Footer Bar */}
         <div className="px-4 sm:px-10 py-3 sm:py-4 bg-[#0d121c] border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
-          <div>
-            {article.wordpress_url && (
-              <a
-                href={article.wordpress_url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[#d4af37] hover:underline font-semibold flex items-center gap-1.5 text-xs"
-              >
-                <span>Read on WordPress Archive</span> ↗
-              </a>
-            )}
-          </div>
+          <div />
 
           <button
             type="button"

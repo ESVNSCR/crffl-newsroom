@@ -61,7 +61,6 @@ export async function POST(request) {
       weekNumber = 1,
       season = 2026,
       status = 'published',
-      publishToWp = true,
       broadcastPush = false,
       bannerUrl = null,
     } = body;

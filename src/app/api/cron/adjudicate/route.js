@@ -3,6 +3,7 @@ import { getNflState } from '@/lib/sleeper';
 import { adjudicateWeekContest } from '@/lib/contestAdjudicator';
 import { syncHofWeekMatchups } from '@/lib/hofSync';
 import { verifyAdminSession } from '@/lib/adminAuth';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -25,33 +26,59 @@ async function handleAdjudication(request) {
     return NextResponse.json({ error: 'Unauthorized: Commissioner clearance required' }, { status: 401 });
   }
 
-
-  let weekToAdjudicate;
+  let weeksToAdjudicate = [];
   if (requestedWeek) {
-    weekToAdjudicate = Number(requestedWeek);
+    weeksToAdjudicate = [Number(requestedWeek)];
   } else {
-    const state = await getNflState();
-    // Default to the current NFL week
-    weekToAdjudicate = state.week || 1;
+    const state = await getNflState().catch(() => ({ week: 1 }));
+    const currentWeek = state.week || 1;
+
+    // Check all uncompleted weeks up to current week from Supabase
+    const { data: dbContests } = await supabase
+      .from('weekly_contests')
+      .select('week_number, status')
+      .lte('week_number', currentWeek)
+      .neq('status', 'completed')
+      .order('week_number', { ascending: true });
+
+    if (dbContests && dbContests.length > 0) {
+      weeksToAdjudicate = dbContests.map((c) => c.week_number);
+    } else {
+      // Fallback: check previous week and current week
+      if (currentWeek > 1) {
+        weeksToAdjudicate.push(currentWeek - 1);
+      }
+      weeksToAdjudicate.push(currentWeek);
+    }
   }
 
   try {
-    const result = await adjudicateWeekContest(weekToAdjudicate, { force, preview });
+    const results = [];
+    for (const w of weeksToAdjudicate) {
+      const result = await adjudicateWeekContest(w, { force, preview });
 
-    // Automatically synchronize official finalized matchups to Hall of Fame (hof_matchups)
-    let hofSyncResult = null;
-    try {
-      hofSyncResult = await syncHofWeekMatchups(weekToAdjudicate, { force, preview });
-    } catch (hofErr) {
-      console.warn('HOF matchup sync notice:', hofErr.message);
-      hofSyncResult = { success: false, error: hofErr.message };
+      let hofSyncResult = null;
+      if (result.isFinal && result.status === 'completed') {
+        try {
+          hofSyncResult = await syncHofWeekMatchups(w, { force, preview });
+        } catch (hofErr) {
+          console.warn(`HOF matchup sync notice for week ${w}:`, hofErr.message);
+          hofSyncResult = { success: false, error: hofErr.message };
+        }
+      }
+
+      results.push({
+        week: w,
+        adjudication: result,
+        hofSync: hofSyncResult,
+      });
     }
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      adjudication: result,
-      hofSync: hofSyncResult,
+      results: results.length === 1 ? results[0] : results,
+      adjudication: results.length === 1 ? results[0].adjudication : results.map((r) => r.adjudication),
     });
   } catch (err) {
     console.error('Error during weekly contest adjudication:', err);
@@ -69,4 +96,3 @@ export async function GET(request) {
 export async function POST(request) {
   return handleAdjudication(request);
 }
-

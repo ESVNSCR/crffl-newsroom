@@ -63,7 +63,7 @@ Your specific assignment is the Thursday Look-Ahead Preview (published Thursday 
 
 ---
 
-### 4. WORDPRESS PUBLISHING FORMAT (CRITICAL)
+### 4. CMS METADATA & PUBLISHING FORMAT (CRITICAL)
 Your response MUST begin with exactly three lines of bracketed shortcodes so our CMS can parse the post metadata. Do not include any greeting, markdown formatting, or text before these brackets:
 
 [title Grit Look-Ahead Headline Here]

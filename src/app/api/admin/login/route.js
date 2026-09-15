@@ -35,7 +35,7 @@ export async function POST(request) {
     const { pin } = body;
 
     // 2. Verify Commissioner PIN
-    const isValid = verifyCommissionerPin(pin);
+    const isValid = await verifyCommissionerPin(pin);
     if (!isValid) {
       const record = recordFailedAttempt(ip);
       return NextResponse.json(

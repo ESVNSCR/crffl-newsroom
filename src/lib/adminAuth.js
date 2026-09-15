@@ -1,8 +1,13 @@
 import crypto from 'crypto';
+import { supabase } from './supabase.js';
 
 export const COOKIE_NAME = 'crffl_admin_session';
 
-const COMMISSIONER_PIN = (process.env.COMMISSIONER_PIN || '').trim();
+const COMMISSIONER_PIN = (
+  process.env.COMMISSIONER_PIN ||
+  process.env.NEXT_PUBLIC_COMMISSIONER_PIN ||
+  ''
+).trim();
 
 const SESSION_SECRET = (
   process.env.ADMIN_SESSION_SECRET ||
@@ -58,27 +63,38 @@ export function clearRateLimit(ip) {
 }
 
 /**
- * Timing-safe PIN verification
+ * Timing-safe PIN verification for the Commissioner
+ * Supports static environment variable as well as dynamic Supabase authentication for manager 'Eric'
  */
-export function verifyCommissionerPin(inputPin) {
+export async function verifyCommissionerPin(inputPin) {
   if (!inputPin || typeof inputPin !== 'string') return false;
-  const target = COMMISSIONER_PIN;
-  if (!target) {
-    console.error('COMMISSIONER_PIN is not configured in server environment.');
-    return false;
-  }
   const cleanInput = inputPin.trim();
 
-  const bufInput = Buffer.from(cleanInput);
-  const bufTarget = Buffer.from(target);
-
-  if (bufInput.length !== bufTarget.length) {
-    // Constant time dummy compare to prevent length timing leaks
-    crypto.timingSafeEqual(bufInput, bufInput);
-    return false;
+  // 1. Check environment variable (COMMISSIONER_PIN or NEXT_PUBLIC_COMMISSIONER_PIN)
+  const target = COMMISSIONER_PIN;
+  if (target) {
+    const bufInput = Buffer.from(cleanInput);
+    const bufTarget = Buffer.from(target);
+    if (bufInput.length === bufTarget.length && crypto.timingSafeEqual(bufInput, bufTarget)) {
+      return true;
+    }
   }
 
-  return crypto.timingSafeEqual(bufInput, bufTarget);
+  // 2. Dynamic check: Eric is the Commissioner and owner of Rebel Scum
+  // Authenticate against Supabase manager_pins table via verify_manager_pin RPC
+  try {
+    const { data: isValid, error } = await supabase.rpc('verify_manager_pin', {
+      p_manager: 'Eric',
+      p_pin: cleanInput,
+    });
+    if (!error && isValid === true) {
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not verify commissioner pin via Supabase RPC:', err.message);
+  }
+
+  return false;
 }
 
 /**

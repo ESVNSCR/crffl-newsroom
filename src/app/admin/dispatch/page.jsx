@@ -119,7 +119,6 @@ export default function AdminDispatchPage() {
   const [authorId, setAuthorId] = useState('commissioner');
   const [authorName, setAuthorName] = useState('Eric Vaughan');
   const [status, setStatus] = useState('published');
-  const [publishToWp, setPublishToWp] = useState(true);
   const [broadcastPush, setBroadcastPush] = useState(false);
   const [bannerUrl, setBannerUrl] = useState('/commissioner-banner.png');
 
@@ -507,7 +506,6 @@ export default function AdminDispatchPage() {
           categoryName,
           weekNumber: Number(weekNumber) || 1,
           status: targetStatus,
-          publishToWp,
           broadcastPush,
           bannerUrl,
         }),
@@ -521,10 +519,9 @@ export default function AdminDispatchPage() {
       setSaveSuccess({
         status: targetStatus,
         message: targetStatus === 'published'
-          ? 'Dispatch successfully published to crffl.org & WordPress!'
+          ? 'Dispatch successfully published to crffl.org!'
           : 'Draft successfully saved to database.',
         article: data.article,
-        wpUrl: data.wordpress?.link,
       });
 
       if (activeTab === 'archive') {
@@ -653,14 +650,6 @@ export default function AdminDispatchPage() {
                 ✕
               </button>
             </div>
-            {saveSuccess.wpUrl && (
-              <p className="text-xs text-emerald-400 font-mono">
-                WordPress Mirror:{' '}
-                <a href={saveSuccess.wpUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
-                  {saveSuccess.wpUrl}
-                </a>
-              </p>
-            )}
           </div>
         )}
 
@@ -1166,16 +1155,6 @@ export default function AdminDispatchPage() {
             {/* Publishing Controls Card */}
             <div className="p-5 rounded-2xl bg-[#121824] border border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-xs font-mono">
-                <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={publishToWp}
-                    onChange={(e) => setPublishToWp(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#d4af37] focus:ring-0 focus:outline-none"
-                  />
-                  <span>Publish mirror to WordPress (store.crffl.org)</span>
-                </label>
-
                 <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
                   <input
                     type="checkbox"

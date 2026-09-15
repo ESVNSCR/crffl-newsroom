@@ -289,7 +289,7 @@ ${reporterId === 'marty_sullivan' ? `
    - You MUST closely analyze the LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT above.
    - If any manager suffered a FATAL BENCH BLUNDER (their optimal lineup would have won the matchup, but they sat the winning points on the bench), you must mercilessly roast them! Name the stranded players, their points, and call out the manager's malpractice.
 ` : ''}
-${reporterId === 'marty_sullivan' ? '4' : '3'}. OUTPUT FORMAT (MANDATORY):
+${reporterId === 'marty_sullivan' ? '4' : '3'}. OUTPUT FORMAT & COMPLETION RULES (MANDATORY):
    Your output MUST begin with exactly four lines of bracketed shortcodes so our CMS can parse the article metadata:
    [title Compelling Headline in Character]
    [author ${persona.name}]
@@ -298,7 +298,11 @@ ${reporterId === 'marty_sullivan' ? '4' : '3'}. OUTPUT FORMAT (MANDATORY):
 
    Followed immediately by well-crafted, stylized HTML content (<p>, optional <h3> sub-headings, <blockquote>).
    Do NOT wrap in markdown code fences (\`\`\`html).
-   Target length: 500 – 800 words of rich, entertaining writing fully in character.
+   Target length: 750 – 1,500 words of rich, entertaining writing fully in character.
+   PACING & COMPLETION REQUIREMENT (CRITICAL):
+   - Pace your writing so you deliver your full message from the opening hook/decree to an authoritative conclusion.
+   - Do not write open-ended drafts. Every article MUST finish with an official closing paragraph and sign-off (e.g. for the Commissioner: "- Eric Vaughan, Commissioner, CRFFL").
+   - Ensure all HTML tags are opened and closed cleanly.
   `.trim();
 
   let userPrompt = '';
@@ -318,9 +322,9 @@ Write a custom column on the following topic:
     userPrompt += `\nSpecial Focus / Focal Target: Make sure to give significant, targeted coverage to manager ${targetManager} in your analysis.\n`;
   }
 
-  userPrompt += `\nRemember to stay completely in your persona as ${persona.name} (${persona.tagline}). Bring your unique worldview, biases, and comedic voice to this topic.`;
+  userPrompt += `\nRemember to stay completely in your persona as ${persona.name} (${persona.tagline}). Bring your unique worldview, biases, and comedic voice to this topic. Ensure your piece is complete through to the final sign-off.`;
 
-  // 11. Call Gemini API
+  // 11. Call Gemini API without artificial maxOutputTokens so output is never cut off
   const response = await ai.models.generateContent({
     model: DEFAULT_MODEL,
     contents: [
@@ -328,9 +332,16 @@ Write a custom column on the following topic:
     ],
     config: {
       temperature: 0.85,
-      maxOutputTokens: 2500,
+      thinkingConfig: {
+        thinkingBudget: 1024,
+      },
     }
   });
+
+  const finishReason = response.candidates?.[0]?.finishReason;
+  if (finishReason === 'MAX_TOKENS') {
+    console.warn('⚠️ Warning: Gemini generation reached MAX_TOKENS ceiling.');
+  }
 
   const rawOutput = response.text || '';
   const { title, cleanHtml } = parseModelOutput(rawOutput);

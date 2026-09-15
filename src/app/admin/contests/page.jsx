@@ -37,10 +37,13 @@ export default function AdminContestsPage() {
         if (adj.isFinal) {
           updateContest(weekNumber, 'status', 'completed');
           setMessage(`Week ${weekNumber} Contest Officially Finalized & Locked! Winner: ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}`);
+        } else if (adj.status === 'stat_correction_pending') {
+          updateContest(weekNumber, 'status', 'stat_correction_pending');
+          setMessage(`[STAT CORRECTION HOLD (< 2.0 PTS)]: Current leader is ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}. Matches complete, but margin is under 2.0 pts. Locks Wednesday at 10:00 AM PT unless force locked.`);
         } else {
           // Status stays active - games are in progress
           updateContest(weekNumber, 'status', 'active');
-          setMessage(`[LIVE PREVIEW - IN PROGRESS]: Current leader is ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}. Contests do not lock until Tuesday morning Pacific Time.`);
+          setMessage(`[LIVE PREVIEW - IN PROGRESS]: Current leader is ${adj.winner_manager} (${adj.winner_team}) with ${adj.winning_score}. Games are underway.`);
         }
         setAdjudicationDetail(adj.explanation || '');
       } else {
@@ -181,12 +184,12 @@ export default function AdminContestsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm(`Are you sure you want to FORCE lock Week ${c.week_number} right now before Tuesday morning?`)) {
+                    if (window.confirm(`Are you sure you want to FORCE lock Week ${c.week_number} right now as officially completed?`)) {
                       runAutoAdjudication(c.week_number, { force: true });
                     }
                   }}
                   disabled={adjudicating}
-                  title="Override Tuesday morning gate and write status=completed immediately"
+                  title="Override stat correction window and lock status=completed immediately"
                   className="px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-xs font-semibold transition flex items-center gap-1 disabled:opacity-50"
                 >
                   Force Lock Winner
