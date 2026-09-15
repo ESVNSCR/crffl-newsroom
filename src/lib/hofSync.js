@@ -114,6 +114,16 @@ export async function syncHofWeekMatchups(weekNumber, { season = 2026, force = f
     const slug1 = toSlug(meta1.managerName);
     const slug2 = toSlug(meta2.managerName);
 
+    const startersSet1 = new Set(t1.starters || []);
+    const bench1 = (t1.players || [])
+      .filter(id => !startersSet1.has(id))
+      .map(id => ({ id, pts: t1.players_points?.[id] ?? 0 }));
+
+    const startersSet2 = new Set(t2.starters || []);
+    const bench2 = (t2.players || [])
+      .filter(id => !startersSet2.has(id))
+      .map(id => ({ id, pts: t2.players_points?.[id] ?? 0 }));
+
     formattedMatchups.push({
       id: `${season}-w${week}-m${mid}-${slug1}-vs-${slug2}`,
       season: Number(season),
@@ -129,6 +139,8 @@ export async function syncHofWeekMatchups(weekNumber, { season = 2026, force = f
       point_diff: diff,
       starters_a: (t1.starters || []).map((id, idx) => ({ id, pts: t1.starters_points?.[idx] ?? 0 })),
       starters_b: (t2.starters || []).map((id, idx) => ({ id, pts: t2.starters_points?.[idx] ?? 0 })),
+      bench_a: bench1,
+      bench_b: bench2,
     });
   }
 
@@ -154,6 +166,26 @@ export async function syncHofWeekMatchups(weekNumber, { season = 2026, force = f
     throw new Error(`Database upsert error: ${error.message}`);
   }
 
+  // Automatically trigger the Hall of Fame Record Audit to detect newly broken records
+  let recordAudit = null;
+  try {
+    const hofBase = process.env.HOF_URL || 'https://crffl.org/hof';
+    const cronSecret = process.env.CRON_SECRET;
+    const auditRes = await fetch(`${hofBase}/api/records/audit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(cronSecret ? { 'Authorization': `Bearer ${cronSecret}` } : {}),
+      },
+      cache: 'no-store'
+    });
+    if (auditRes.ok) {
+      recordAudit = await auditRes.json();
+    }
+  } catch (auditErr) {
+    console.warn('HOF automated record audit trigger notice:', auditErr.message);
+  }
+
   return {
     success: true,
     status: 'synced',
@@ -161,6 +193,7 @@ export async function syncHofWeekMatchups(weekNumber, { season = 2026, force = f
     week,
     syncedCount: formattedMatchups.length,
     matchups: formattedMatchups,
+    recordAudit
   };
 }
 
