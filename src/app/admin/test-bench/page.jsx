@@ -128,7 +128,7 @@ export default function AdminTestBenchPage() {
     setReminderResult(null);
 
     try {
-      const res = await fetch('/api/cron/baseline-reminder?week=1', {
+      const res = await fetch('/api/cron/baseline-reminder?week=1&force=true', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/baseline-reminder",
-      "schedule": "0 16 * * 3"
+      "schedule": "0 16 * * 2"
     },
     {
       "path": "/api/cron/dispatch?reporter=chloe",

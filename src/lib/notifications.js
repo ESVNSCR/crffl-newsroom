@@ -77,7 +77,7 @@ export async function sendDiscordAlert({ message, weekNumber, title = 'CRFFL Com
           fields: [
             {
               name: 'Dr. Vance Run Time',
-              value: 'Wednesdays @ 2:00 PM Pacific',
+              value: 'Tuesdays @ 2:00 PM Pacific',
               inline: true,
             },
             {
