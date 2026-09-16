@@ -117,6 +117,102 @@ export async function generateMarcusPowerRankings({ dryRun = false, forcePreseas
     }
   }
 
+  // 3. Detect week-over-week rank movements & high-volatility anomalies (> 3 positions)
+  const bigRisers = [];
+  const bigFallers = [];
+  const allRankMovements = [];
+
+  if (!isPreseasonOrWeekOne && Object.keys(lastWeekRankMap).length > 0) {
+    baseline.forEach((team, idx) => {
+      const currentRank = team.rank || (idx + 1);
+      const preset =
+        MANAGERS[team.username] ||
+        MANAGERS[team.manager_name] ||
+        MANAGERS[team.managerName] ||
+        Object.values(MANAGERS).find(
+          (m) =>
+            m.teamName?.toLowerCase() === (team.team_name || team.teamName)?.toLowerCase() ||
+            m.managerName?.toLowerCase() === (team.manager_name || team.managerName)?.toLowerCase()
+        ) ||
+        {};
+
+      const prevRank =
+        lastWeekRankMap[team.username?.toLowerCase()] ??
+        lastWeekRankMap[team.manager_name?.toLowerCase()] ??
+        lastWeekRankMap[team.managerName?.toLowerCase()] ??
+        lastWeekRankMap[team.team_name?.toLowerCase()] ??
+        lastWeekRankMap[team.teamName?.toLowerCase()] ??
+        lastWeekRankMap[preset.username?.toLowerCase()] ??
+        lastWeekRankMap[preset.managerName?.toLowerCase()] ??
+        lastWeekRankMap[preset.teamName?.toLowerCase()];
+
+      if (typeof prevRank === 'number') {
+        const diff = prevRank - currentRank; // positive = climbed, negative = dropped
+        const teamName = preset.teamName || team.team_name || team.teamName || 'Unknown Team';
+        const managerName = preset.managerName || team.manager_name || team.managerName || 'Unknown Manager';
+        const username = team.username || preset.username;
+
+        allRankMovements.push({
+          username,
+          teamName,
+          managerName,
+          prevRank,
+          currentRank,
+          diff,
+        });
+
+        if (diff > 3) {
+          bigRisers.push({
+            username,
+            teamName,
+            managerName,
+            prevRank,
+            currentRank,
+            diff,
+          });
+        } else if (diff < -3) {
+          bigFallers.push({
+            username,
+            teamName,
+            managerName,
+            prevRank,
+            currentRank,
+            diff: Math.abs(diff),
+          });
+        }
+      }
+    });
+  }
+
+  let moversPromptSection = '';
+  if (!isPreseasonOrWeekOne && Object.keys(lastWeekRankMap).length > 0) {
+    const summaryLines = allRankMovements
+      .sort((a, b) => a.prevRank - b.prevRank)
+      .map((m) => {
+        const trendStr = m.diff > 0 ? `▲ +${m.diff}` : m.diff < 0 ? `▼ -${Math.abs(m.diff)}` : '▬ 0';
+        return `  - #${m.prevRank} -> #${m.currentRank}: ${m.teamName} (${m.managerName}) [${trendStr}]`;
+      })
+      .join('\n');
+
+    moversPromptSection = `\n---
+
+### 4. WEEK-OVER-WEEK RANK MOVEMENTS & HIGH-VOLATILITY ANOMALIES
+Official Movement from Week ${previousWeek} to Week ${currentWeek} based on Baseline:
+${summaryLines}
+
+${(bigRisers.length > 0 || bigFallers.length > 0) ? `HIGH-VOLATILITY ANOMALIES (SHIFTS OF MORE THAN 3 POSITIONS):
+${bigRisers.length > 0 ? `* ROCKET RISERS (Climbed > 3 spots):
+${bigRisers.map((r) => `  - ${r.teamName} (${r.managerName}): Vaulted from #${r.prevRank} to #${r.currentRank} (+${r.diff} spots!)`).join('\n')}` : ''}
+${bigFallers.length > 0 ? `* FREEFALL COLLAPSES (Plummeted > 3 spots):
+${bigFallers.map((f) => `  - ${f.teamName} (${f.managerName}): Plummeted from #${f.prevRank} to #${f.currentRank} (-${f.diff} spots!)`).join('\n')}` : ''}
+
+CRITICAL SPECIAL MENTION MANDATE FOR BIG MOVERS:
+1. INTRO BLURB REQUIREMENT: You MUST dedicate an analytical paragraph in your intro_blurb to these high-volatility shifts. Frame these violent swings through advanced statistical modeling (stochastic variance, sample-size noise, schedule luck, or true systematic structural changes in expected fantasy output). Call out the biggest risers and steepest fallers by manager name!
+2. INDIVIDUAL TEAM BLURB MANDATE: For EVERY team listed above that climbed or dropped more than 3 positions, you MUST give a direct, emphatic special mention of their massive rank swing in their individual blurb:
+   - For Rocket Risers (+4 spots or more): Highlight their dramatic rise and diagnose whether it represents sustainable offensive efficiency or an unsustainable lucky variance outlier due to regress.
+   - For Freefall Collapses (-4 spots or more): Highlight their catastrophic fall and surgically diagnose whether it is temporary bad variance (roster still has solid xFP equity) or genuine structural decay.` : 'No teams moved more than 3 positions this week. Address standard incremental variance.'}`;
+  }
+
   const prompt = `You are Dr. Marcus Vance, Senior Analytics Columnist for the CRFFL Times-Herald (crffl.org). You are writing the weekly Power Rankings for the Columbia River Fantasy Football League (CRFFL).
 
 ### 1. YOUR PERSONA & VOICE
@@ -169,24 +265,31 @@ CRITICAL: NEVER use generic placeholder names like "Team 10", "Team 4", "Team 8"
 CRITICAL: NEVER use account usernames or Sleeper handles (NEVER write "mikef5630", "XWINGBLUE", "KillaMC", "GardenGoddess", "RaiderRose510", "coreycash", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "iammichael2u") in blurbs or intro blurbs. Refer to people by their real human names!
 
 ${rivalInfo.promptContext}
+${moversPromptSection}
 
 ---
 
-### 4. INSTRUCTIONS & OUTPUT SCHEMA
+### ${moversPromptSection ? '5' : '4'}. INSTRUCTIONS & OUTPUT SCHEMA
 Generate your complete weekly Power Rankings for Week ${currentWeek}.
 Format your response as valid JSON with NO markdown code fences (raw JSON string only) matching this exact schema:
 {
-  "intro_blurb": "A 2-3 paragraph analytical introduction. Lightly poke fun at ${rivalInfo.rivalName}'s recent take using good-natured math and explain your model's preseason calibrations for Week ${currentWeek}.",
+  "intro_blurb": "${isPreseasonOrWeekOne
+    ? `A 2-3 paragraph analytical introduction. Lightly poke fun at ${rivalInfo.rivalName}'s recent take using good-natured math and explain your model's preseason calibrations for Week ${currentWeek}.`
+    : `A 2-3 paragraph analytical introduction. Lightly poke fun at ${rivalInfo.rivalName}'s recent take using good-natured math, analyze league-wide variance from Week ${previousWeek} to Week ${currentWeek}, and prominently discuss the high-volatility anomalies (>3 spot risers/fallers).`
+  }",
   "rankings": [
     {
       "rank": 1,
       "username": "XWINGBLUE",
       "team_name": "Rebel Scum",
       "manager_name": "Eric",
-      "record": "0-0",
-      "points_for": "0.0",
-      "blurb": "4-5 sentence analytical breakdown evaluating their draft equity, key named starters, and projected xFP distribution with witty statistical precision. NEVER mention match scores or wins/losses.",
-      "trend": "▬"
+      "record": "${isPreseasonOrWeekOne ? '0-0' : '1-0'}",
+      "points_for": "${isPreseasonOrWeekOne ? '0.0' : '145.2'}",
+      "blurb": "${isPreseasonOrWeekOne
+        ? '4-5 sentence analytical breakdown evaluating their draft equity, key named starters, and projected xFP distribution with witty statistical precision. NEVER mention match scores or wins/losses.'
+        : '4-5 sentence analytical breakdown diagnosing their performance, key named starters, efficiency metrics, and expected fantasy points (xFP). MANDATORY: If this team rose or dropped more than 3 positions compared to last week, you MUST explicitly address and diagnose their violent rank swing in this blurb!'
+      }",
+      "trend": "▲ 4 or ▼ 5 or ▬"
     }
   ]
 }

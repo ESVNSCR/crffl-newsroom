@@ -184,7 +184,7 @@ export default async function PowerRankingsPage({ searchParams }) {
                   .map((para, i) => <p key={i}>{para}</p>)
               ) : (
                 <p className="italic text-gray-400">
-                  Awaiting Dr. Vance's regression models for this week. Rankings will publish Wednesday at 2:00 PM.
+                  Awaiting Dr. Vance's regression models for this week. Rankings will publish Tuesday at 2:00 PM.
                 </p>
               )}
             </div>
