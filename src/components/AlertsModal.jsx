@@ -493,7 +493,10 @@ export default function AlertsModal({ isOpen, onClose }) {
                   Email Address
                 </label>
                 <input
+                  id="alert-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="e.g. manager@gmail.com"
@@ -509,7 +512,11 @@ export default function AlertsModal({ isOpen, onClose }) {
                     Mobile Phone (for SMS)
                   </label>
                   <input
+                    id="alert-phone"
+                    name="phone"
                     type="tel"
+                    autoComplete="tel"
+                    inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="e.g. 480-209-7790"

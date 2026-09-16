@@ -110,7 +110,12 @@ export default function AdminLayout({ children }) {
           <form onSubmit={handlePinSubmit} className="space-y-4">
             <div>
               <input
+                id="admin-clearance-pin"
+                name="pin"
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="current-password"
                 maxLength={8}
                 value={pin}
                 disabled={submitting || locked}

@@ -33,7 +33,7 @@ export default function ArticleModal({ article, onClose }) {
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal Dialog Card */}
-      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-[#121824] border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-10">
+      <div className="relative w-full max-w-3xl max-h-[90dvh] sm:max-h-[92dvh] flex flex-col bg-[#121824] border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-10 overscroll-contain">
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800 bg-[#0d121c]/90">
           <div className="flex items-center space-x-2 sm:space-x-2.5">

@@ -277,7 +277,12 @@ export default function ArticleComments({ articleId }) {
             <div>
               <label className="block text-[10px] font-mono text-gray-300 mb-1">SECURITY PIN:</label>
               <input
+                id="article-reply-pin"
+                name="pin"
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="current-password"
                 maxLength={6}
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
@@ -549,7 +554,12 @@ export default function ArticleComments({ articleId }) {
               </button>
             </div>
             <input
+              id="article-comment-pin"
+              name="pin"
               type={showPin ? "text" : "password"}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="current-password"
               maxLength={6}
               value={pin}
               onChange={(e) => { setPin(e.target.value); setErrorMsg(''); }}

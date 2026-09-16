@@ -296,7 +296,12 @@ export default function PowerRankingComments({ rankingId, weekNumber }) {
             <div>
               <label className="block text-[10px] font-mono text-gray-300 mb-1">SECURITY PIN:</label>
               <input
+                id="ranking-reply-pin"
+                name="pin"
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="current-password"
                 maxLength={6}
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
@@ -613,7 +618,12 @@ export default function PowerRankingComments({ rankingId, weekNumber }) {
               </button>
             </div>
             <input
+              id="ranking-comment-pin"
+              name="pin"
               type={showPin ? 'text' : 'password'}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="current-password"
               maxLength={6}
               value={pin}
               onChange={(e) => {
