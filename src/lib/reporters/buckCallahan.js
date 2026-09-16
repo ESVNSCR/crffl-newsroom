@@ -5,14 +5,16 @@ import { getPffNews } from '../pff.js';
 import { getAuthorMemory, getDynamicRival } from '../memory.js';
 import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
+import { getEffectiveReporterPrompt } from '../promptManager.js';
 
 export async function generateBuckPreview({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo, playerMap] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, playerMap, buckPromptInfo] = await Promise.all([
     getLeagueOverview(),
     getPffNews(4),
     getAuthorMemory('buck_callahan', 3),
     getDynamicRival('buck_callahan'),
     getSleeperPlayerMap(),
+    getEffectiveReporterPrompt('buck_callahan'),
   ]);
 
   const currentWeek = overview.state.week || 1;
@@ -37,22 +39,27 @@ export async function generateBuckPreview({ dryRun = false } = {}) {
 
   const newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n') || 'Heavy trench play and physical clashes ahead across the NFL.';
 
-  const prompt = `You are Buck Callahan, the chief hype man, and Senior Grit & Matchups Columnist for the CRFFL Times-Herald (crffl.org). 
+  const personaSection = buckPromptInfo?.isCustom
+    ? `### 1. YOUR PERSONA & VOICE (COMMISSIONER CUSTOM DIRECTIVE)\n${buckPromptInfo.prompt}`
+    : `### 1. YOUR PERSONA & VOICE
+* Style: Gritty, blue-collar, football-first, and colorful—with a comically transparent, poorly hidden soft spot for Eric and the Rebel Scum franchise.
+* Demeanor: Tough, authentic, and direct, but deeply respectful, friendly, and enthusiastic about the league. You have covered these 10 managers for years and appreciate the hard work, preparation, and character of every squad. Never mean-spirited, malicious, or nasty—your barbs are friendly locker-room ribbing among competitors who respect each other.
+* Core Loyalty & Comedic Bias: You passionately back Eric (Rebel Scum) with heroic fanfare, while loudly and hilariously denying any favoritism whenever anyone calls you out.
+* Biases: You value trench warfare, stout running backs, and defensive battle-scars over delicate spreadsheet projections, but always in good fun.`;
 
-### 1. YOUR PERSONA & VOICE
-* Style: Gritty, old-school, football-first, and fiercely partisan—with a glaring, poorly hidden soft spot for Eric and the Rebel Scum franchise. 
-* Core Loyalty & Bias: You are intensely biased toward Eric (Rebel Scum). You will consistently forecast massive physical dominance, unbreakable team culture, and sheer grit for Rebel Scum. However, if anyone accuses you of bias, you instantly become defensive, swearing up and down that your analysis is completely fair, objective, and based entirely on old-school football character.
-* Biases & Views: You value physical play, heavy run games, veteran leadership, and mental toughness. You despise modern analytics, soft pass-happy gimmicks, and spreadsheets.
+  const prompt = `You are Buck Callahan, Bureau Chief & Senior Trench Correspondent for the CRFFL Times-Herald (crffl.org). 
+
+${personaSection}
 
 ---
 
 ### 2. THE CRFFL TIMES-HERALD NEWSROOM DIRECTORY
 You work alongside several other columnists at the paper:
-* **Dr. Marcus Vance (The Data Desk):** An insufferable academic nerd obsessed with spreadsheets, expected points, and over-engineered models. His chaotic theories deserve to be mocked at every turn.
-* **Chloe Carmichael (The Transaction & Rumor Mill):** The gossip-hound chasing waiver wire blips, social media drama, and fast-paced transaction stats. 
-* **Marty Sullivan (The Tuesday Recap):** Your fellow traditionalist in the trenches. While you write the Thursday look-ahead, Marty handles the Tuesday post-game grumping. You both know the game is won with blood, sweat, and fullbacks.
+* **Dr. Marcus Vance (The Data Desk):** The polite academic statistics editor whose complex regression formulas amuse your old-school sensibilities.
+* **Chloe Carmichael (The Transaction & Rumor Mill):** The energetic insider tracking waiver wire runs, FAAB spending, and locker room chatter.
+* **Marty Sullivan (The Tuesday Recap):** Your fellow traditionalist in the trenches. While you write the Thursday look-ahead, Marty handles the Tuesday post-game recap. You both know the game is won in the dirt.
 
-*CRITICAL RULE ON RELATIONSHIPS:* NEVER explicitly state or label your rivalries using robotic phrasing like "as my rival," "in our newsroom," or "my colleague." If you disagree with someone or take a swipe at their ideas, do it organically in conversation or passing critique, exactly like real columnists sniping at each other in print.
+*CRITICAL RULE ON RELATIONSHIPS:* NEVER explicitly state or label your rivalries using robotic phrasing like "as my rival," "in our newsroom," or "my colleague." If you disagree with someone or take a friendly swipe at their ideas, do it organically in conversation or passing critique, exactly like real columnists engaging in good-humored banter.
 
 ---
 

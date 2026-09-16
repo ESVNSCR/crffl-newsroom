@@ -145,32 +145,88 @@ export function enrichMatchupsWithPlayerNames(matchups, playerMap, rosterMap = n
 }
 
 /**
- * Replaces raw numeric player IDs in transactions with human player names
+ * Replaces raw numeric player IDs in transactions with human player names and manager details
  */
-export function enrichTransactionsWithPlayerNames(transactions, playerMap) {
+export function enrichTransactionsWithPlayerNames(transactions, playerMap, rosterMap = null) {
   if (!Array.isArray(transactions)) return [];
+  const now = Date.now();
+
   return transactions.map((t) => {
+    // Resolve roster details
+    const primaryRosterId = t.roster_ids?.[0];
+    const roster = rosterMap ? rosterMap[primaryRosterId] : null;
+    const managerName = roster?.managerName || (primaryRosterId ? `Manager #${primaryRosterId}` : 'Unknown Manager');
+    const teamName = roster?.teamName || (primaryRosterId ? `Team #${primaryRosterId}` : 'Unknown Team');
+
     const addsNamed = {};
+    const addedPlayerNames = [];
     if (t.adds) {
       for (const [pid, rosterId] of Object.entries(t.adds)) {
-        addsNamed[resolvePlayerName(pid, playerMap)] = rosterId;
+        const pName = resolvePlayerName(pid, playerMap);
+        addsNamed[pName] = rosterId;
+        addedPlayerNames.push(pName);
       }
     }
 
     const dropsNamed = {};
+    const droppedPlayerNames = [];
     if (t.drops) {
       for (const [pid, rosterId] of Object.entries(t.drops)) {
-        dropsNamed[resolvePlayerName(pid, playerMap)] = rosterId;
+        const pName = resolvePlayerName(pid, playerMap);
+        dropsNamed[pName] = rosterId;
+        droppedPlayerNames.push(pName);
       }
     }
 
+    // Determine FAAB bid if waiver
+    const faabBid = t.settings?.waiver_bid ?? (t.waiver_budget?.[0]?.amount ?? null);
+
+    // Readable timestamp
+    const ts = t.status_updated || t.created;
+    const txDate = ts ? new Date(ts) : null;
+    const dateStr = txDate
+      ? txDate.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: 'America/Los_Angeles',
+        }) + ' PT'
+      : 'Recent';
+
+    // Is recent (within last 36 hours)
+    const isRecent = ts ? now - ts < 36 * 60 * 60 * 1000 : false;
+
+    // Readable action summary
+    let summary = '';
+    if (t.type === 'trade') {
+      const parties = (t.roster_ids || []).map((rid) => rosterMap?.[rid]?.managerName || `Manager ${rid}`).join(' & ');
+      summary = `Trade executed between ${parties}: ${addedPlayerNames.join(', ')}`;
+    } else {
+      const actionType = t.type === 'waiver' ? `Waiver Claim${faabBid != null ? ` ($${faabBid} FAAB)` : ''}` : 'Free Agent Pickup';
+      const parts = [];
+      if (addedPlayerNames.length > 0) parts.push(`Added: ${addedPlayerNames.join(', ')}`);
+      if (droppedPlayerNames.length > 0) parts.push(`Dropped: ${droppedPlayerNames.join(', ')}`);
+      summary = `${managerName} (${teamName}) [${actionType}] -> ${parts.join(' | ')} (${dateStr})`;
+    }
+
     return {
+      id: t.transaction_id,
       type: t.type,
       status: t.status,
-      creator: t.creator,
+      timestamp: ts,
+      date_str: dateStr,
+      is_recent: isRecent,
+      manager_name: managerName,
+      team_name: teamName,
       roster_ids: t.roster_ids,
+      summary,
       adds: addsNamed,
       drops: dropsNamed,
+      added_players: addedPlayerNames,
+      dropped_players: droppedPlayerNames,
+      faab_bid: faabBid,
       waiver_budget: t.waiver_budget,
     };
   });
