@@ -94,6 +94,10 @@ const nextConfig = {
           source: '/hof/:path*',
           destination: 'https://crffl-hof.vercel.app/hof/:path*',
         },
+        {
+          source: '/api/sync-sheets',
+          destination: 'https://crffl-hof.vercel.app/hof/api/sync-sheets',
+        },
       ],
       afterFiles: [
         {
