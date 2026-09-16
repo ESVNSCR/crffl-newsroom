@@ -35,6 +35,26 @@ export default async function PowerRankingsPage({ searchParams }) {
 
   // Process, normalize names, clean blurbs, and sort from #10 down to #1
   const isWeekOne = (currentRankings?.week_number || 1) === 1;
+  const currentWeekNum = currentRankings?.week_number || 1;
+  const prevWeekNum = currentWeekNum - 1;
+
+  // Fetch previous week rankings to ensure 100% mathematical precision for trend arrows
+  let prevRankMap = {};
+  if (prevWeekNum >= 1) {
+    const { data: prevRow } = await supabase
+      .from('power_rankings')
+      .select('rankings')
+      .eq('week_number', prevWeekNum)
+      .maybeSingle();
+
+    if (prevRow?.rankings && Array.isArray(prevRow.rankings)) {
+      prevRow.rankings.forEach((item) => {
+        if (item.username) prevRankMap[item.username.toLowerCase()] = item.rank;
+        if (item.manager_name) prevRankMap[item.manager_name.toLowerCase()] = item.rank;
+        if (item.team_name) prevRankMap[item.team_name.toLowerCase()] = item.rank;
+      });
+    }
+  }
 
   const displayRankings = [...(currentRankings?.rankings || [])]
     .map((team) => {
@@ -65,6 +85,24 @@ export default async function PowerRankingsPage({ searchParams }) {
 
       cleanBlurb = sanitizeManagerNames(cleanBlurb);
 
+      // Compute mathematical trend from previous week
+      let computedTrend = team.trend || '▬';
+      if (prevWeekNum >= 1 && Object.keys(prevRankMap).length > 0) {
+        const prev =
+          prevRankMap[team.username?.toLowerCase()] ||
+          prevRankMap[team.manager_name?.toLowerCase()] ||
+          prevRankMap[team.team_name?.toLowerCase()] ||
+          prevRankMap[preset.managerName?.toLowerCase()] ||
+          prevRankMap[preset.teamName?.toLowerCase()];
+
+        if (typeof prev === 'number') {
+          const diff = prev - team.rank;
+          if (diff > 0) computedTrend = `▲ ${diff}`;
+          else if (diff < 0) computedTrend = `▼ ${Math.abs(diff)}`;
+          else computedTrend = '▬';
+        }
+      }
+
       return {
         ...team,
         team_name: preset.teamName || team.team_name,
@@ -73,7 +111,7 @@ export default async function PowerRankingsPage({ searchParams }) {
         record: isWeekOne ? '0-0' : team.record || '0-0',
         points_for: isWeekOne ? '0.0' : team.points_for || '0.0',
         blurb: cleanBlurb,
-        trend: isWeekOne ? '▬' : team.trend || '▬',
+        trend: isWeekOne ? '▬' : computedTrend,
       };
     })
     .sort((a, b) => b.rank - a.rank); // Sort 10 at the top, down to 1 at the bottom

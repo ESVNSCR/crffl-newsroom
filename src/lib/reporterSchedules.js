@@ -65,7 +65,7 @@ export const DEFAULT_SCHEDULES = [
     category: 'Power Rankings',
     avatar: '/reporters/marcus-vance.png',
     description: 'Analytical weekly power rankings, mathematical regression curves, expected fantasy points models, and mathematical luck vs. skill breakdowns.',
-    day_of_week: 'Wednesday',
+    day_of_week: 'Tuesday',
     time_of_day: '2:00 PM',
     timezone: 'America/Los_Angeles',
     enabled: true,

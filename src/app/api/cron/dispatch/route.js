@@ -5,6 +5,8 @@ import { generateMarcusPowerRankings } from '@/lib/reporters/marcusVance';
 import { generateBuckPreview } from '@/lib/reporters/buckCallahan';
 import { getReporterScheduleById, normalizeReporterId } from '@/lib/reporterSchedules';
 import { verifyAdminSession } from '@/lib/adminAuth';
+import { supabase } from '@/lib/supabase';
+import { getNflState } from '@/lib/sleeper';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60s timeout for serverless generation
@@ -14,8 +16,8 @@ const SCHEDULED_DAYS_FALLBACK = {
   marty_sullivan: 'Tuesday',
   chloe: 'Wednesday',
   chloe_carmichael: 'Wednesday',
-  marcus: 'Wednesday',
-  marcus_vance: 'Wednesday',
+  marcus: 'Tuesday',
+  marcus_vance: 'Tuesday',
   buck: 'Thursday',
   buck_callahan: 'Thursday',
 };
@@ -95,6 +97,54 @@ async function handleDispatch(request) {
         },
         { status: 400 }
       );
+    }
+
+    // Idempotency check: Don't republish if already published for this week unless force=true
+    if (!force) {
+      let currentWeek = 1;
+      try {
+        const nflState = await getNflState();
+        currentWeek = nflState?.week || 1;
+      } catch (err) {
+        console.warn('Could not fetch NFL state for dispatch idempotency check:', err.message);
+      }
+
+      // Check if Marcus has already published power rankings for this week
+      if (normId === 'marcus_vance') {
+        const { data: existingRanking } = await supabase
+          .from('power_rankings')
+          .select('id, created_at')
+          .eq('week_number', currentWeek)
+          .maybeSingle();
+
+        if (existingRanking) {
+          return NextResponse.json({
+            success: true,
+            skipped: true,
+            message: `Power Rankings for Week ${currentWeek} have already been published. Execution skipped to prevent duplicate release. Use force=true to override.`,
+            reporter: normId,
+            publishedAt: existingRanking.created_at,
+          });
+        }
+      } else {
+        // For other columnists, check newsroom_articles for existing publication this week
+        const { data: existingArticle } = await supabase
+          .from('newsroom_articles')
+          .select('id, title, created_at')
+          .eq('author_id', normId)
+          .eq('week_number', currentWeek)
+          .maybeSingle();
+
+        if (existingArticle) {
+          return NextResponse.json({
+            success: true,
+            skipped: true,
+            message: `${schedule?.reporter_name || reporter} has already published for Week ${currentWeek} ("${existingArticle.title}"). Execution skipped to prevent duplicate release. Use force=true to override.`,
+            reporter: normId,
+            publishedAt: existingArticle.created_at,
+          });
+        }
+      }
     }
 
     let result;

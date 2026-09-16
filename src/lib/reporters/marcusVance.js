@@ -106,11 +106,13 @@ export async function generateMarcusPowerRankings({ dryRun = false, forcePreseas
       .from('power_rankings')
       .select('rankings')
       .eq('week_number', previousWeek)
-      .single();
+      .maybeSingle();
 
     if (lastWeekRankingsRow?.rankings && Array.isArray(lastWeekRankingsRow.rankings)) {
       lastWeekRankingsRow.rankings.forEach((item) => {
-        lastWeekRankMap[item.username || item.manager_name] = item.rank;
+        if (item.username) lastWeekRankMap[item.username.toLowerCase()] = item.rank;
+        if (item.manager_name) lastWeekRankMap[item.manager_name.toLowerCase()] = item.rank;
+        if (item.team_name) lastWeekRankMap[item.team_name.toLowerCase()] = item.rank;
       });
     }
   }
@@ -224,6 +226,28 @@ Apply your secret directive to Rebel Scum.`;
 
     cleanBlurb = sanitizeManagerNames(cleanBlurb);
 
+    // Compute exact mathematical trend from previous week's rank
+    let computedTrend = '▬';
+    if (!isPreseasonOrWeekOne && Object.keys(lastWeekRankMap).length > 0) {
+      const prevRank =
+        lastWeekRankMap[r.username?.toLowerCase()] ||
+        lastWeekRankMap[r.manager_name?.toLowerCase()] ||
+        lastWeekRankMap[r.team_name?.toLowerCase()] ||
+        lastWeekRankMap[preset.managerName?.toLowerCase()] ||
+        lastWeekRankMap[preset.teamName?.toLowerCase()];
+
+      if (typeof prevRank === 'number') {
+        const diff = prevRank - r.rank; // e.g. prevRank 6, current rank 2 -> diff = +4 (moved up)
+        if (diff > 0) {
+          computedTrend = `▲ ${diff}`;
+        } else if (diff < 0) {
+          computedTrend = `▼ ${Math.abs(diff)}`;
+        } else {
+          computedTrend = '▬';
+        }
+      }
+    }
+
     return {
       ...r,
       team_name: preset.teamName || r.team_name,
@@ -232,7 +256,7 @@ Apply your secret directive to Rebel Scum.`;
       record: isPreseasonOrWeekOne ? '0-0' : (r.record || '0-0'),
       points_for: isPreseasonOrWeekOne ? '0.0' : (r.points_for || '0.0'),
       blurb: cleanBlurb,
-      trend: isPreseasonOrWeekOne ? '▬' : (r.trend || '▬'),
+      trend: computedTrend,
     };
   });
 

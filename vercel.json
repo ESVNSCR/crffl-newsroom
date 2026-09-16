@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/cron/dispatch?reporter=marcus",
-      "schedule": "0 21 * * 3"
+      "schedule": "0 21 * * 2"
     },
     {
       "path": "/api/cron/dispatch?reporter=buck",
