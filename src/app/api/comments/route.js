@@ -33,9 +33,35 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const articleId = searchParams.get('article_id');
+    const rankingId = searchParams.get('ranking_id');
+    const weekNumber = searchParams.get('week_number');
 
+    // 1. Power Rankings comments
+    if (rankingId || weekNumber) {
+      let query = supabase
+        .from('power_ranking_comments')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (rankingId) {
+        query = query.eq('ranking_id', rankingId);
+      } else if (weekNumber) {
+        query = query.eq('week_number', Number(weekNumber));
+      }
+
+      const { data: comments, error } = await query;
+      if (error) throw error;
+
+      return NextResponse.json({
+        success: true,
+        comments: comments || [],
+        count: (comments || []).length
+      });
+    }
+
+    // 2. Article comments
     if (!articleId) {
-      return NextResponse.json({ error: 'Missing article_id parameter.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing article_id or ranking_id parameter.' }, { status: 400 });
     }
 
     const { data: comments, error } = await supabase
@@ -52,7 +78,7 @@ export async function GET(request) {
       count: (comments || []).length
     });
   } catch (err) {
-    console.error('Error fetching article comments:', err);
+    console.error('Error fetching comments:', err);
     return NextResponse.json({ error: 'Failed to retrieve comments.' }, { status: 500 });
   }
 }
@@ -60,10 +86,21 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { article_id, manager_name, pin, comment, parent_id } = body || {};
+    const {
+      article_id,
+      ranking_id,
+      week_number,
+      manager_name,
+      pin,
+      comment,
+      parent_id,
+      target_type
+    } = body || {};
 
-    if (!article_id) {
-      return NextResponse.json({ error: 'Article ID is required.' }, { status: 400 });
+    const isRanking = target_type === 'power_ranking' || Boolean(ranking_id) || (Boolean(week_number) && !article_id);
+
+    if (!isRanking && !article_id) {
+      return NextResponse.json({ error: 'Target identifier (article_id or ranking_id) is required.' }, { status: 400 });
     }
 
     if (!manager_name || !String(manager_name).trim()) {
@@ -94,6 +131,69 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Incorrect security PIN. Comment transmission rejected.' }, { status: 401 });
     }
 
+    // --- Branch A: Power Rankings Comments ---
+    if (isRanking) {
+      let targetRankingId = ranking_id;
+      let targetWeekNumber = week_number ? Number(week_number) : null;
+
+      if (!targetRankingId && targetWeekNumber) {
+        const { data: rRow } = await supabase
+          .from('power_rankings')
+          .select('id, week_number')
+          .eq('week_number', targetWeekNumber)
+          .maybeSingle();
+        if (rRow) {
+          targetRankingId = rRow.id;
+        }
+      } else if (targetRankingId && !targetWeekNumber) {
+        const { data: rRow } = await supabase
+          .from('power_rankings')
+          .select('id, week_number')
+          .eq('id', targetRankingId)
+          .maybeSingle();
+        if (rRow) {
+          targetWeekNumber = rRow.week_number;
+        }
+      }
+
+      if (!targetRankingId) {
+        return NextResponse.json({ error: 'Target power rankings edition not found.' }, { status: 404 });
+      }
+
+      // If parent_id provided, validate parent comment
+      if (parent_id) {
+        const { data: parentCheck, error: parentError } = await supabase
+          .from('power_ranking_comments')
+          .select('id, ranking_id')
+          .eq('id', parent_id)
+          .single();
+
+        if (parentError || !parentCheck || parentCheck.ranking_id !== targetRankingId) {
+          return NextResponse.json({ error: 'Parent comment to reply to does not exist.' }, { status: 404 });
+        }
+      }
+
+      const { data: newComment, error: insertError } = await supabase
+        .from('power_ranking_comments')
+        .insert({
+          ranking_id: targetRankingId,
+          week_number: targetWeekNumber || 1,
+          manager_name: manager_name.trim(),
+          comment: trimmedComment,
+          parent_id: parent_id || null
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      return NextResponse.json({
+        success: true,
+        comment: newComment
+      });
+    }
+
+    // --- Branch B: Article Comments ---
     // 2. Validate that article exists
     const { data: articleCheck, error: articleError } = await supabase
       .from('newsroom_articles')
@@ -137,7 +237,7 @@ export async function POST(request) {
       comment: newComment
     });
   } catch (err) {
-    console.error('Error posting article comment:', err);
+    console.error('Error posting comment:', err);
     return NextResponse.json({ error: 'Failed to post comment.' }, { status: 500 });
   }
 }
@@ -148,6 +248,7 @@ export async function DELETE(request) {
     const commentId = searchParams.get('id');
     const managerName = searchParams.get('manager');
     const pin = searchParams.get('pin');
+    const type = searchParams.get('type'); // 'article', 'ranking', or auto-detect
 
     if (!commentId || !managerName || !pin) {
       return NextResponse.json({ error: 'Missing required credentials to delete comment.' }, { status: 400 });
@@ -155,15 +256,48 @@ export async function DELETE(request) {
 
     const authManager = resolveAuthManager(managerName);
 
-    // Securely authorize and delete comment via PostgreSQL RPC
-    const { data: result, error: rpcError } = await supabase.rpc('delete_article_comment', {
+    // If type is explicitly 'ranking', call delete_power_ranking_comment
+    if (type === 'ranking') {
+      const { data: result, error: rpcError } = await supabase.rpc('delete_power_ranking_comment', {
+        p_comment_id: commentId,
+        p_manager: authManager,
+        p_pin: String(pin).trim(),
+      });
+
+      if (rpcError) {
+        console.error('delete_power_ranking_comment RPC error:', rpcError);
+        return NextResponse.json({ error: 'Failed to delete comment.' }, { status: 500 });
+      }
+
+      if (!result?.success) {
+        const status = result?.error === 'Invalid security PIN' ? 401 : (result?.error === 'Permission denied' ? 403 : 400);
+        return NextResponse.json({ error: result?.error || 'Failed to delete comment.' }, { status });
+      }
+
+      return NextResponse.json({ success: true, message: result.message || 'Comment deleted successfully.' });
+    }
+
+    // Default: try delete_article_comment first, fall back to delete_power_ranking_comment if not found
+    let { data: result, error: rpcError } = await supabase.rpc('delete_article_comment', {
       p_comment_id: commentId,
       p_manager: authManager,
       p_pin: String(pin).trim(),
     });
 
+    if (result?.error === 'Comment not found') {
+      const fallback = await supabase.rpc('delete_power_ranking_comment', {
+        p_comment_id: commentId,
+        p_manager: authManager,
+        p_pin: String(pin).trim(),
+      });
+      if (!fallback.error) {
+        result = fallback.data;
+        rpcError = null;
+      }
+    }
+
     if (rpcError) {
-      console.error('delete_article_comment RPC error:', rpcError);
+      console.error('delete comment RPC error:', rpcError);
       return NextResponse.json({ error: 'Failed to delete comment.' }, { status: 500 });
     }
 
