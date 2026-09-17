@@ -152,13 +152,20 @@ export default async function ContestsPage() {
                   )}
 
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[11px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full border ${tier.badgeColor}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`text-[10px] sm:text-[11px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${tier.badgeColor}`}>
                         {tier.tag}
                       </span>
-                      <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
-                        {tier.label}
-                      </span>
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight block">
+                          {tier.label}
+                        </span>
+                        {tier.subLabel && (
+                          <span className="text-[10px] sm:text-[11px] font-mono text-purple-300 font-bold block -mt-0.5">
+                            {tier.subLabel}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <h3 className="text-lg font-black text-white">

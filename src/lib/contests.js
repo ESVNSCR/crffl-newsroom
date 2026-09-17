@@ -46,7 +46,8 @@ export const LEAGUE_PAYOUTS = [
   {
     place: '14 Weekly Contests',
     amount: 140,
-    label: '$140 ($10 × 14)',
+    label: '$140',
+    subLabel: '($10 × 14)',
     tag: 'Regular Season Bounties',
     description: 'Weekly $10 bounty purse awarded across Weeks 1 through 14.',
     badgeColor: 'border-purple-700 text-purple-300 bg-purple-950/40',
