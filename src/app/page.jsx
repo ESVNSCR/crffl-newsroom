@@ -173,16 +173,16 @@ export default async function HomePage({ searchParams }) {
           {/* Card 0: League Email & Text Alerts */}
           <AlertsCtaCard />
 
-          {/* Card 1: Official Team Shop Banner */}
+          {/* Card 1: The CRFFL Pro Shop Banner */}
           <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-amber-950/40 via-[#161d2b] to-[#0e1420] border border-[#d4af37]/40 p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-2">
               <span className="text-xs uppercase font-mono font-bold tracking-wider text-[#d4af37]">
-                Official League Pro Shop
+                The CRFFL Pro Shop
               </span>
             </div>
 
             <h3 className="text-xl font-black text-white leading-snug">
-              CRFFL Merchandise & Custom Franchise Gear
+              Official Franchise Apparel & League Gear
             </h3>
 
             <p className="text-xs text-gray-300 leading-relaxed">
@@ -195,7 +195,7 @@ export default async function HomePage({ searchParams }) {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-[#d4af37] text-gray-950 font-bold hover:bg-[#e6c24d] transition shadow-lg text-xs"
             >
-              Shop Official Gear at crffl.printify.me →
+              Visit The CRFFL Pro Shop →
             </a>
           </div>
 
