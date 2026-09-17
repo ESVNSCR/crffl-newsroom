@@ -29,7 +29,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { week_number, contest_name, description, prize, winner_manager, winner_team, winning_score, status } = body;
+    const { week_number, contest_name, description, prize, winner_manager, winner_team, winner_player, winning_score, status } = body;
 
     const { data, error } = await supabase
       .from('weekly_contests')
@@ -42,6 +42,7 @@ export async function POST(request) {
           prize: prize || '$10',
           winner_manager: winner_manager || null,
           winner_team: winner_team || null,
+          winner_player: winner_player || null,
           winning_score: winning_score || null,
           status: status || 'upcoming',
           updated_at: new Date().toISOString(),

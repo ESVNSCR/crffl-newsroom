@@ -218,7 +218,7 @@ export async function generateCustomReporterArticle({
   // 6. Weekly Contest
   let contestSummary = '';
   if (options.contests && contestData) {
-    contestSummary = `• Week ${activeWeek} Contest: "${contestData.contest_name}" (Prize: ${contestData.prize || '$10'})\n  Description: ${contestData.description || 'N/A'}\n  Current Status/Winner: ${contestData.winner_manager ? `${contestData.winner_manager} (${contestData.winning_score} pts)` : 'In progress / TBD'}`;
+    contestSummary = `• Week ${activeWeek} Contest: "${contestData.contest_name}" (Prize: ${contestData.prize || '$10'})\n  Description: ${contestData.description || 'N/A'}\n  Current Status/Winner: ${contestData.winner_manager ? `${contestData.winner_manager} (${contestData.winning_score} pts${contestData.winner_player ? ` - ${contestData.winner_player}` : ''})` : 'In progress / TBD'}`;
   }
 
   // 7. Bench Points & Lineup Optimization Audit

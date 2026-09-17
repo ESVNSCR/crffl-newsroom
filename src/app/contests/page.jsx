@@ -48,6 +48,7 @@ export default async function ContestsPage() {
               ...(contestMap[w] || {}),
               winner_manager: trackerResult.winner_manager,
               winner_team: trackerResult.winner_team,
+              winner_player: trackerResult.winner_player,
               winning_score: trackerResult.winning_score,
               status: 'completed',
             };
@@ -210,6 +211,8 @@ export default async function ContestsPage() {
               const isStatCorrectionPending = c.tracker?.status === 'stat_correction_pending';
               const isInProgress = c.tracker?.status === 'in_progress';
               const isActive = c.status === 'active' || c.isCurrent;
+              const winningPlayer = c.winner_player || c.tracker?.winner_player;
+              const runnerUpPlayer = c.tracker?.runner_up?.playerName || c.tracker?.runner_up?.name;
 
               return (
                 <div
@@ -237,6 +240,11 @@ export default async function ContestsPage() {
                       </div>
 
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        {c.is_player_contest && (
+                          <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-purple-950/60 border border-purple-800/70 text-purple-300">
+                            Player Challenge
+                          </span>
+                        )}
                         {isCompleted && (
                           <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-700 text-emerald-300 flex items-center gap-1.5 shadow-sm">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -298,6 +306,19 @@ export default async function ContestsPage() {
                             {c.winner_manager} <span className="text-gray-300 font-normal text-xs">({c.winner_team})</span>
                           </span>
                         </div>
+
+                        {winningPlayer && (
+                          <div className="flex items-center justify-between text-xs pt-1.5 border-t border-emerald-900/40 text-gray-300">
+                            <span className="text-gray-400 text-[11px] flex items-center gap-1.5 font-medium">
+                              <span className="text-amber-400">⚡</span>
+                              <span>Winning Player{winningPlayer.includes('&') ? 's' : ''}:</span>
+                            </span>
+                            <span className="font-mono font-bold text-amber-300 text-xs bg-amber-950/40 border border-amber-500/30 px-2.5 py-0.5 rounded text-right shadow-sm">
+                              {winningPlayer}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between text-xs pt-1.5 border-t border-emerald-900/40 text-gray-300">
                           <span className="text-gray-400 text-[11px]">Winning Mark:</span>
                           <span className="font-mono font-bold text-emerald-400 text-xs">{c.winning_score}</span>
@@ -333,6 +354,18 @@ export default async function ContestsPage() {
                           </span>
                         </div>
 
+                        {winningPlayer && (
+                          <div className="flex items-center justify-between text-xs pt-1 border-t border-amber-500/20 text-gray-300">
+                            <span className="text-gray-400 text-[11px] flex items-center gap-1.5 font-medium">
+                              <span className="text-amber-400">⚡</span>
+                              <span>Leading Player{winningPlayer.includes('&') ? 's' : ''}:</span>
+                            </span>
+                            <span className="font-mono font-bold text-amber-300 text-xs bg-amber-950/40 border border-amber-500/30 px-2.5 py-0.5 rounded text-right shadow-sm">
+                              {winningPlayer}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-400">Leading Mark:</span>
                           <span className="font-mono font-bold text-[#d4af37]">
@@ -344,7 +377,7 @@ export default async function ContestsPage() {
                           <div className="flex items-center justify-between text-xs pt-1 border-t border-amber-500/20 text-gray-300">
                             <span className="text-gray-400 text-[11px]">Runner-Up:</span>
                             <span className="font-mono text-gray-200 text-xs">
-                              {c.tracker.runner_up.name ? `${c.tracker.runner_up.name} • ` : ''}{c.tracker.runner_up.managerName} ({c.tracker.runner_up.score})
+                              {runnerUpPlayer ? `${runnerUpPlayer} • ` : ''}{c.tracker.runner_up.managerName} ({c.tracker.runner_up.score})
                             </span>
                           </div>
                         )}
@@ -384,6 +417,18 @@ export default async function ContestsPage() {
                             {c.tracker.winner_manager} <span className="text-gray-400 font-normal">({c.tracker.winner_team})</span>
                           </span>
                         </div>
+
+                        {winningPlayer && (
+                          <div className="flex items-center justify-between text-xs pt-1 border-t border-blue-500/20 text-gray-300">
+                            <span className="text-gray-400 text-[11px] flex items-center gap-1.5 font-medium">
+                              <span className="text-[#d4af37]">⚡</span>
+                              <span>Leading Player{winningPlayer.includes('&') ? 's' : ''}:</span>
+                            </span>
+                            <span className="font-mono font-bold text-[#d4af37] text-xs bg-black/40 border border-[#d4af37]/30 px-2.5 py-0.5 rounded text-right shadow-sm">
+                              {winningPlayer}
+                            </span>
+                          </div>
+                        )}
 
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-gray-400">Current Margin / Score:</span>

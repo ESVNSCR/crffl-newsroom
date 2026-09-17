@@ -32,6 +32,7 @@ export default function AdminContestsPage() {
         const adj = data.adjudication;
         updateContest(weekNumber, 'winner_manager', adj.winner_manager);
         updateContest(weekNumber, 'winner_team', adj.winner_team);
+        updateContest(weekNumber, 'winner_player', adj.winner_player || '');
         updateContest(weekNumber, 'winning_score', adj.winning_score);
 
         if (adj.isFinal) {
@@ -254,7 +255,23 @@ export default function AdminContestsPage() {
                   type="text"
                   value={c.winning_score || ''}
                   onChange={(e) => updateContest(c.week_number, 'winning_score', e.target.value)}
-                  placeholder="e.g. 28.4 pts (Isaiah Likely)"
+                  placeholder="e.g. 28.4 pts"
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-gray-100 focus:outline-none focus:border-[#d4af37]"
+                />
+              </div>
+
+              <div className="sm:col-span-2 space-y-2">
+                <label className="text-xs font-semibold text-gray-300 flex items-center justify-between">
+                  <span>Winning Player(s) {c.is_player_contest ? '⭐ (Player-Specific Challenge)' : '(Optional)'}</span>
+                  {c.is_player_contest && (
+                    <span className="text-[11px] text-[#d4af37] font-mono font-bold">Player-Specific Challenge</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  value={c.winner_player || ''}
+                  onChange={(e) => updateContest(c.week_number, 'winner_player', e.target.value)}
+                  placeholder="e.g. Kenneth Walker (RB - KC) or Justin Jefferson & Ja'Marr Chase"
                   className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-gray-100 focus:outline-none focus:border-[#d4af37]"
                 />
               </div>

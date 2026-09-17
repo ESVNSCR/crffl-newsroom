@@ -55,7 +55,7 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
   const thisWeekContest = contestData?.find((c) => c.week_number === upcomingWeek);
 
   const contestSummary = `
-- Completed Week ${weekToRecap} Contest: ${lastWeekContest ? `"${lastWeekContest.contest_name}" (Winner: ${lastWeekContest.winner_manager || 'TBD'} with score ${lastWeekContest.winning_score || 'N/A'})` : 'No contest logged.'}
+- Completed Week ${weekToRecap} Contest: ${lastWeekContest ? `"${lastWeekContest.contest_name}" (Winner: ${lastWeekContest.winner_manager || 'TBD'} with score ${lastWeekContest.winning_score || 'N/A'}${lastWeekContest.winner_player ? `, winning player: ${lastWeekContest.winner_player}` : ''})` : 'No contest logged.'}
 - Upcoming Week ${upcomingWeek} Contest On Deck: ${thisWeekContest ? `"${thisWeekContest.contest_name}" (Prize: ${thisWeekContest.prize || '$10'} - Description: ${thisWeekContest.description || 'N/A'})` : `Standard $10 Week ${upcomingWeek} Challenge on deck.`}
   `.trim();
 

@@ -239,6 +239,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
   let winnerManager = null;
   let winnerTeam = null;
   let winningScore = null;
+  let winnerPlayer = null;
   let explanation = '';
   let runnerUp = null;
   let margin = 0;
@@ -278,6 +279,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = top.name;
         winningScore = `+${top.diff.toFixed(2)} pts`;
         margin = second ? Number((top.diff - second.diff).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -326,6 +328,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = top.name;
         winningScore = `${top.pts.toFixed(2)} pts`;
         margin = second ? Number((top.pts - second.pts).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -373,6 +376,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = top.name;
         winningScore = `${top.pts.toFixed(2)} pts`;
         margin = second ? Number((top.pts - second.pts).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -432,6 +436,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = top.name;
         winningScore = `${top.pts.toFixed(2)} pts`;
         margin = second ? Number((second.pts - top.pts).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -483,6 +488,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = `${top.wr1Name} & ${top.wr2Name}`;
         winningScore = `${top.total.toFixed(2)} combined pts`;
         margin = second ? Number((top.total - second.total).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -491,6 +497,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
           runnerUp = {
             managerName: second.managerName,
             teamName: second.teamName,
+            playerName: `${second.wr1Name} & ${second.wr2Name}`,
             score: `${second.total.toFixed(2)} combined pts`,
           };
           explanation = `${top.wr1Name} (${top.wr1Pts.toFixed(1)}) and ${top.wr2Name} (${top.wr2Pts.toFixed(1)}) combined for ${top.total.toFixed(2)} pts. Runner-up: ${second.teamName} with ${second.total.toFixed(2)} pts (Margin: ${margin.toFixed(2)} pts).`;
@@ -577,6 +584,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = `${top.rb1Name} & ${top.rb2Name}`;
         winningScore = `${top.total.toFixed(2)} combined pts`;
         margin = second ? Number((top.total - second.total).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -585,6 +593,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
           runnerUp = {
             managerName: second.managerName,
             teamName: second.teamName,
+            playerName: `${second.rb1Name} & ${second.rb2Name}`,
             score: `${second.total.toFixed(2)} combined pts`,
           };
           explanation = `${top.rb1Name} (${top.rb1Pts.toFixed(1)}) and ${top.rb2Name} (${top.rb2Pts.toFixed(1)}) powered ${top.total.toFixed(2)} backfield pts. Runner-up: ${second.teamName} with ${second.total.toFixed(2)} pts (Margin: ${margin.toFixed(2)} pts).`;
@@ -681,6 +690,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = top.name;
         winningScore = `${top.yards} yards`;
         margin = second ? top.yards - second.yards : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -777,6 +787,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       if (top) {
         winnerManager = top.managerName;
         winnerTeam = top.teamName;
+        winnerPlayer = `${top.kName} & ${top.defName}`;
         winningScore = `${top.total.toFixed(2)} combined pts`;
         margin = second ? Number((top.total - second.total).toFixed(2)) : 999;
         isClose = margin < STAT_CORRECTION_THRESHOLD;
@@ -785,6 +796,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
           runnerUp = {
             managerName: second.managerName,
             teamName: second.teamName,
+            playerName: `${second.kName} & ${second.defName}`,
             score: `${second.total.toFixed(2)} combined pts`,
           };
           explanation = `${top.kName} (${top.kPts.toFixed(1)}) and ${top.defName} (${top.defPts.toFixed(1)}) produced ${top.total.toFixed(2)} special units pts. Runner-up: ${second.teamName} with ${second.total.toFixed(2)} pts (Margin: ${margin.toFixed(2)} pts).`;
@@ -977,6 +989,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       isFinal: false,
       winner_manager: winnerManager,
       winner_team: winnerTeam,
+      winner_player: winnerPlayer,
       winning_score: winningScore,
       margin,
       isClose,
@@ -997,6 +1010,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
       isFinal: false,
       winner_manager: winnerManager,
       winner_team: winnerTeam,
+      winner_player: winnerPlayer,
       winning_score: winningScore,
       margin,
       isClose: true,
@@ -1015,6 +1029,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
     .update({
       winner_manager: winnerManager,
       winner_team: winnerTeam,
+      winner_player: winnerPlayer,
       winning_score: winningScore,
       status: 'completed',
       updated_at: new Date().toISOString(),
@@ -1034,6 +1049,7 @@ export async function adjudicateWeekContest(weekNumber, { force = false, preview
     isFinal: true,
     winner_manager: winnerManager,
     winner_team: winnerTeam,
+    winner_player: winnerPlayer,
     winning_score: winningScore,
     margin,
     isClose: false,

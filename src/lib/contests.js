@@ -63,6 +63,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '9/15/2026',
     prize: '$10',
     status: 'active',
+    is_player_contest: true,
   },
   {
     week_number: 2,
@@ -71,6 +72,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '9/22/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 3,
@@ -79,6 +81,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '9/29/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 4,
@@ -87,6 +90,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '10/6/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 5,
@@ -95,6 +99,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '10/13/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 6,
@@ -103,6 +108,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '10/20/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: false,
   },
   {
     week_number: 7,
@@ -111,6 +117,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '10/27/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 8,
@@ -119,6 +126,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '11/3/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: false,
   },
   {
     week_number: 9,
@@ -127,6 +135,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '11/10/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 10,
@@ -135,6 +144,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '11/17/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: false,
   },
   {
     week_number: 11,
@@ -143,6 +153,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '11/24/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: true,
   },
   {
     week_number: 12,
@@ -151,6 +162,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '12/1/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: false,
   },
   {
     week_number: 13,
@@ -159,6 +171,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '12/8/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: false,
   },
   {
     week_number: 14,
@@ -167,6 +180,7 @@ export const WEEKLY_CONTESTS_MASTER = [
     adjudication_date: '12/15/2026',
     prize: '$10',
     status: 'upcoming',
+    is_player_contest: false,
   },
 ];
 
