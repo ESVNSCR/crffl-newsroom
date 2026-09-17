@@ -253,3 +253,144 @@ body {
   justify-content: center;
 }
 
+/* ==========================================================================
+   Themed Navigation Button System
+   - Home: Obsidian Black
+   - Power Rankings: Crimson Red
+   - Schedule: Sapphire Blue
+   - Info: Emerald Green
+   - HOF: Champion Gold Plaque (retained as is)
+   - Sportsbook: 80's Neon Arcade (Cyan / Hot Magenta Glow)
+   - Pick'em: Crisp Pure White
+   - Staff: Newsroom Vintage Cream
+   ========================================================================== */
+
+.btn-nav-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  user-select: none;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 800;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  position: relative;
+}
+
+/* 1. Home - Obsidian Black */
+.btn-nav-home {
+  background: linear-gradient(135deg, #181d28 0%, #0d1117 100%);
+  border: 1.5px solid #2d3748;
+  color: #f3f4f6;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.btn-nav-home:hover {
+  background: linear-gradient(135deg, #252e40 0%, #151c27 100%);
+  border-color: #4b5563;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* 2. Power Rankings - Crimson Red */
+.btn-nav-rankings {
+  background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #7f1d1d 100%);
+  border: 1.5px solid #ef4444;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(185, 28, 28, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.btn-nav-rankings:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #ef4444 50%, #991b1b 100%);
+  border-color: #f87171;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* 3. Schedule - Sapphire Blue */
+.btn-nav-schedule {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #1d4ed8 100%);
+  border: 1.5px solid #3b82f6;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(29, 78, 216, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.btn-nav-schedule:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #1e40af 100%);
+  border-color: #60a5fa;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* 4. Info - Emerald Green */
+.btn-nav-info {
+  background: linear-gradient(135deg, #065f46 0%, #059669 50%, #047857 100%);
+  border: 1.5px solid #10b981;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(4, 120, 87, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.btn-nav-info:hover {
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #065f46 100%);
+  border-color: #34d399;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* 5. Sportsbook - 80's Neon Arcade (Cyan / Magenta Synthwave) */
+.btn-nav-sportsbook {
+  background: linear-gradient(135deg, #120024 0%, #29004d 50%, #0f001c 100%);
+  border: 1.5px solid #00ffff;
+  color: #00ffff;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.45), inset 0 0 7px rgba(255, 0, 255, 0.35);
+  text-shadow: 0 0 5px #00ffff, 0 0 10px rgba(0, 255, 255, 0.6);
+  letter-spacing: 0.03em;
+}
+.btn-nav-sportsbook:hover {
+  background: linear-gradient(135deg, #220040 0%, #3e006b 50%, #1a0033 100%);
+  border-color: #ff00ff;
+  color: #ffffff;
+  text-shadow: 0 0 7px #ff00ff, 0 0 14px #00ffff;
+  box-shadow: 0 0 15px #ff00ff, 0 0 26px rgba(0, 255, 255, 0.6), inset 0 0 10px rgba(255, 0, 255, 0.5);
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* 6. Pick'em - Pure Crisp White */
+.btn-nav-pickem {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%);
+  border: 1.5px solid #ffffff;
+  color: #090d16;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 2px 6px rgba(0, 0, 0, 0.35);
+  font-weight: 900;
+}
+.btn-nav-pickem:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.85), inset 0 1px 0 #ffffff;
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+/* 7. Staff - Vintage Newsroom Cream */
+.btn-nav-staff {
+  background: linear-gradient(135deg, #fefae0 0%, #faedcd 50%, #f7e1b5 100%);
+  border: 1.5px solid #d4a373;
+  color: #381f08;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.35);
+  font-weight: 900;
+}
+.btn-nav-staff:hover {
+  background: linear-gradient(135deg, #fffdf0 0%, #fdf0d5 50%, #faedcd 100%);
+  border-color: #c97a29;
+  box-shadow: 0 0 14px rgba(250, 237, 205, 0.7), inset 0 1px 0 #ffffff;
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+

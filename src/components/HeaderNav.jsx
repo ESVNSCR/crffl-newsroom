@@ -44,35 +44,35 @@ export default function HeaderNav() {
           </div>
 
           {/* Desktop Navigation (Visible on lg and up) */}
-          <nav className="hidden lg:flex items-center space-x-1.5 xl:space-x-2.5 text-xs sm:text-sm font-semibold">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 text-xs font-semibold">
             <Link
               href="/"
-              className={`px-2.5 py-1.5 rounded-lg transition ${
-                pathname === '/' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+              className={`btn-nav-base btn-nav-home px-2.5 py-1 xl:px-3 xl:py-1.5 ${
+                pathname === '/' ? 'ring-2 ring-white/70 shadow-md' : ''
               }`}
             >
               Home
             </Link>
             <Link
               href="/power-rankings"
-              className={`px-2.5 py-1.5 rounded-lg transition whitespace-nowrap ${
-                pathname === '/power-rankings' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-[#d4af37] hover:bg-gray-800/80'
+              className={`btn-nav-base btn-nav-rankings px-2.5 py-1 xl:px-3 xl:py-1.5 ${
+                pathname === '/power-rankings' ? 'ring-2 ring-white/80 shadow-md' : ''
               }`}
             >
               Power Rankings
             </Link>
             <Link
               href="/schedule"
-              className={`px-2.5 py-1.5 rounded-lg transition ${
-                pathname === '/schedule' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-[#d4af37] hover:bg-gray-800/80'
+              className={`btn-nav-base btn-nav-schedule px-2.5 py-1 xl:px-3 xl:py-1.5 ${
+                pathname === '/schedule' ? 'ring-2 ring-white/80 shadow-md' : ''
               }`}
             >
               Schedule
             </Link>
             <Link
               href="/contests"
-              className={`px-2.5 py-1.5 rounded-lg transition whitespace-nowrap ${
-                pathname === '/contests' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-[#d4af37] hover:bg-gray-800/80'
+              className={`btn-nav-base btn-nav-info px-2.5 py-1 xl:px-3 xl:py-1.5 ${
+                pathname === '/contests' ? 'ring-2 ring-white/80 shadow-md' : ''
               }`}
             >
               Info
@@ -91,7 +91,7 @@ export default function HeaderNav() {
               href="https://crffl-sportsbook.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2.5 py-1.5 rounded-lg hover:text-amber-400 hover:bg-gray-800/80 transition text-gray-300"
+              className="btn-nav-base btn-nav-sportsbook px-2.5 py-1 xl:px-3 xl:py-1.5"
             >
               Sportsbook
             </a>
@@ -99,14 +99,14 @@ export default function HeaderNav() {
               href="https://crffl-pickem.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-2.5 py-1.5 rounded-lg hover:text-cyan-400 hover:bg-gray-800/80 transition text-gray-300"
+              className="btn-nav-base btn-nav-pickem px-2.5 py-1 xl:px-3 xl:py-1.5"
             >
               Pick'em
             </a>
             <Link
               href="/staff"
-              className={`px-2.5 py-1.5 rounded-lg transition ${
-                pathname === '/staff' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-[#d4af37] hover:bg-gray-800/80'
+              className={`btn-nav-base btn-nav-staff px-2.5 py-1 xl:px-3 xl:py-1.5 ${
+                pathname === '/staff' ? 'ring-2 ring-white/80 shadow-md' : ''
               }`}
             >
               Staff
@@ -116,7 +116,7 @@ export default function HeaderNav() {
             <button
               type="button"
               onClick={() => setAlertsOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-gray-800/80 transition flex items-center gap-1.5 font-semibold"
+              className="btn-nav-base px-2 py-1 xl:px-2.5 xl:py-1.5 bg-gray-900/90 border border-[#d4af37]/60 text-gray-300 hover:text-[#d4af37] hover:border-[#d4af37] hover:bg-gray-800 transition flex items-center gap-1 font-bold text-xs shadow-sm hover:shadow-[0_0_10px_rgba(212,175,55,0.3)]"
             >
               <svg className="w-3.5 h-3.5 text-[#d4af37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -129,7 +129,7 @@ export default function HeaderNav() {
               target="_blank"
               rel="noopener noreferrer"
               title="The CRFFL Pro Shop"
-              className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold transition shadow-md flex items-center gap-1 ml-1"
+              className="btn-nav-base px-2.5 py-1 xl:px-3 xl:py-1.5 bg-[#d4af37] border border-[#d4af37] text-gray-950 hover:bg-[#e6c24d] hover:border-[#e6c24d] font-black text-xs transition shadow-md flex items-center gap-1 hover:shadow-[0_0_14px_rgba(212,175,55,0.6)]"
             >
               <span className="hidden xl:inline">The CRFFL </span>
               <span>Pro Shop</span>
@@ -192,7 +192,10 @@ export default function HeaderNav() {
                   pathname === '/' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Home</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="btn-nav-base btn-nav-home px-2 py-0.5 text-[11px]">Home</span>
+                  <span className="font-semibold text-sm">Main Frontpage</span>
+                </div>
                 <span className="text-xs text-gray-500 font-mono">Dispatches →</span>
               </Link>
 
@@ -203,7 +206,10 @@ export default function HeaderNav() {
                   pathname === '/power-rankings' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Power Rankings</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="btn-nav-base btn-nav-rankings px-2 py-0.5 text-[11px]">Rankings</span>
+                  <span className="font-semibold text-sm">Power Rankings</span>
+                </div>
                 <span className="text-xs text-[#d4af37] font-mono font-bold">Top 10 →</span>
               </Link>
 
@@ -214,7 +220,10 @@ export default function HeaderNav() {
                   pathname === '/schedule' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">2026 Schedule</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="btn-nav-base btn-nav-schedule px-2 py-0.5 text-[11px]">Schedule</span>
+                  <span className="font-semibold text-sm">2026 Schedule</span>
+                </div>
                 <span className="text-xs text-gray-500 font-mono">14 Weeks →</span>
               </Link>
 
@@ -225,8 +234,11 @@ export default function HeaderNav() {
                   pathname === '/contests' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Info</span>
-                <span className="text-xs text-emerald-400 font-mono font-bold">Contests & Rules →</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="btn-nav-base btn-nav-info px-2 py-0.5 text-[11px]">Info</span>
+                  <span className="font-semibold text-sm">Contests & Payouts</span>
+                </div>
+                <span className="text-xs text-emerald-400 font-mono font-bold">Rules &amp; $505 →</span>
               </Link>
 
               <a
@@ -253,7 +265,10 @@ export default function HeaderNav() {
                   pathname === '/staff' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Staff Directory & Bios</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="btn-nav-base btn-nav-staff px-2 py-0.5 text-[11px]">Staff</span>
+                  <span className="font-semibold text-sm">Staff Directory</span>
+                </div>
                 <span className="text-xs text-gray-500 font-mono">The Bureau →</span>
               </Link>
             </div>
@@ -269,20 +284,26 @@ export default function HeaderNav() {
                   href="https://crffl-sportsbook.vercel.app"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-amber-400 transition"
+                  className="flex items-center justify-between p-3 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-cyan-400 transition"
                 >
-                  <span className="text-xs font-bold">Gameday Sportsbook</span>
-                  <span className="text-[10px] font-mono text-amber-400">Live Odds ↗</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="btn-nav-base btn-nav-sportsbook px-2 py-0.5 text-[11px]">Sportsbook</span>
+                    <span className="text-xs font-bold">Gameday Sportsbook</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-cyan-400">80's Neon ↗</span>
                 </a>
 
                 <a
                   href="https://crffl-pickem.vercel.app"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-cyan-400 transition"
+                  className="flex items-center justify-between p-3 rounded-xl bg-gray-900/80 hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white transition"
                 >
-                  <span className="text-xs font-bold">Pick'em & Scoreboard</span>
-                  <span className="text-[10px] font-mono text-cyan-400">Picks ↗</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="btn-nav-base btn-nav-pickem px-2 py-0.5 text-[11px]">Pick'em</span>
+                    <span className="text-xs font-bold">Weekly Pick'em</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-gray-300">Picks ↗</span>
                 </a>
               </div>
             </div>
