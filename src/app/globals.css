@@ -150,3 +150,106 @@ body {
   animation: fadeIn 0.25s ease-out forwards;
 }
 
+/* ==========================================================================
+   Hall of Fame Champion Gold Plaque Button & Gleam System
+   ========================================================================== */
+
+.hof-plaque-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg, 
+    #cf9b24 0%, 
+    #fced9a 14%, 
+    #d8aa37 28%, 
+    #fae489 44%, 
+    #c49426 58%, 
+    #fae896 74%, 
+    #a87814 90%, 
+    #d8aa37 100%
+  );
+  border: 1.5px solid #77520c;
+  border-radius: 0.45rem;
+  box-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.9),
+    inset -1px -1px 1.5px rgba(70, 45, 8, 0.75),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  color: #100b06;
+  text-shadow: 
+    0 1px 0.5px rgba(255, 255, 255, 0.85),
+    0 -0.5px 0.5px rgba(0, 0, 0, 0.75);
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Brushed fine grain overlay */
+.hof-plaque-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    rgba(255, 255, 255, 0.06) 1px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.035) 3px,
+    transparent 4px
+  );
+  pointer-events: none;
+  opacity: 0.9;
+  z-index: 1;
+}
+
+/* Diagonal specular gleam sweep on hover */
+.hof-plaque-btn .gold-shimmer-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -160%;
+  width: 75%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hof-plaque-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 
+    0 0 18px rgba(250, 228, 137, 0.65),
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 1px 1px 1.5px rgba(255, 255, 255, 1),
+    inset -1px -1px 1.5px rgba(70, 45, 8, 0.85);
+}
+
+.hof-plaque-btn:hover .gold-shimmer-sweep {
+  transform: skewX(-25deg) translateX(460%);
+}
+
+.hof-plaque-inner {
+  position: relative;
+  z-index: 2;
+  border: 1px solid rgba(75, 48, 10, 0.6);
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  box-shadow: 
+    0 0.5px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0.5px 1px rgba(60, 36, 6, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+

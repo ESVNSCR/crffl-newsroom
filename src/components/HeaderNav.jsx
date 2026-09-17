@@ -80,11 +80,12 @@ export default function HeaderNav() {
             <a
               href="/hof"
               title="CRFFL Hall of Fame"
-              className={`px-2.5 py-1 rounded-md bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-black text-xs uppercase tracking-wider transition shadow-sm flex items-center ${
+              className={`hof-plaque-btn px-1 py-0.5 text-xs select-none ${
                 pathname?.startsWith('/hof') ? 'ring-2 ring-white/60 brightness-110' : ''
               }`}
             >
-              HOF
+              <span className="gold-shimmer-sweep" />
+              <span className="hof-plaque-inner">HOF</span>
             </a>
             <a
               href="https://crffl-sportsbook.vercel.app"
@@ -235,8 +236,11 @@ export default function HeaderNav() {
                   pathname === '/hof' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <span className="px-1.5 py-0.5 rounded bg-[#d4af37] text-gray-950 font-black text-[10px] tracking-wider uppercase">HOF</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="hof-plaque-btn px-0.5 py-0.5 text-[10px] select-none">
+                    <span className="gold-shimmer-sweep" />
+                    <span className="hof-plaque-inner">HOF</span>
+                  </span>
                   <span className="font-semibold text-sm">Hall of Fame</span>
                 </div>
                 <span className="text-xs text-gray-500 font-mono">Ring Room →</span>
