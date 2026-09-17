@@ -44,14 +44,14 @@ export default function HeaderNav() {
           </div>
 
           {/* Desktop Navigation (Visible on lg and up) */}
-          <nav className="hidden lg:flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 text-xs sm:text-sm font-semibold">
+          <nav className="hidden lg:flex items-center space-x-1.5 xl:space-x-2.5 text-xs sm:text-sm font-semibold">
             <Link
               href="/"
               className={`px-2.5 py-1.5 rounded-lg transition ${
                 pathname === '/' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-800/80'
               }`}
             >
-              Dispatches
+              Home
             </Link>
             <Link
               href="/power-rankings"
@@ -75,15 +75,16 @@ export default function HeaderNav() {
                 pathname === '/contests' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-[#d4af37] hover:bg-gray-800/80'
               }`}
             >
-              Contests & Payouts
+              Info
             </Link>
             <a
               href="/hof"
-              className={`px-2.5 py-1.5 rounded-lg transition ${
-                pathname === '/hof' ? 'text-[#d4af37] bg-black/40 font-bold' : 'text-gray-300 hover:text-white hover:bg-gray-800/80'
+              title="CRFFL Hall of Fame"
+              className={`px-2.5 py-1 rounded-md bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-black text-xs uppercase tracking-wider transition shadow-sm flex items-center ${
+                pathname?.startsWith('/hof') ? 'ring-2 ring-white/60 brightness-110' : ''
               }`}
             >
-              Hall of Fame
+              HOF
             </a>
             <a
               href="https://crffl-sportsbook.vercel.app"
@@ -190,8 +191,8 @@ export default function HeaderNav() {
                   pathname === '/' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Dispatches Wire</span>
-                <span className="text-xs text-gray-500 font-mono">Home →</span>
+                <span className="font-semibold text-sm">Home</span>
+                <span className="text-xs text-gray-500 font-mono">Dispatches →</span>
               </Link>
 
               <Link
@@ -223,8 +224,8 @@ export default function HeaderNav() {
                   pathname === '/contests' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Contests & Payouts</span>
-                <span className="text-xs text-emerald-400 font-mono font-bold">$505 Purse →</span>
+                <span className="font-semibold text-sm">Info</span>
+                <span className="text-xs text-emerald-400 font-mono font-bold">Contests & Rules →</span>
               </Link>
 
               <a
@@ -234,7 +235,10 @@ export default function HeaderNav() {
                   pathname === '/hof' ? 'bg-[#d4af37]/15 border-[#d4af37] text-[#d4af37] font-bold' : 'bg-[#121824] border-gray-800 text-gray-200 hover:border-gray-700'
                 }`}
               >
-                <span className="font-semibold text-sm">Hall of Fame</span>
+                <div className="flex items-center gap-2">
+                  <span className="px-1.5 py-0.5 rounded bg-[#d4af37] text-gray-950 font-black text-[10px] tracking-wider uppercase">HOF</span>
+                  <span className="font-semibold text-sm">Hall of Fame</span>
+                </div>
                 <span className="text-xs text-gray-500 font-mono">Ring Room →</span>
               </a>
 
