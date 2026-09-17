@@ -123,7 +123,9 @@ export default function HeaderNav() {
             </button>
 
             <a
-              href="https://store.crffl.org/shop/"
+              href="https://crffl.printify.me/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold transition shadow-md flex items-center gap-1 ml-1"
             >
               <span>Shop</span>
@@ -145,7 +147,9 @@ export default function HeaderNav() {
             </button>
 
             <a
-              href="https://store.crffl.org/shop/"
+              href="https://crffl.printify.me/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold text-xs transition shadow-sm"
             >
               Shop
@@ -275,11 +279,13 @@ export default function HeaderNav() {
             {/* Official Store Card */}
             <div className="pt-2">
               <a
-                href="https://store.crffl.org/shop/"
+                href="https://crffl.printify.me/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center justify-between w-full p-3.5 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#e6c24d] text-gray-950 font-black shadow-lg hover:brightness-105 transition text-sm"
               >
                 <span>Shop Official Franchise Gear</span>
-                <span>store.crffl.org →</span>
+                <span>crffl.printify.me →</span>
               </a>
             </div>
 

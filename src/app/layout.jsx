@@ -102,7 +102,7 @@ export default function RootLayout({ children }) {
               <span>•</span>
               <a href="https://crffl-pickem.vercel.app/scoreboard" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Scoreboard</a>
               <span>•</span>
-              <a href="https://store.crffl.org/shop/" className="hover:text-[#d4af37] transition">Pro Shop</a>
+              <a href="https://crffl.printify.me/" target="_blank" rel="noopener noreferrer" className="hover:text-[#d4af37] transition">Pro Shop</a>
               <span>•</span>
               <Link href="/admin/rankings" className="hover:text-[#d4af37] transition">Commissioner Portal</Link>
             </div>

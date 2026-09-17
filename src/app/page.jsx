@@ -190,10 +190,12 @@ export default async function HomePage({ searchParams }) {
             </p>
 
             <a
-              href="https://store.crffl.org/shop/"
+              href="https://crffl.printify.me/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-[#d4af37] text-gray-950 font-bold hover:bg-[#e6c24d] transition shadow-lg text-xs"
             >
-              Shop Official Gear at CRFFL.org/shop →
+              Shop Official Gear at crffl.printify.me →
             </a>
           </div>
 

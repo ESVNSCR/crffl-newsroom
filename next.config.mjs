@@ -33,52 +33,52 @@ const nextConfig = {
       },
       {
         source: '/shop',
-        destination: 'https://store.crffl.org/shop/',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/shop/:path*',
-        destination: 'https://store.crffl.org/shop/:path*',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/product/:path*',
-        destination: 'https://store.crffl.org/product/:path*',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/product-category/:path*',
-        destination: 'https://store.crffl.org/product-category/:path*',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/cart',
-        destination: 'https://store.crffl.org/cart/',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/cart/:path*',
-        destination: 'https://store.crffl.org/cart/:path*',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/checkout',
-        destination: 'https://store.crffl.org/checkout/',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/checkout/:path*',
-        destination: 'https://store.crffl.org/checkout/:path*',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/my-account',
-        destination: 'https://store.crffl.org/my-account/',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
       {
         source: '/my-account/:path*',
-        destination: 'https://store.crffl.org/my-account/:path*',
+        destination: 'https://crffl.printify.me/',
         permanent: false,
       },
     ];
