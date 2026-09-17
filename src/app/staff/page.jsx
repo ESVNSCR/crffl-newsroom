@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import StaffDirectoryClient from '@/components/StaffDirectoryClient';
 
 export const metadata = {
   title: 'Editorial Staff Directory | CRFFL Times-Herald',
@@ -13,11 +14,15 @@ const COLUMNISTS = [
     desk: 'The Apex Board',
     role: 'Senior Analytics Editor & Lead Power Ranker',
     beat: 'Advanced Metrics, Roster Efficiency, Regression Modeling & Forensics',
+    avatar: '/reporters/marcus-vance-avatar.png',
     image: '/reporters/marcus-vance.png',
     accentColor: '#d4af37',
     badge: 'Senior Analytics Editor',
     catchphrase: 'The tape may deceive, but the math is ruthless.',
     bio: 'Dr. Vance holds a doctorate in statistical economics and brings uncompromising mathematical rigor to fantasy football. He refuses to indulge in emotional narratives or locker room nostalgia. Under his watchful eye, every manager’s roster is evaluated through true win expectancy, depth durability, and regression-adjusted potency.',
+    category: 'Power Rankings',
+    href: '/?category=Power+Rankings#dispatches',
+    wpAuthorId: '04',
     credentials: [
       'Lead Architect of the Apex Power Index (Weeks 1–17)',
       'Former Academic Fellow in Sports Quantitative Dynamics',
@@ -30,11 +35,15 @@ const COLUMNISTS = [
     desk: 'The Grit Desk',
     role: 'Bureau Chief & Senior Trench Correspondent',
     beat: 'Locker Room Warfare, Waiver Scrapes, Hard-Nosed Roster Construction',
+    avatar: '/reporters/buck-callahan-avatar.png',
     image: '/reporters/buck-callahan.png',
     accentColor: '#38bdf8',
     badge: 'Bureau Chief',
     catchphrase: 'Championships aren’t won in algorithms; they’re won in the mud.',
     bio: 'Buck Callahan has covered football for 30 years with a fedora, coffee stains, and an Underwood typewriter. He watches the game in the dirt and between the whistles. Buck has zero patience for managers who coast on lucky waiver wires or complain about bad referee calls. If your offensive line is crumbling or your bench has gone soft, Buck will print it on page one.',
+    category: 'The Grit Desk',
+    href: '/?category=The+Grit+Desk#dispatches',
+    wpAuthorId: '03',
     credentials: [
       '3-Time Fantasy Press Association "Trench Dog" Award Winner',
       'Veteran Columnist for Pacific Northwest Gridiron Gazette',
@@ -47,11 +56,15 @@ const COLUMNISTS = [
     desk: 'The Spin Room',
     role: 'Senior League Insider & Narrative Columnist',
     beat: 'Manager Psychology, Trade Whispers, Title Windows & Power Politics',
+    avatar: '/reporters/chloe-carmichael-avatar.png',
     image: '/reporters/chloe-carmichael.png',
     accentColor: '#c084fc',
     badge: 'Senior League Insider',
     catchphrase: 'In this league, ego is the highest tax.',
     bio: 'The most deeply plugged-in insider in the Columbia River circuit. Chloe possesses screenshots from every midnight group chat, records of rejected trade offers, and a psychological dossier on every owner from Vancouver to Portland. Her columns peel back the public facades to reveal the panic, vanity, and boardroom betrayals driving every Sunday decision.',
+    category: 'The Spin Room',
+    href: '/?category=The+Spin+Room#dispatches',
+    wpAuthorId: '02',
     credentials: [
       'Breaking News Contributor for Fantasy Dispatch Daily',
       'Moderator of the Annual CRFFL Draft Day Hot Stove',
@@ -64,11 +77,15 @@ const COLUMNISTS = [
     desk: 'The Tuesday Recap',
     role: 'Sports Desk Columnist & Matchup Recap Correspondent',
     beat: 'Box Score Forensic Heroics, Heartbreak Decimals & Weekly $10 Contests',
+    avatar: '/reporters/marty-sullivan-avatar.png',
     image: '/reporters/marty-sullivan.png',
     accentColor: '#34d399',
     badge: 'Lead Gameday Correspondent',
     catchphrase: 'Every Tuesday we separate the kings from the clowns!',
     bio: 'Fast-talking, sleepless, and fueled by hot diner coffee, Marty delivers the definitive blow-by-blow of Sunday gamedays. He lives for the 0.12-point upsets, the Monday night kicker miracles, and the benching disasters that haunt managers for years. Marty also serves as the official adjudicator and announcer for the league’s weekly $10 cash bounty contests.',
+    category: 'The Tuesday Recap',
+    href: '/?category=The+Tuesday+Recap#dispatches',
+    wpAuthorId: '05',
     credentials: [
       'Voice of the "Tuesday Morning Autopsy" Broadcast',
       'Official Commissioner of CRFFL Weekly Bounty Bounties',
@@ -179,103 +196,8 @@ export default function StaffDirectoryPage() {
           </div>
         </div>
 
-        {/* Columnist Profiles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {COLUMNISTS.map((col) => (
-            <div
-              key={col.id}
-              className="rounded-2xl bg-[#121824] border border-gray-800 hover:border-gray-700 transition-all p-6 sm:p-8 space-y-6 shadow-xl flex flex-col justify-between group"
-            >
-              <div className="space-y-6">
-                {/* Reporter Header */}
-                <div className="flex items-start gap-5">
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-black/60 border-2 border-[#d4af37]/60 shadow-xl flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
-                    <img
-                      src={col.image}
-                      alt={col.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <span
-                      className="inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded"
-                      style={{
-                        backgroundColor: `${col.accentColor}20`,
-                        color: col.accentColor,
-                        border: `1px solid ${col.accentColor}40`,
-                      }}
-                    >
-                      {col.desk}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                      {col.name}
-                    </h2>
-                    <p className="text-xs text-gray-400 font-medium">
-                      {col.role}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Catchphrase Quote */}
-                <div className="border-l-2 border-[#d4af37] pl-3 py-1 bg-gray-900/50 rounded-r-lg">
-                  <p className="text-xs italic text-gray-300 font-serif">
-                    “{col.catchphrase}”
-                  </p>
-                </div>
-
-                {/* Full Biography */}
-                <div className="space-y-2">
-                  <h3 className="text-xs uppercase font-mono font-bold text-gray-400 tracking-wider">
-                    Bureau Dossier
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                    {col.bio}
-                  </p>
-                </div>
-
-                {/* Beat Focus & Credentials */}
-                <div className="space-y-2 pt-2 border-t border-gray-800">
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                    <span className="font-bold text-gray-300">Beat:</span>
-                    <span>{col.beat}</span>
-                  </div>
-
-                  <div className="pt-2">
-                    <span className="text-[10px] uppercase font-mono font-bold text-gray-500 tracking-wider block mb-1">
-                      Credentials & Honors
-                    </span>
-                    <ul className="space-y-1">
-                      {col.credentials.map((cred, i) => (
-                        <li
-                          key={i}
-                          className="text-[11px] text-gray-400 flex items-center gap-2"
-                        >
-                          <span className="text-[#d4af37] text-xs">◆</span>
-                          <span>{cred}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Read Action */}
-              <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between">
-                <span className="text-[11px] font-mono text-gray-400">
-                  CRFFL Times-Herald
-                </span>
-                <Link
-                  href="/"
-                  className="text-xs font-bold text-[#d4af37] hover:text-white flex items-center gap-1 group-hover:translate-x-1 transition-transform"
-                >
-                  <span>Read Dispatches</span>
-                  <span>→</span>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Columnist Profiles Grid & Interactive Bureau Showcase */}
+        <StaffDirectoryClient columnists={COLUMNISTS} />
 
         {/* Bottom Newsroom Notice */}
         <div className="rounded-2xl bg-gradient-to-r from-gray-900 via-[#121824] to-gray-900 border border-gray-800 p-6 text-center space-y-3">

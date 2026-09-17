@@ -9,7 +9,7 @@ const REPORTERS = [
     role: 'Tuesday Post-Game Recap',
     category: 'The Tuesday Recap',
     day: 'Tuesday @ 12:00 PM',
-    avatar: '/reporters/marty-sullivan.png',
+    avatar: '/reporters/marty-sullivan-avatar.png',
   },
   {
     id: 'chloe',
@@ -17,7 +17,7 @@ const REPORTERS = [
     role: 'Wednesday Transactions & Rumor Mill',
     category: 'The Spin Room',
     day: 'Wednesday @ 12:00 PM',
-    avatar: '/reporters/chloe-carmichael.png',
+    avatar: '/reporters/chloe-carmichael-avatar.png',
   },
   {
     id: 'marcus',
@@ -25,7 +25,7 @@ const REPORTERS = [
     role: 'Wednesday Power Rankings Desk',
     category: 'Power Rankings',
     day: 'Wednesday @ 2:00 PM',
-    avatar: '/reporters/marcus-vance.png',
+    avatar: '/reporters/marcus-vance-avatar.png',
   },
   {
     id: 'buck',
@@ -33,7 +33,7 @@ const REPORTERS = [
     role: 'Thursday Look-Ahead & Matchup Preview',
     category: 'The Grit Desk',
     day: 'Thursday @ 12:00 PM',
-    avatar: '/reporters/buck-callahan.png',
+    avatar: '/reporters/buck-callahan-avatar.png',
   },
 ];
 

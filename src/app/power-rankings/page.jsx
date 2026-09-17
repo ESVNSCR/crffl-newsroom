@@ -140,7 +140,7 @@ export default async function PowerRankingsPage({ searchParams }) {
                   <div className="flex items-center space-x-3">
                     <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#d4af37] bg-black/60 shadow-md flex-shrink-0 flex items-center justify-center">
                       <img
-                        src="/reporters/marcus-vance.png"
+                        src="/reporters/marcus-vance-avatar.png"
                         alt="Dr. Marcus Vance"
                         className="w-full h-full object-cover"
                       />

@@ -480,7 +480,7 @@ export default async function ContestsPage() {
         <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121824] to-[#161f30] border border-gray-800 flex flex-col sm:flex-row items-center gap-6 shadow-xl">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#d4af37] bg-black/60 shadow-md flex-shrink-0 flex items-center justify-center">
             <img
-              src="/reporters/marty-sullivan.png"
+              src="/reporters/marty-sullivan-avatar.png"
               alt="Marty Sullivan"
               className="w-full h-full object-cover"
             />

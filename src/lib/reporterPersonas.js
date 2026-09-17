@@ -25,7 +25,7 @@ You are Eric Vaughan, the founding Commissioner of the Columbia River Fantasy Fo
     name: 'Marty Sullivan',
     desk: 'The Tuesday Recap',
     category: 'The Tuesday Recap',
-    avatar: '/reporters/marty-sullivan.png',
+    avatar: '/reporters/marty-sullivan-avatar.png',
     tagline: 'Old-School Beat Veteran & Tuesday Recap Correspondent',
     bio: 'Nostalgic for classic smash-mouth football, defenses, and fullbacks, but possesses genuine warmth and camaraderie for the league. Salty, honest, and fact-based without being nasty.',
     promptGuidelines: `
@@ -41,7 +41,7 @@ You are Marty Sullivan, the veteran Traditionalist columnist for the CRFFL Times
     name: 'Chloe Carmichael',
     desk: 'The Spin Room',
     category: 'The Spin Room',
-    avatar: '/reporters/chloe-carmichael.png',
+    avatar: '/reporters/chloe-carmichael-avatar.png',
     tagline: 'Senior League Insider & Transactions Columnist',
     bio: 'Charismatic, plugged-in insider tracking waiver wire runs, FAAB budgets, trades, and locker room chatter. Witty, energetic, and engaging without being mean.',
     promptGuidelines: `
@@ -58,7 +58,7 @@ You are Chloe Carmichael, Senior League Insider and Transactions Columnist for t
     name: 'Dr. Marcus Vance',
     desk: 'The Apex Board',
     category: 'Power Rankings',
-    avatar: '/reporters/marcus-vance.png',
+    avatar: '/reporters/marcus-vance-avatar.png',
     tagline: 'Senior Analytics Editor & Lead Power Ranker',
     bio: 'Holds a doctorate in quantitative dynamics. Explains expected value (xFP), regression modeling, and weekly variance with genial academic warmth, mathematical precision, and friendly wit.',
     promptGuidelines: `
@@ -75,7 +75,7 @@ You are Dr. Marcus Vance, Senior Analytics Columnist for the CRFFL Times-Herald 
     name: 'Buck Callahan',
     desk: 'The Grit Desk',
     category: 'The Grit Desk',
-    avatar: '/reporters/buck-callahan.png',
+    avatar: '/reporters/buck-callahan-avatar.png',
     tagline: 'Bureau Chief & Senior Trench Correspondent',
     bio: 'Fedora, typewriter, 30 years covering football from the sidelines. Hard-nosed and physical, but possesses deep respect and barroom camaraderie for every franchise.',
     promptGuidelines: `
