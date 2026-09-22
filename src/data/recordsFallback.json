@@ -1,0 +1,137 @@
+[
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring Starter",
+    "record_value": "75.3",
+    "detail": "Vikings DEF",
+    "holder_manager": "KC",
+    "season_week": "2025 Week 3",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring QB",
+    "record_value": "73.3",
+    "detail": "Josh Allen",
+    "holder_manager": "Casey",
+    "season_week": "2024 Week 14",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring RB",
+    "record_value": "63.1",
+    "detail": "Jahmyr Gibbs",
+    "holder_manager": "Corey",
+    "season_week": "2025 Week 12",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring WR",
+    "record_value": "62.4",
+    "detail": "Jamar Chase",
+    "holder_manager": "Roger",
+    "season_week": "2024 Week 10",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring TE",
+    "record_value": "46",
+    "detail": "Brock Bowers",
+    "holder_manager": "Mike F.",
+    "season_week": "2025 Week 9",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring DEF",
+    "record_value": "75.3",
+    "detail": "Vikings DEF",
+    "holder_manager": "KC",
+    "season_week": "2025 Week 3",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Scoring Bench Player (non DEF)",
+    "record_value": "58.1",
+    "detail": "Devon Achane",
+    "holder_manager": "Marcus",
+    "season_week": "2023 Week 3",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Longest Win Streak",
+    "record_value": "8 - Weeks 3 - 10",
+    "detail": "Stars & Stripes",
+    "holder_manager": "Mike F.",
+    "season_week": "2023",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Longest Losing Streak",
+    "record_value": "8 - Weeks 1 - 8",
+    "detail": "My Purdy Team",
+    "holder_manager": "Roger",
+    "season_week": "2025",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Team Score",
+    "record_value": "276.45",
+    "detail": "Moore Better",
+    "holder_manager": "Mike M.",
+    "season_week": "2025 Week 11",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Lowest Team Score",
+    "record_value": "57.98",
+    "detail": "Team Scott Scott",
+    "holder_manager": "Helen",
+    "season_week": "2021 Week 9",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Highest Team Score in a Loss",
+    "record_value": "245.25",
+    "detail": "The Art of Dual Threat",
+    "holder_manager": "AJ",
+    "season_week": "2023 Week 8",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Lowest Team Score in a Win",
+    "record_value": "156.6",
+    "detail": "Sweetnuts",
+    "holder_manager": "Kip",
+    "season_week": "2024 Week 1",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Biggest Blowout",
+    "record_value": "157.7",
+    "detail": "The Art of Dual Threat",
+    "holder_manager": "AJ",
+    "season_week": "2023 Week 9",
+    "source": "google_sheets"
+  },
+  {
+    "category": "All-Time",
+    "title": "Narrowest Victory",
+    "record_value": "0.05",
+    "detail": "Sweetnuts",
+    "holder_manager": "Kip",
+    "season_week": "2024 Week 5",
+    "source": "google_sheets"
+  }
+]

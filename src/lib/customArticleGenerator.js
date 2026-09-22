@@ -12,6 +12,7 @@ import {
 } from './sleeperPlayers.js';
 import { REPORTER_PERSONAS } from './reporterPersonas.js';
 import { calculateWeeklyBenchAudit } from './benchAudit.js';
+import { auditWeeklyRecordsAgainstHallOfFame } from './recordAudit.js';
 import { getEffectiveReporterPrompt } from './promptManager.js';
 
 export { REPORTER_PERSONAS };
@@ -230,7 +231,26 @@ export async function generateCustomReporterArticle({
     }
   }
 
-  // 8. Real NFL Newswire
+  // 8. Record Book & Hall of Fame Audit
+  let recordSection = '';
+  if (rawMatchups.length > 0) {
+    try {
+      const recordAudit = await auditWeeklyRecordsAgainstHallOfFame({
+        weekNumber: activeWeek,
+        rawMatchups,
+        playerMap,
+        rosters: overview.rosters,
+        season: 2026,
+      });
+      if (recordAudit?.formattedReport) {
+        recordSection = recordAudit.formattedReport;
+      }
+    } catch (recErr) {
+      console.warn('Record audit warning in customArticleGenerator:', recErr.message);
+    }
+  }
+
+  // 9. Real NFL Newswire
   let newsSummary = '';
   if (options.nflNews && nflNews.length > 0) {
     newsSummary = nflNews.map((n) => `• ${n.title}: ${n.description}`).join('\n');
@@ -263,6 +283,9 @@ export async function generateCustomReporterArticle({
   if (newsSummary) {
     contextBlocks.push(`Real-World NFL Newswire (PFF):\n${newsSummary}`);
   }
+  if (recordSection) {
+    contextBlocks.push(recordSection);
+  }
   if (pastMemoryText) {
     contextBlocks.push(`Your Prior Columns (Continuity):\n${pastMemoryText}`);
   }
@@ -288,8 +311,12 @@ ${reporterId === 'marty_sullivan' ? `
 3. BENCH POINTS & FATAL BLUNDERS FOCUS (CRITICAL):
    - You MUST closely analyze the LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT above.
    - If any manager suffered a FATAL BENCH BLUNDER (their optimal lineup would have won the matchup, but they sat the winning points on the bench), you must mercilessly roast them! Name the stranded players, their points, and call out the manager's malpractice.
+
+4. ALL-TIME RECORD BOOK & BROKEN RECORDS (MANDATORY):
+   - You MUST review the ALL-TIME CRFFL RECORD BOOK AUDIT above.
+   - If ANY all-time CRFFL records were broken or newly set this week, dedicate an entire prominent, passionate paragraph to it! Salute the manager, team/player, and the historic new mark that shattered the record book. If no records fell, give a brief nod that the record books stood safe.
 ` : ''}
-${reporterId === 'marty_sullivan' ? '4' : '3'}. OUTPUT FORMAT & COMPLETION RULES (MANDATORY):
+${reporterId === 'marty_sullivan' ? '5' : '3'}. OUTPUT FORMAT & COMPLETION RULES (MANDATORY):
    Your output MUST begin with exactly four lines of bracketed shortcodes so our CMS can parse the article metadata:
    [title Compelling Headline in Character]
    [author ${persona.name}]

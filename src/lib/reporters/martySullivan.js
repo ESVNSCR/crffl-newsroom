@@ -6,6 +6,7 @@ import { getAuthorMemory, getDynamicRival } from '../memory.js';
 import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 import { calculateWeeklyBenchAudit } from '../benchAudit.js';
+import { auditWeeklyRecordsAgainstHallOfFame } from '../recordAudit.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
 
 export async function generateMartyRecap({ dryRun = false } = {}) {
@@ -44,6 +45,15 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
 
   // Calculate bench points and lineup optimization audit using CRFFL 11-slot matrix
   const benchAudit = calculateWeeklyBenchAudit(rawMatchups, playerMap, overview.rosters);
+
+  // Audit weekly performance against all-time Hall of Fame records
+  const recordAudit = await auditWeeklyRecordsAgainstHallOfFame({
+    weekNumber: weekToRecap,
+    rawMatchups,
+    playerMap,
+    rosters: overview.rosters,
+    season: 2026,
+  });
 
   // Fetch contest data from Supabase
   const { data: contestData } = await supabase
@@ -94,6 +104,11 @@ Your specific assignment is the Tuesday Post-Game Recap (published Tuesdays at N
   You MUST review the "CRFFL LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT" in the data below.
   - FATAL BENCH BLUNDERS: If any manager lost their matchup but legally had the points on their bench to win under CRFFL's 11 starting slots (1 QB, 2 RB, 2 WR, 2 FLEX, 1 REC_FLEX [WR/TE only], 1 SUPER_FLEX, 1 K, 1 DEF), analyze it honestly and with good-humored tough love. Call them out by their real human name and team name, name the exact players they sat and their point totals, and shake your head at the coaching heartbreak ("Leaving 25 points on the pine is a tough pill to swallow, but we've all been there"). Be fact-based and candid without being mean-spirited or insulting.
   - BENCH POINTS LEFT STRANDED: Give a friendly nod to other managers who left big points on their pine even if they still managed to win.
+
+* CRITICAL MANDATORY FOCUS: ALL-TIME LEAGUE RECORDS BROKEN (HALL OF FAME SPOTLIGHT):
+  You MUST review the "ALL-TIME CRFFL RECORD BOOK AUDIT" in the data below.
+  - IF ANY ALL-TIME RECORDS WERE BROKEN: This is massive, historic news! You MUST dedicate an entire prominent, passionate paragraph to the newly broken record(s). Name the manager, the player/team, the exact historic stat, and contrast it with the prior all-time mark they shattered. React in full character—give a respectful tip of the cap to legendary excellence, or grumble about how modern scoring is through the roof, but treat it as a monumental league milestone that belongs in the Hall of Fame.
+  - IF NO RECORDS WERE BROKEN: Briefly note with satisfaction that the all-time record books held firm through another week of gridiron warfare (mentioning any notable near-misses if applicable).
 
 ---
 
@@ -156,6 +171,9 @@ ${JSON.stringify(previousMatchups, null, 2)}
 
 CRFFL LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT (MATHEMATICAL MATRIX):
 ${benchAudit.formattedReport}
+
+ALL-TIME CRFFL RECORD BOOK AUDIT (HALL OF FAME INTEGRATION):
+${recordAudit.formattedReport}
 `;
 
   const response = await ai.models.generateContent({
