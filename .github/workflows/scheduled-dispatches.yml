@@ -1,0 +1,100 @@
+name: Scheduled Newsroom Dispatches
+
+on:
+  schedule:
+    # -------------------------------------------------------------
+    # TUESDAYS:
+    # Marty Sullivan (The Tuesday Recap) at 12:00 PM Pacific:
+    #   19:00 UTC (PDT) / 20:00 UTC (PST)
+    # Dr. Marcus Vance (Power Rankings) at 2:00 PM Pacific:
+    #   21:00 UTC (PDT) / 22:00 UTC (PST)
+    # -------------------------------------------------------------
+    - cron: '0 19 * * 2'
+    - cron: '0 20 * * 2'
+    - cron: '0 21 * * 2'
+    - cron: '0 22 * * 2'
+
+    # -------------------------------------------------------------
+    # WEDNESDAYS:
+    # Chloe Carmichael (The Spin Room) at 12:00 PM Pacific:
+    #   19:00 UTC (PDT) / 20:00 UTC (PST)
+    # -------------------------------------------------------------
+    - cron: '0 19 * * 3'
+    - cron: '0 20 * * 3'
+
+    # -------------------------------------------------------------
+    # THURSDAYS:
+    # Buck Callahan (The Look-Ahead) at 12:00 PM Pacific:
+    #   19:00 UTC (PDT) / 20:00 UTC (PST)
+    # -------------------------------------------------------------
+    - cron: '0 19 * * 4'
+    - cron: '0 20 * * 4'
+
+  workflow_dispatch:
+    inputs:
+      reporter:
+        description: 'Reporter to dispatch (marcus, marty, chloe, buck)'
+        required: true
+        default: 'marcus'
+      force:
+        description: 'Force execution even if already published this week'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  run-dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate Pacific Time and Execute Scheduled Dispatch
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET || 'crffl-newsroom-cron-secret-2026' }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_REPORTER: ${{ github.event.inputs.reporter }}
+          INPUT_FORCE: ${{ github.event.inputs.force }}
+        run: |
+          PACIFIC_DAY=$(TZ="America/Los_Angeles" date +%A)
+          PACIFIC_HOUR=$(TZ="America/Los_Angeles" date +%H)
+          echo "Current Pacific Time: $PACIFIC_DAY at $PACIFIC_HOUR:00"
+
+          REPORTER_TO_RUN=""
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            REPORTER_TO_RUN="$INPUT_REPORTER"
+            echo "Manual trigger for reporter: $REPORTER_TO_RUN"
+          else
+            # Automated Schedule Checks in Pacific Time:
+            if [ "$PACIFIC_DAY" = "Tuesday" ]; then
+              if [ "$PACIFIC_HOUR" = "12" ]; then
+                REPORTER_TO_RUN="marty"
+              elif [ "$PACIFIC_HOUR" = "14" ]; then
+                REPORTER_TO_RUN="marcus"
+              fi
+            elif [ "$PACIFIC_DAY" = "Wednesday" ]; then
+              if [ "$PACIFIC_HOUR" = "12" ]; then
+                REPORTER_TO_RUN="chloe"
+              fi
+            elif [ "$PACIFIC_DAY" = "Thursday" ]; then
+              if [ "$PACIFIC_HOUR" = "12" ]; then
+                REPORTER_TO_RUN="buck"
+              fi
+            fi
+          fi
+
+          if [ -z "$REPORTER_TO_RUN" ]; then
+            echo "No columnist scheduled for $PACIFIC_DAY at $PACIFIC_HOUR:00 Pacific Time. Skipping cleanly."
+            exit 0
+          fi
+
+          echo "Triggering dispatch for: $REPORTER_TO_RUN..."
+          FORCE_PARAM=""
+          if [ "$INPUT_FORCE" = "true" ]; then
+            FORCE_PARAM="&force=true"
+          fi
+
+          RESPONSE=$(curl -s -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "https://www.crffl.org/api/cron/dispatch?reporter=$REPORTER_TO_RUN$FORCE_PARAM")
+
+          echo "Dispatch Response: $RESPONSE"

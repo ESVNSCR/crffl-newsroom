@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getLeagueOverview } from '@/lib/sleeper';
 import { verifyAdminSession } from '@/lib/adminAuth';
+import { generateMarcusPowerRankings } from '@/lib/reporters/marcusVance';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +39,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { week_number, team_order, notes } = body;
+    const { week_number, team_order, notes, publishNow = false } = body;
 
     const { data, error } = await supabase
       .from('rankings_submissions')
@@ -56,8 +57,20 @@ export async function POST(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, submission: data });
+
+    let publishResult = null;
+    if (publishNow) {
+      publishResult = await generateMarcusPowerRankings({ dryRun: false });
+    }
+
+    return NextResponse.json({
+      success: true,
+      submission: data,
+      published: Boolean(publishNow),
+      publishResult,
+    });
   } catch (err) {
+    console.error('Error saving or publishing rankings:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

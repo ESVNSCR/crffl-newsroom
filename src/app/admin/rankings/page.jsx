@@ -8,6 +8,7 @@ export default function AdminRankingsPage() {
   const [teams, setTeams] = useState([]);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -83,8 +84,12 @@ export default function AdminRankingsPage() {
     setTeams(newTeams.map((t, i) => ({ ...t, rank: i + 1 })));
   };
 
-  const saveSubmission = async () => {
-    setSaving(true);
+  const saveSubmission = async (publishNow = false) => {
+    if (publishNow) {
+      setPublishing(true);
+    } else {
+      setSaving(true);
+    }
     setMessage('');
     try {
       const res = await fetch('/api/admin/rankings', {
@@ -94,11 +99,16 @@ export default function AdminRankingsPage() {
           week_number: currentWeek,
           team_order: teams,
           notes,
+          publishNow,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        setMessage('Baseline rankings saved successfully! Dr. Vance will utilize these Wednesday at 2:00 PM.');
+        if (publishNow) {
+          setMessage(`🚀 Week ${currentWeek} Power Rankings generated and published live! The scheduled 2:00 PM Tuesday run has been marked complete and deferred until Week ${currentWeek + 1}.`);
+        } else {
+          setMessage('✅ Baseline rankings saved successfully! Dr. Vance will automatically publish these on Tuesday at 2:00 PM PT.');
+        }
       } else {
         setMessage(`Error: ${data.error}`);
       }
@@ -106,6 +116,7 @@ export default function AdminRankingsPage() {
       setMessage(`Network Error: ${err.message}`);
     } finally {
       setSaving(false);
+      setPublishing(false);
     }
   };
 
@@ -197,15 +208,28 @@ export default function AdminRankingsPage() {
         />
       </div>
 
-      <div className="flex justify-end pt-4">
-        <button
-          type="button"
-          onClick={saveSubmission}
-          disabled={saving}
-          className="bg-[#d4af37] text-gray-950 font-bold px-6 py-3 rounded-xl hover:bg-[#e6c24d] transition disabled:opacity-50"
-        >
-          {saving ? 'Saving...' : `Submit Baseline for Week ${currentWeek}`}
-        </button>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-800">
+        <div className="text-xs text-gray-400 max-w-md">
+          <span className="text-[#d4af37] font-bold">Automatic Schedule:</span> Tuesdays at 2:00 PM PT. If you click <strong className="text-white">Save &amp; Publish Now</strong>, Dr. Vance will generate and release the rankings immediately, and the scheduled Tuesday 2:00 PM run will automatically skip until next week.
+        </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <button
+            type="button"
+            onClick={() => saveSubmission(false)}
+            disabled={saving || publishing}
+            className="bg-gray-800 text-gray-200 font-semibold px-5 py-3 rounded-xl hover:bg-gray-700 transition disabled:opacity-50 text-sm"
+          >
+            {saving ? 'Saving...' : `Save Baseline Only`}
+          </button>
+          <button
+            type="button"
+            onClick={() => saveSubmission(true)}
+            disabled={saving || publishing}
+            className="bg-gradient-to-r from-[#d4af37] to-[#fce803] text-gray-950 font-bold px-6 py-3 rounded-xl hover:opacity-90 shadow-[0_0_15px_rgba(212,175,55,0.3)] transition disabled:opacity-50 text-sm flex items-center gap-2"
+          >
+            {publishing ? '🚀 Publishing Now...' : `🚀 Save & Publish Now`}
+          </button>
+        </div>
       </div>
     </div>
   );
