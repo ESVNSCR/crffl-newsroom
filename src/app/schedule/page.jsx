@@ -260,7 +260,7 @@ export default function SchedulePage() {
               href="/contests"
               className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#d4af37] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 px-3.5 py-1 rounded-full transition shadow-sm"
             >
-              <span>View 14-Week Contests & Prize Payouts ($505 Purse)</span>
+              <span>View 14-Week Contests & Prize Payouts ($520 Purse)</span>
               <span>→</span>
             </Link>
           </div>

@@ -75,6 +75,10 @@ export default async function ContestsPage() {
     };
   });
 
+  const playoffPool = LEAGUE_PAYOUTS
+    .filter((p) => p.place !== '14 Weekly Contests')
+    .reduce((sum, p) => sum + p.amount, 0);
+
   return (
     <div className="min-h-screen bg-[#0b0f17] text-gray-100 py-10 sm:py-14 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-12 sm:space-y-16">
@@ -96,7 +100,7 @@ export default async function ContestsPage() {
             </h1>
 
             <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-300 leading-relaxed">
-              Every dollar accounted for. From the coveted $180 championship apex down to the fourteen $10 regular-season weekly side bounties, adjudicated following Monday Night Football by Marty Sullivan.
+              Every dollar accounted for. From the coveted $195 championship apex down to the fourteen $10 regular-season weekly side bounties, adjudicated following Monday Night Football by Marty Sullivan.
             </p>
 
             {/* Quick Stat Pill Highlights */}
@@ -108,7 +112,7 @@ export default async function ContestsPage() {
 
               <div className="px-4 py-2 rounded-xl bg-black/60 border border-white/10 shadow-inner">
                 <span className="text-[10px] font-mono text-gray-400 block uppercase">Championship Playoff Pool</span>
-                <span className="text-xl sm:text-2xl font-black text-white font-mono">$365</span>
+                <span className="text-xl sm:text-2xl font-black text-white font-mono">${playoffPool}</span>
               </div>
 
               <div className="px-4 py-2 rounded-xl bg-black/60 border border-white/10 shadow-inner">
