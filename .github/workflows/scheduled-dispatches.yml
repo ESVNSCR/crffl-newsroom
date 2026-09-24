@@ -4,31 +4,32 @@ on:
   schedule:
     # -------------------------------------------------------------
     # TUESDAYS:
-    # Marty Sullivan (The Tuesday Recap) at 12:00 PM Pacific:
-    #   19:00 UTC (PDT) / 20:00 UTC (PST)
-    # Dr. Marcus Vance (Power Rankings) at 2:00 PM Pacific:
-    #   21:00 UTC (PDT) / 22:00 UTC (PST)
+    # Marty Sullivan (The Tuesday Recap) at 12:00 PM Pacific
+    # Dr. Marcus Vance (Power Rankings) at 2:00 PM Pacific
+    # Trigger at :50 to bypass top-of-the-hour runner queue congestion:
+    #   11:50 AM PDT = 18:50 UTC / 11:50 AM PST = 19:50 UTC
+    #   1:50 PM PDT  = 20:50 UTC / 1:50 PM PST  = 21:50 UTC
     # -------------------------------------------------------------
-    - cron: '0 19 * * 2'
-    - cron: '0 20 * * 2'
-    - cron: '0 21 * * 2'
-    - cron: '0 22 * * 2'
+    - cron: '50 18 * * 2'
+    - cron: '50 19 * * 2'
+    - cron: '50 20 * * 2'
+    - cron: '50 21 * * 2'
 
     # -------------------------------------------------------------
     # WEDNESDAYS:
     # Chloe Carmichael (The Spin Room) at 12:00 PM Pacific:
-    #   19:00 UTC (PDT) / 20:00 UTC (PST)
+    #   11:50 AM PDT = 18:50 UTC / 11:50 AM PST = 19:50 UTC
     # -------------------------------------------------------------
-    - cron: '0 19 * * 3'
-    - cron: '0 20 * * 3'
+    - cron: '50 18 * * 3'
+    - cron: '50 19 * * 3'
 
     # -------------------------------------------------------------
     # THURSDAYS:
     # Buck Callahan (The Look-Ahead) at 12:00 PM Pacific:
-    #   19:00 UTC (PDT) / 20:00 UTC (PST)
+    #   11:50 AM PDT = 18:50 UTC / 11:50 AM PST = 19:50 UTC
     # -------------------------------------------------------------
-    - cron: '0 19 * * 4'
-    - cron: '0 20 * * 4'
+    - cron: '50 18 * * 4'
+    - cron: '50 19 * * 4'
 
   workflow_dispatch:
     inputs:
@@ -53,37 +54,73 @@ jobs:
           INPUT_REPORTER: ${{ github.event.inputs.reporter }}
           INPUT_FORCE: ${{ github.event.inputs.force }}
         run: |
-          PACIFIC_DAY=$(TZ="America/Los_Angeles" date +%A)
-          PACIFIC_HOUR=$(TZ="America/Los_Angeles" date +%H)
-          echo "Current Pacific Time: $PACIFIC_DAY at $PACIFIC_HOUR:00"
-
           REPORTER_TO_RUN=""
+          WAIT_SECONDS=0
+          CURRENT_TIME=""
+          TARGET_HOUR=""
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             REPORTER_TO_RUN="$INPUT_REPORTER"
             echo "Manual trigger for reporter: $REPORTER_TO_RUN"
           else
-            # Automated Schedule Checks in Pacific Time:
-            if [ "$PACIFIC_DAY" = "Tuesday" ]; then
-              if [ "$PACIFIC_HOUR" = "12" ]; then
-                REPORTER_TO_RUN="marty"
-              elif [ "$PACIFIC_HOUR" = "14" ]; then
-                REPORTER_TO_RUN="marcus"
-              fi
-            elif [ "$PACIFIC_DAY" = "Wednesday" ]; then
-              if [ "$PACIFIC_HOUR" = "12" ]; then
-                REPORTER_TO_RUN="chloe"
-              fi
-            elif [ "$PACIFIC_DAY" = "Thursday" ]; then
-              if [ "$PACIFIC_HOUR" = "12" ]; then
-                REPORTER_TO_RUN="buck"
-              fi
-            fi
+            eval $(node -e '
+              const parts = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Los_Angeles",
+                weekday: "long",
+                hour: "numeric",
+                minute: "numeric",
+                second: "numeric",
+                hour12: false
+              }).formatToParts(new Date());
+
+              const get = (type) => parts.find(p => p.type === type)?.value;
+              const day = get("weekday");
+              const hour = parseInt(get("hour"), 10);
+              const minute = parseInt(get("minute"), 10);
+              const second = parseInt(get("second"), 10);
+
+              let targetHour = -1;
+              let waitSeconds = 0;
+
+              if (minute >= 40) {
+                // Pre-trigger: queue early before the top of the hour
+                targetHour = (hour + 1) % 24;
+                waitSeconds = (59 - minute) * 60 + (60 - second);
+              } else if (minute <= 35) {
+                // Runner started at or slightly after the top of the hour
+                targetHour = hour;
+                waitSeconds = 0;
+              }
+
+              let reporter = "";
+              if (day === "Tuesday") {
+                if (targetHour === 12) reporter = "marty";
+                else if (targetHour === 14) reporter = "marcus";
+              } else if (day === "Wednesday") {
+                if (targetHour === 12) reporter = "chloe";
+              } else if (day === "Thursday") {
+                if (targetHour === 12) reporter = "buck";
+              }
+
+              const timeStr = `${day} at ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")} Pacific`;
+              console.log(`REPORTER_TO_RUN="${reporter}"`);
+              console.log(`WAIT_SECONDS=${waitSeconds}`);
+              console.log(`CURRENT_TIME="${timeStr}"`);
+              console.log(`TARGET_HOUR="${targetHour}"`);
+            ')
+            echo "Current Pacific Time: $CURRENT_TIME"
           fi
 
           if [ -z "$REPORTER_TO_RUN" ]; then
-            echo "No columnist scheduled for $PACIFIC_DAY at $PACIFIC_HOUR:00 Pacific Time. Skipping cleanly."
+            echo "No columnist scheduled for this window (Target hour: $TARGET_HOUR:00 Pacific). Skipping cleanly."
             exit 0
+          fi
+
+          if [ "$WAIT_SECONDS" -gt 0 ]; then
+            echo "Pre-trigger active for $REPORTER_TO_RUN (Target: $TARGET_HOUR:00:00 Pacific)."
+            echo "Waiting $WAIT_SECONDS seconds until target hour..."
+            sleep "$WAIT_SECONDS"
+            echo "Target time reached! Proceeding with dispatch."
           fi
 
           echo "Triggering dispatch for: $REPORTER_TO_RUN..."
