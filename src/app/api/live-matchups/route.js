@@ -151,17 +151,31 @@ export async function GET(request) {
         }
       }
 
+      // Add win probabilities and point aliases to team objects
+      teamA.winProbability = winProbA;
+      teamA.currentPoints = pointsA;
+      teamA.projectedPoints = teamA.projected;
+
+      teamB.winProbability = winProbB;
+      teamB.currentPoints = pointsB;
+      teamB.projectedPoints = teamB.projected;
+
       return {
         matchupId: Number(mid),
+        team1: teamA,
+        team2: teamB,
         teamA,
         teamB,
         margin,
+        projectedMargin: Number(Math.abs(projA - projB).toFixed(1)),
         leader,
         winProbA,
         winProbB,
         isThriller,
+        isClose: isThriller || margin < 12,
         isBlowout,
         status: statusLabel,
+        statusLabel,
       };
     });
 

@@ -548,9 +548,25 @@ export default function GritZoneClient() {
             {!matchupsLoading &&
               matchups.map((m) => {
                 const isExpanded = expandedMatchupId === m.matchupId;
-                const isThriller = m.isClose || m.projectedMargin <= 10;
-                const team1Prob = Math.round(m.team1.winProbability || 50);
-                const team2Prob = 100 - team1Prob;
+                const t1 = m.team1 || m.teamA || {};
+                const t2 = m.team2 || m.teamB || {};
+
+                const team1Prob = Math.round(t1.winProbability ?? m.winProbA ?? 50);
+                const team2Prob = Math.round(t2.winProbability ?? m.winProbB ?? (100 - team1Prob));
+                const margin = m.projectedMargin ?? m.margin ?? Math.abs((t1.points || 0) - (t2.points || 0));
+                const isThriller = m.isThriller || m.isClose || margin <= 10;
+
+                const t1Points = Number(t1.currentPoints ?? t1.points ?? 0).toFixed(1);
+                const t2Points = Number(t2.currentPoints ?? t2.points ?? 0).toFixed(1);
+                const t1Proj = Number(t1.projectedPoints ?? t1.projected ?? 0).toFixed(1);
+                const t2Proj = Number(t2.projectedPoints ?? t2.projected ?? 0).toFixed(1);
+                const t1Remaining = t1.startersRemaining ?? 0;
+                const t2Remaining = t2.startersRemaining ?? 0;
+                const startersInPlay = t1Remaining + t2Remaining;
+
+                const t1Starters = Array.isArray(t1.starters) ? t1.starters : [];
+                const t2Starters = Array.isArray(t2.starters) ? t2.starters : [];
+                const maxStarters = Math.max(t1Starters.length, t2Starters.length);
 
                 return (
                   <div
@@ -575,13 +591,13 @@ export default function GritZoneClient() {
                           </span>
                         )}
                         <span className="text-[11px] text-gray-400">
-                          Spread: <span className="font-mono font-bold text-gray-200">{m.projectedMargin} pts</span>
+                          Spread: <span className="font-mono font-bold text-gray-200">{margin} pts</span>
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] uppercase font-mono text-gray-400">
-                          {m.team1.startersRemaining + m.team2.startersRemaining} in-play
+                          {startersInPlay} in-play
                         </span>
                       </div>
                     </div>
@@ -594,29 +610,29 @@ export default function GritZoneClient() {
                           <div className="flex items-center gap-2 w-full">
                             <div className="w-10 h-10 rounded-full border border-gray-700/80 overflow-hidden relative bg-black shrink-0 shadow-sm">
                               <Image
-                                src={m.team1.logo || '/logos/league.png'}
-                                alt={m.team1.managerName}
+                                src={t1.logo || '/logos/league.png'}
+                                alt={t1.managerName || 'Team 1'}
                                 fill
                                 className="object-cover"
                               />
                             </div>
                             <div className="min-w-0 truncate">
                               <div className="font-extrabold text-sm sm:text-base text-white truncate">
-                                {m.team1.managerName}
+                                {t1.managerName || 'Manager 1'}
                               </div>
                               <div className="text-[10px] text-gray-400 truncate">
-                                {m.team1.teamName}
+                                {t1.teamName || 'Franchise 1'}
                               </div>
                             </div>
                           </div>
 
                           <div className="mt-2.5 w-full">
                             <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
-                              {Number(m.team1.currentPoints || 0).toFixed(1)}
+                              {t1Points}
                             </div>
                             <div className="text-[11px] font-mono text-gray-400 flex items-center justify-between">
-                              <span>Proj: <span className="text-[#d4af37] font-bold">{Number(m.team1.projectedPoints || 0).toFixed(1)}</span></span>
-                              <span className="text-[10px] text-gray-400">{m.team1.startersRemaining} left</span>
+                              <span>Proj: <span className="text-[#d4af37] font-bold">{t1Proj}</span></span>
+                              <span className="text-[10px] text-gray-400">{t1Remaining} left</span>
                             </div>
                           </div>
                         </div>
@@ -636,16 +652,16 @@ export default function GritZoneClient() {
                           <div className="flex items-center gap-2 w-full justify-end">
                             <div className="min-w-0 truncate text-right">
                               <div className="font-extrabold text-sm sm:text-base text-white truncate">
-                                {m.team2.managerName}
+                                {t2.managerName || 'Manager 2'}
                               </div>
                               <div className="text-[10px] text-gray-400 truncate">
-                                {m.team2.teamName}
+                                {t2.teamName || 'Franchise 2'}
                               </div>
                             </div>
                             <div className="w-10 h-10 rounded-full border border-gray-700/80 overflow-hidden relative bg-black shrink-0 shadow-sm">
                               <Image
-                                src={m.team2.logo || '/logos/league.png'}
-                                alt={m.team2.managerName}
+                                src={t2.logo || '/logos/league.png'}
+                                alt={t2.managerName || 'Team 2'}
                                 fill
                                 className="object-cover"
                               />
@@ -654,11 +670,11 @@ export default function GritZoneClient() {
 
                           <div className="mt-2.5 w-full text-right">
                             <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
-                              {Number(m.team2.currentPoints || 0).toFixed(1)}
+                              {t2Points}
                             </div>
                             <div className="text-[11px] font-mono text-gray-400 flex items-center justify-between flex-row-reverse">
-                              <span>Proj: <span className="text-[#d4af37] font-bold">{Number(m.team2.projectedPoints || 0).toFixed(1)}</span></span>
-                              <span className="text-[10px] text-gray-400">{m.team2.startersRemaining} left</span>
+                              <span>Proj: <span className="text-[#d4af37] font-bold">{t2Proj}</span></span>
+                              <span className="text-[10px] text-gray-400">{t2Remaining} left</span>
                             </div>
                           </div>
                         </div>
@@ -720,52 +736,61 @@ export default function GritZoneClient() {
                             Starter Points Comparison
                           </div>
 
-                          {m.team1.starters?.map((p1, idx) => {
-                            const p2 = m.team2.starters?.[idx] || {};
-                            return (
-                              <div
-                                key={idx}
-                                className="grid grid-cols-12 items-center text-xs py-1.5 px-2 rounded-lg bg-[#0a0f19] border border-gray-800/60 gap-1.5"
-                              >
-                                {/* Team 1 Starter */}
-                                <div className="col-span-5 flex items-center justify-between min-w-0 pr-1">
-                                  <div className="truncate">
-                                    <div className="font-bold text-gray-200 truncate text-[11px] sm:text-xs">
-                                      {p1.name || 'Empty'}
-                                    </div>
-                                    <div className="text-[9px] text-gray-400 font-mono">
-                                      {p1.team ? `${p1.team} - ${p1.position}` : p1.position}
-                                    </div>
-                                  </div>
-                                  <span className="font-mono font-black text-white text-xs ml-1">
-                                    {Number(p1.points || 0).toFixed(1)}
-                                  </span>
-                                </div>
+                          {maxStarters === 0 ? (
+                            <div className="text-center py-3 text-xs text-gray-500">
+                              No starters submitted yet for this matchup.
+                            </div>
+                          ) : (
+                            Array.from({ length: maxStarters }).map((_, idx) => {
+                              const p1 = t1Starters[idx] || {};
+                              const p2 = t2Starters[idx] || {};
+                              const slotLabel = p1.pos || p1.position || p2.pos || p2.position || 'SLOT';
 
-                                {/* Position Badge */}
-                                <div className="col-span-2 text-center">
-                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">
-                                    {p1.position || 'SLOT'}
-                                  </span>
-                                </div>
-
-                                {/* Team 2 Starter */}
-                                <div className="col-span-5 flex items-center justify-between min-w-0 pl-1 flex-row-reverse">
-                                  <div className="truncate text-right">
-                                    <div className="font-bold text-gray-200 truncate text-[11px] sm:text-xs">
-                                      {p2.name || 'Empty'}
+                              return (
+                                <div
+                                  key={idx}
+                                  className="grid grid-cols-12 items-center text-xs py-1.5 px-2 rounded-lg bg-[#0a0f19] border border-gray-800/60 gap-1.5"
+                                >
+                                  {/* Team 1 Starter */}
+                                  <div className="col-span-5 flex items-center justify-between min-w-0 pr-1">
+                                    <div className="truncate">
+                                      <div className="font-bold text-gray-200 truncate text-[11px] sm:text-xs">
+                                        {p1.name || '—'}
+                                      </div>
+                                      <div className="text-[9px] text-gray-400 font-mono truncate">
+                                        {p1.team ? `${p1.team} - ${p1.pos || p1.position || 'SLOT'}` : (p1.pos || p1.position || 'SLOT')}
+                                      </div>
                                     </div>
-                                    <div className="text-[9px] text-gray-400 font-mono">
-                                      {p2.team ? `${p2.team} - ${p2.position}` : p2.position}
-                                    </div>
+                                    <span className="font-mono font-black text-white text-xs ml-1">
+                                      {Number(p1.points || 0).toFixed(1)}
+                                    </span>
                                   </div>
-                                  <span className="font-mono font-black text-white text-xs mr-1">
-                                    {Number(p2.points || 0).toFixed(1)}
-                                  </span>
+
+                                  {/* Position Badge */}
+                                  <div className="col-span-2 text-center">
+                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">
+                                      {slotLabel}
+                                    </span>
+                                  </div>
+
+                                  {/* Team 2 Starter */}
+                                  <div className="col-span-5 flex items-center justify-between min-w-0 pl-1 flex-row-reverse">
+                                    <div className="truncate text-right">
+                                      <div className="font-bold text-gray-200 truncate text-[11px] sm:text-xs">
+                                        {p2.name || '—'}
+                                      </div>
+                                      <div className="text-[9px] text-gray-400 font-mono truncate">
+                                        {p2.team ? `${p2.team} - ${p2.pos || p2.position || 'SLOT'}` : (p2.pos || p2.position || 'SLOT')}
+                                      </div>
+                                    </div>
+                                    <span className="font-mono font-black text-white text-xs mr-1">
+                                      {Number(p2.points || 0).toFixed(1)}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })
+                          )}
                         </div>
                       )}
                     </div>
