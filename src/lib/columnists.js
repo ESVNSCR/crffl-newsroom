@@ -1,6 +1,7 @@
 /**
  * Central registry for the four CRFFL Times-Herald columnists.
- * Provides names, roles, desk names, WordPress author mapping, and avatar image paths.
+ * Provides names, roles, desk names, WordPress author mapping, avatar image paths,
+ * and War Room live chat badges/colors.
  */
 export const COLUMNISTS = {
   marcus_vance: {
@@ -12,6 +13,12 @@ export const COLUMNISTS = {
     href: '/?category=Power+Rankings#dispatches',
     avatar: '/reporters/marcus-vance-avatar.png',
     image: '/reporters/marcus-vance.png',
+    tag: '@Marcus',
+    chatRole: 'Analytics Desk',
+    chatColor: 'border-cyan-500/50 bg-cyan-950/20 text-cyan-300',
+    chatBorder: 'border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)] bg-[#091829]',
+    chatTagBg: 'bg-cyan-900/60 text-cyan-300 border-cyan-500/40',
+    nameColor: 'text-cyan-300',
     wpAuthorId: 4,
     wpAuthorSlug: 'marcus_vance',
   },
@@ -24,6 +31,12 @@ export const COLUMNISTS = {
     href: '/?category=The+Grit+Desk#dispatches',
     avatar: '/reporters/buck-callahan-avatar.png',
     image: '/reporters/buck-callahan.png',
+    tag: '@Buck',
+    chatRole: 'The Grit Desk',
+    chatColor: 'border-amber-500/50 bg-amber-950/20 text-amber-300',
+    chatBorder: 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.15)] bg-[#241306]',
+    chatTagBg: 'bg-amber-900/60 text-amber-300 border-amber-500/40',
+    nameColor: 'text-amber-400',
     wpAuthorId: 3,
     wpAuthorSlug: 'buck_callahan',
   },
@@ -36,6 +49,12 @@ export const COLUMNISTS = {
     href: '/?category=The+Tuesday+Recap#dispatches',
     avatar: '/reporters/marty-sullivan-avatar.png',
     image: '/reporters/marty-sullivan.png',
+    tag: '@Marty',
+    chatRole: 'Tuesday Recap',
+    chatColor: 'border-emerald-500/50 bg-emerald-950/20 text-emerald-300',
+    chatBorder: 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)] bg-[#091f14]',
+    chatTagBg: 'bg-emerald-900/60 text-emerald-300 border-emerald-500/40',
+    nameColor: 'text-emerald-300',
     wpAuthorId: 5,
     wpAuthorSlug: 'marty_sullivan',
   },
@@ -48,6 +67,12 @@ export const COLUMNISTS = {
     href: '/?category=The+Spin+Room#dispatches',
     avatar: '/reporters/chloe-carmichael-avatar.png',
     image: '/reporters/chloe-carmichael.png',
+    tag: '@Chloe',
+    chatRole: 'The Spin Room',
+    chatColor: 'border-purple-500/50 bg-purple-950/20 text-purple-300',
+    chatBorder: 'border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.15)] bg-[#1e0a26]',
+    chatTagBg: 'bg-purple-900/60 text-purple-300 border-purple-500/40',
+    nameColor: 'text-purple-300',
     wpAuthorId: 2,
     wpAuthorSlug: 'chloe_carmichael',
   },
@@ -65,13 +90,21 @@ export const COLUMNISTS = {
   },
 };
 
-export function getColumnist(id) {
-  return COLUMNISTS[id] || {
-    id,
-    name: 'Staff Reporter',
-    title: 'Columnist',
-    desk: 'CRFFL Times-Herald',
-    avatar: '/reporters/default-avatar.png',
-  };
-}
+export const REPORTERS_CHAT_LIST = [
+  COLUMNISTS.marcus_vance,
+  COLUMNISTS.buck_callahan,
+  COLUMNISTS.marty_sullivan,
+  COLUMNISTS.chloe_carmichael,
+];
 
+export function getColumnist(id) {
+  return (
+    COLUMNISTS[id] || {
+      id,
+      name: 'Staff Reporter',
+      title: 'Columnist',
+      desk: 'CRFFL Times-Herald',
+      avatar: '/reporters/default-avatar.png',
+    }
+  );
+}

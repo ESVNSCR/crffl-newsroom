@@ -2,20 +2,11 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { formatDatePacific } from '@/lib/formatters';
-
-const MANAGERS_OPTIONS = [
-  { value: 'Corey', label: 'Corey (Team CoreyCash)' },
-  { value: 'Ed', label: 'Ed (Team RaiderRose510)' },
-  { value: 'Eric', label: 'Eric (Rebel Scum)' },
-  { value: 'Jeff', label: 'Jeff (Hickory Huskers)' },
-  { value: 'KC', label: 'KC (Shortbus Superstars)' },
-  { value: 'Marcus', label: 'Marcus (Team Killa MC)' },
-  { value: 'Mike F.', label: 'Mike F. (Stars & Stripes)' },
-  { value: 'Mike M.', label: 'Mike M. (Moore Better)' },
-  { value: 'Pam', label: 'Pam (Team GardenGoddess)' },
-  { value: 'Randy', label: 'Randy (Generic Football Team)' },
-  { value: 'The Commissioner', label: 'The Commissioner (Office of the Commish)' }
-];
+import {
+  MANAGERS_OPTIONS,
+  getStoredManagerCredentials,
+  setStoredManagerCredentials,
+} from '@/lib/managers';
 
 export default function ArticleComments({ articleId }) {
   const [comments, setComments] = useState([]);
@@ -38,16 +29,11 @@ export default function ArticleComments({ articleId }) {
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [replyError, setReplyError] = useState('');
 
-  // Load cached manager credentials from sessionStorage on mount
+  // Load cached manager credentials from storage on mount
   useEffect(() => {
-    try {
-      const cachedManager = sessionStorage.getItem('crffl_manager_name') || sessionStorage.getItem('crffl_auth_manager');
-      const cachedPin = sessionStorage.getItem('crffl_manager_pin') || sessionStorage.getItem('crffl_auth_pin');
-      if (cachedManager) setManagerName(cachedManager);
-      if (cachedPin) setPin(cachedPin);
-    } catch {
-      // ignore
-    }
+    const { managerName: cachedManager, pin: cachedPin } = getStoredManagerCredentials();
+    if (cachedManager) setManagerName(cachedManager);
+    if (cachedPin) setPin(cachedPin);
   }, []);
 
   // Fetch comments for this article
@@ -87,12 +73,7 @@ export default function ArticleComments({ articleId }) {
 
   // Cache credentials helper
   const cacheCredentials = (mgr, p) => {
-    try {
-      sessionStorage.setItem('crffl_manager_name', mgr);
-      sessionStorage.setItem('crffl_manager_pin', p.trim());
-    } catch {
-      // ignore
-    }
+    setStoredManagerCredentials(mgr, p);
   };
 
   // Submit top-level comment

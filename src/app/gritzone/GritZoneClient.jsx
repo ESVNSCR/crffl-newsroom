@@ -4,27 +4,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-
-// List of all 10 managers in CRFFL
-const MANAGERS_OPTIONS = [
-  { name: 'Corey', team: 'Team CoreyCash', logo: '/logos/corey.png' },
-  { name: 'Ed', team: 'Team RaiderRose510', logo: '/logos/ed.png' },
-  { name: 'Eric', team: 'Rebel Scum', logo: '/logos/eric.png' },
-  { name: 'Jeff', team: 'Hickory Huskers', logo: '/logos/jeff.png' },
-  { name: 'KC', team: 'Shortbus Superstars', logo: '/logos/kc.png' },
-  { name: 'Marcus', team: 'Team Killa MC', logo: '/logos/marcus.png' },
-  { name: 'Mike F.', team: 'Stars & Stripes', logo: '/logos/mike-f.png' },
-  { name: 'Mike M.', team: 'Moore Better', logo: '/logos/mike-m.png' },
-  { name: 'Pam', team: 'Team GardenGoddess', logo: '/logos/pam.png' },
-  { name: 'Randy', team: 'Generic Football Team', logo: '/logos/randy.png' },
-];
-
-const REPORTERS = [
-  { tag: '@Marcus', name: 'Dr. Marcus Vance', role: 'Analytics Desk', color: 'border-cyan-500/50 bg-cyan-950/20 text-cyan-300' },
-  { tag: '@Buck', name: 'Buck Callahan', role: 'The Grit Desk', color: 'border-amber-500/50 bg-amber-950/20 text-amber-300' },
-  { tag: '@Marty', name: 'Marty Sullivan', role: 'Tuesday Recap', color: 'border-emerald-500/50 bg-emerald-950/20 text-emerald-300' },
-  { tag: '@Chloe', name: 'Chloe Carmichael', role: 'The Spin Room', color: 'border-purple-500/50 bg-purple-950/20 text-purple-300' },
-];
+import {
+  MANAGERS_OPTIONS,
+  getStoredManagerCredentials,
+  setStoredManagerCredentials,
+  clearStoredManagerCredentials,
+} from '@/lib/managers';
+import { COLUMNISTS, REPORTERS_CHAT_LIST } from '@/lib/columnists';
 
 export default function GritZoneClient() {
   // Navigation / View Tabs ('matchups' or 'chat')
@@ -60,16 +46,11 @@ export default function GritZoneClient() {
 
   // 1. Load credentials from storage on mount
   useEffect(() => {
-    try {
-      const storedMgr = localStorage.getItem('crffl_manager_name') || sessionStorage.getItem('crffl_manager_name');
-      const storedPin = localStorage.getItem('crffl_manager_pin') || sessionStorage.getItem('crffl_manager_pin');
-      if (storedMgr && storedPin) {
-        setAuthManager(storedMgr);
-        setAuthPin(storedPin);
-        setLoginManager(storedMgr);
-      }
-    } catch {
-      // storage unavailable
+    const { managerName: storedMgr, pin: storedPin } = getStoredManagerCredentials();
+    if (storedMgr && storedPin) {
+      setAuthManager(storedMgr);
+      setAuthPin(storedPin);
+      setLoginManager(storedMgr);
     }
   }, []);
 
@@ -203,27 +184,13 @@ export default function GritZoneClient() {
     setLoginError('');
     setShowLoginModal(false);
 
-    try {
-      localStorage.setItem('crffl_manager_name', loginManager);
-      localStorage.setItem('crffl_manager_pin', cleanPin);
-      sessionStorage.setItem('crffl_manager_name', loginManager);
-      sessionStorage.setItem('crffl_manager_pin', cleanPin);
-    } catch {
-      // ignore
-    }
+    setStoredManagerCredentials(loginManager, cleanPin);
   };
 
   const handleLogout = () => {
     setAuthManager('');
     setAuthPin('');
-    try {
-      localStorage.removeItem('crffl_manager_name');
-      localStorage.removeItem('crffl_manager_pin');
-      sessionStorage.removeItem('crffl_manager_name');
-      sessionStorage.removeItem('crffl_manager_pin');
-    } catch {
-      // ignore
-    }
+    clearStoredManagerCredentials();
   };
 
   // Send message
@@ -837,11 +804,11 @@ export default function GritZoneClient() {
               <span className="text-[10px] font-mono uppercase text-gray-400 shrink-0 mr-1">
                 Summon:
               </span>
-              {REPORTERS.map((r) => (
+              {REPORTERS_CHAT_LIST.map((r) => (
                 <button
                   key={r.tag}
                   onClick={() => handleTagReporter(r.tag)}
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition shrink-0 cursor-pointer ${r.color} hover:brightness-125`}
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition shrink-0 cursor-pointer ${r.chatColor} hover:brightness-125`}
                   title={`Prompt ${r.name}`}
                 >
                   {r.tag}

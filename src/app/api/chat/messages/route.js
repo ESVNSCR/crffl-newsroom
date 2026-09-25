@@ -1,62 +1,26 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { MANAGERS } from '@/lib/sleeper';
+import { resolveManager } from '@/lib/managers';
 import { getInstantReporterQuip } from '@/lib/cannedReporterMessages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const VALID_MANAGERS = [
-  'Corey',
-  'Ed',
-  'Eric',
-  'Jeff',
-  'KC',
-  'Marcus',
-  'Mike F.',
-  'Mike M.',
-  'Pam',
-  'Randy',
-  'The Commissioner'
-];
-
-function resolveManager(name) {
-  if (!name) return null;
-  const trimmed = name.trim();
-  if (trimmed.toLowerCase().includes('commissioner')) {
-    return {
-      managerName: 'The Commissioner',
-      authName: 'Eric',
-      teamName: 'Office of the Commissioner',
-      logo: '/logos/league.png',
-    };
-  }
-
-  const matched = VALID_MANAGERS.find(m => trimmed.toLowerCase().startsWith(m.toLowerCase()));
-  if (!matched) return null;
-
-  // Find team details from MANAGERS constant
-  const meta = Object.values(MANAGERS).find(
-    m => m.managerName.toLowerCase() === matched.toLowerCase()
-  ) || {
-    managerName: matched,
-    teamName: `Team ${matched}`,
-    logo: '/logos/league.png',
-  };
-
-  return {
-    managerName: matched,
-    authName: matched,
-    teamName: meta.teamName,
-    logo: meta.logo,
-  };
-}
-
 export async function GET() {
   try {
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+    // Opportunistically prune expired messages older than 15 minutes
+    await supabase
+      .from('newsroom_chat_messages')
+      .delete()
+      .lt('created_at', fifteenMinsAgo)
+      .catch(() => {});
+
     const { data: messages, error } = await supabase
       .from('newsroom_chat_messages')
       .select('*')
+      .gte('created_at', fifteenMinsAgo)
       .order('created_at', { ascending: true })
       .limit(60);
 
@@ -75,7 +39,8 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { managerName, pin, message, matchupContext } = body || {};
+    const managerName = body?.managerName || body?.manager_name;
+    const { pin, message, matchupContext } = body || {};
 
     if (!managerName || !String(managerName).trim()) {
       return NextResponse.json({ error: 'Manager name is required.' }, { status: 400 });

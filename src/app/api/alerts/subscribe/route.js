@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { resolveManager } from '@/lib/managers';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +46,12 @@ export async function POST(request) {
       );
     }
 
+    const resolved = resolveManager(manager_name);
+    const cleanManagerName = resolved ? resolved.managerName : manager_name.trim();
+
     // Upsert into Supabase alert_subscriptions table
     const subscriptionPayload = {
-      manager_name: manager_name.trim(),
+      manager_name: cleanManagerName,
       email: cleanEmail,
       phone: cleanPhone,
       carrier: carrier ? carrier.toLowerCase().trim() : null,
@@ -64,12 +68,13 @@ export async function POST(request) {
       .from('alert_subscriptions')
       .select('id');
 
-    if (cleanEmail && cleanPhone) {
-      query.or(`email.eq.${cleanEmail},phone.eq.${cleanPhone},manager_name.eq.${manager_name.trim()}`);
-    } else if (cleanEmail) {
-      query.or(`email.eq.${cleanEmail},manager_name.eq.${manager_name.trim()}`);
-    } else {
-      query.or(`phone.eq.${cleanPhone},manager_name.eq.${manager_name.trim()}`);
+    const orConditions = [];
+    if (cleanEmail) orConditions.push(`email.eq."${cleanEmail}"`);
+    if (cleanPhone) orConditions.push(`phone.eq."${cleanPhone}"`);
+    if (cleanManagerName) orConditions.push(`manager_name.eq."${cleanManagerName}"`);
+
+    if (orConditions.length > 0) {
+      query.or(orConditions.join(','));
     }
 
     const { data: existingRows } = await query.limit(1);

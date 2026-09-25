@@ -4,32 +4,9 @@
  * for Dr. Marcus Vance, Buck Callahan, Marty Sullivan, and Chloe Carmichael.
  */
 
-export const REPORTERS_META = {
-  marcus_vance: {
-    id: 'marcus_vance',
-    name: 'Dr. Marcus Vance',
-    role: 'Senior Analytics Editor',
-    avatar: '/reporters/marcus-vance-avatar.png',
-  },
-  buck_callahan: {
-    id: 'buck_callahan',
-    name: 'Buck Callahan',
-    role: 'Chief Trench Correspondent',
-    avatar: '/reporters/buck-callahan-avatar.png',
-  },
-  marty_sullivan: {
-    id: 'marty_sullivan',
-    name: 'Marty Sullivan',
-    role: 'Traditionalist Columnist',
-    avatar: '/reporters/marty-sullivan-avatar.png',
-  },
-  chloe_carmichael: {
-    id: 'chloe_carmichael',
-    name: 'Chloe Carmichael',
-    role: 'Senior League Insider',
-    avatar: '/reporters/chloe-carmichael-avatar.png',
-  },
-};
+import { COLUMNISTS } from './columnists';
+
+export const REPORTERS_META = COLUMNISTS;
 
 // ---------------------------------------------------------------------------
 // DR. MARCUS VANCE — ANALYTICS & PROBABILITIES

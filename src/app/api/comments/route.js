@@ -1,33 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+import { resolveManager } from '@/lib/managers';
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const VALID_MANAGERS = [
-  'Corey',
-  'Ed',
-  'Eric',
-  'Jeff',
-  'KC',
-  'Marcus',
-  'Mike F.',
-  'Mike M.',
-  'Pam',
-  'Randy',
-  'The Commissioner'
-];
-
-function resolveAuthManager(name) {
-  if (!name) return '';
-  const trimmed = name.trim();
-  if (trimmed.toLowerCase().includes('commissioner')) {
-    return 'Eric';
-  }
-  // Strip team name if formatted as "Corey (Team CoreyCash)"
-  const matched = VALID_MANAGERS.find(m => trimmed.toLowerCase().startsWith(m.toLowerCase()));
-  return matched || trimmed;
-}
 
 export async function GET(request) {
   try {
@@ -121,7 +98,8 @@ export async function POST(request) {
     }
 
     // 1. Authenticate manager PIN via PostgreSQL RPC
-    const authManager = resolveAuthManager(manager_name);
+    const resolved = resolveManager(manager_name);
+    const authManager = resolved ? resolved.authName : manager_name.trim();
     const { data: isValidPin, error: pinError } = await supabase.rpc('verify_manager_pin', {
       p_manager: authManager,
       p_pin: String(pin).trim()

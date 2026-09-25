@@ -5,7 +5,6 @@ export const COOKIE_NAME = 'crffl_admin_session';
 
 const COMMISSIONER_PIN = (
   process.env.COMMISSIONER_PIN ||
-  process.env.NEXT_PUBLIC_COMMISSIONER_PIN ||
   ''
 ).trim();
 
