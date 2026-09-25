@@ -81,3 +81,4 @@ foreach ($item in $avatars) {
 }
 
 Write-Output "Avatar generation complete!"
+

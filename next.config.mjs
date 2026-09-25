@@ -17,6 +17,16 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/redzone',
+        destination: '/gritzone',
+        permanent: true,
+      },
+      {
+        source: '/live',
+        destination: '/gritzone',
+        permanent: true,
+      },
+      {
         source: '/wp-admin',
         destination: 'https://store.crffl.org/wp-admin/',
         permanent: false,

@@ -77,6 +77,15 @@ export default function HeaderNav() {
             >
               Info
             </Link>
+            <Link
+              href="/gritzone"
+              className={`btn-nav-base px-2.5 py-1 xl:px-3 xl:py-1.5 bg-red-950/70 border border-red-500/70 text-red-200 hover:text-white hover:border-red-400 hover:bg-red-900/80 transition flex items-center gap-1.5 font-bold shadow-sm ${
+                pathname === '/gritzone' ? 'ring-2 ring-red-400 shadow-[0_0_12px_rgba(239,68,68,0.5)] text-white bg-red-900' : ''
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0"></span>
+              <span>GRITZone</span>
+            </Link>
             <a
               href="/hof"
               title="CRFFL Hall of Fame"
@@ -138,6 +147,19 @@ export default function HeaderNav() {
 
           {/* Mobile / Tablet Actions (Visible below lg) */}
           <div className="flex lg:hidden items-center space-x-1.5">
+            <Link
+              href="/gritzone"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border font-black text-xs transition shadow-sm ${
+                pathname === '/gritzone'
+                  ? 'bg-red-600 border-red-500 text-white shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                  : 'bg-red-950/70 border-red-600/70 text-red-300 hover:text-white hover:bg-red-900'
+              }`}
+              title="The GRITZone Live Tracker"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
+              <span>GRIT</span>
+            </Link>
+
             <button
               type="button"
               onClick={() => setAlertsOpen(true)}
@@ -184,6 +206,33 @@ export default function HeaderNav() {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 bg-black/80 backdrop-blur-md z-40 animate-fadeIn">
           <div className="bg-[#0e1420] border-b border-gray-800 px-6 py-6 space-y-4 max-h-[calc(100vh-4rem)] overflow-y-auto shadow-2xl">
+            {/* GRITZone Mobile Headline Card */}
+            <div>
+              <Link
+                href="/gritzone"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between p-3.5 rounded-xl border transition ${
+                  pathname === '/gritzone'
+                    ? 'bg-red-950/70 border-red-500 text-white shadow-lg shadow-red-950/50'
+                    : 'bg-gradient-to-r from-red-950/50 via-[#161a29] to-[#0e1420] border-red-800/70 text-red-200 hover:border-red-500'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="px-2 py-0.5 rounded bg-red-600 text-white font-black text-[11px] uppercase tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    LIVE
+                  </span>
+                  <div>
+                    <div className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                      <span>THE GRITZONE</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400">Matchups &amp; War Room Chat</div>
+                  </div>
+                </div>
+                <span className="text-xs text-red-400 font-mono font-bold">Tune In →</span>
+              </Link>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Link
                 href="/"

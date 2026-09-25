@@ -164,3 +164,4 @@ export default function PressPassModal({ columnist, isOpen, onClose }) {
     </div>
   );
 }
+

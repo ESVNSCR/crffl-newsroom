@@ -1,0 +1,1068 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+
+// List of all 10 managers in CRFFL
+const MANAGERS_OPTIONS = [
+  { name: 'Corey', team: 'Team CoreyCash', logo: '/logos/corey.png' },
+  { name: 'Ed', team: 'Team RaiderRose510', logo: '/logos/ed.png' },
+  { name: 'Eric', team: 'Rebel Scum', logo: '/logos/eric.png' },
+  { name: 'Jeff', team: 'Hickory Huskers', logo: '/logos/jeff.png' },
+  { name: 'KC', team: 'Shortbus Superstars', logo: '/logos/kc.png' },
+  { name: 'Marcus', team: 'Team Killa MC', logo: '/logos/marcus.png' },
+  { name: 'Mike F.', team: 'Stars & Stripes', logo: '/logos/mike-f.png' },
+  { name: 'Mike M.', team: 'Moore Better', logo: '/logos/mike-m.png' },
+  { name: 'Pam', team: 'Team GardenGoddess', logo: '/logos/pam.png' },
+  { name: 'Randy', team: 'Generic Football Team', logo: '/logos/randy.png' },
+];
+
+const REPORTERS = [
+  { tag: '@Marcus', name: 'Dr. Marcus Vance', role: 'Analytics Desk', color: 'border-cyan-500/50 bg-cyan-950/20 text-cyan-300' },
+  { tag: '@Buck', name: 'Buck Callahan', role: 'The Grit Desk', color: 'border-amber-500/50 bg-amber-950/20 text-amber-300' },
+  { tag: '@Marty', name: 'Marty Sullivan', role: 'Tuesday Recap', color: 'border-emerald-500/50 bg-emerald-950/20 text-emerald-300' },
+  { tag: '@Chloe', name: 'Chloe Carmichael', role: 'The Spin Room', color: 'border-purple-500/50 bg-purple-950/20 text-purple-300' },
+];
+
+export default function GritZoneClient() {
+  // Navigation / View Tabs ('matchups' or 'chat')
+  const [activeTab, setActiveTab] = useState('matchups');
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  // Matchups State
+  const [matchupsData, setMatchupsData] = useState(null);
+  const [matchupsLoading, setMatchupsLoading] = useState(true);
+  const [matchupsError, setMatchupsError] = useState(null);
+  const [expandedMatchupId, setExpandedMatchupId] = useState(null);
+  const [countdown, setCountdown] = useState(60);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // War Room Chat State
+  const [messages, setMessages] = useState([]);
+  const [chatLoading, setChatLoading] = useState(true);
+  const [chatInput, setChatInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [chatError, setChatError] = useState('');
+
+  // Manager Authentication State
+  const [authManager, setAuthManager] = useState('');
+  const [authPin, setAuthPin] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginManager, setLoginManager] = useState('Eric');
+  const [loginPin, setLoginPin] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  const messagesEndRef = useRef(null);
+  const chatScrollContainerRef = useRef(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+
+  // 1. Load credentials from storage on mount
+  useEffect(() => {
+    try {
+      const storedMgr = localStorage.getItem('crffl_manager_name') || sessionStorage.getItem('crffl_manager_name');
+      const storedPin = localStorage.getItem('crffl_manager_pin') || sessionStorage.getItem('crffl_manager_pin');
+      if (storedMgr && storedPin) {
+        setAuthManager(storedMgr);
+        setAuthPin(storedPin);
+        setLoginManager(storedMgr);
+      }
+    } catch {
+      // storage unavailable
+    }
+  }, []);
+
+  // 2. Fetch Live Matchups
+  const fetchMatchups = useCallback(async (manual = false) => {
+    if (manual) setIsRefreshing(true);
+    try {
+      const res = await fetch('/api/live-matchups');
+      const data = await res.json();
+      if (data.success) {
+        setMatchupsData(data);
+        setMatchupsError(null);
+      } else {
+        setMatchupsError(data.error || 'Failed to load live matchups');
+      }
+    } catch (err) {
+      setMatchupsError('Network error loading matchups');
+    } finally {
+      setMatchupsLoading(false);
+      if (manual) {
+        setTimeout(() => setIsRefreshing(false), 500);
+      }
+      setCountdown(60);
+    }
+  }, []);
+
+  // 3. Matchup Countdown & 60s Polling Loop
+  useEffect(() => {
+    fetchMatchups();
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          fetchMatchups();
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [fetchMatchups]);
+
+  // 4. Fetch Chat Messages
+  const fetchMessages = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chat/messages');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+      }
+    } catch (err) {
+      console.error('Error fetching chat messages:', err);
+    } finally {
+      setChatLoading(false);
+    }
+  }, []);
+
+  // 5. Chat Realtime Subscription + 8s Polling Fallback
+  useEffect(() => {
+    fetchMessages();
+
+    // Supabase Realtime channel
+    const channel = supabase
+      .channel('gritzone_war_room')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'newsroom_chat_messages' },
+        (payload) => {
+          const newMsg = payload.new;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+          // Increment unread count if user is on matchups tab
+          setActiveTab((cur) => {
+            if (cur !== 'chat') {
+              setUnreadChatCount((c) => c + 1);
+            }
+            return cur;
+          });
+        }
+      )
+      .subscribe();
+
+    // Polling fallback
+    const pollInterval = setInterval(() => {
+      fetchMessages();
+    }, 8000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, [fetchMessages]);
+
+  // Scroll chat to bottom when new messages arrive (if near bottom)
+  useEffect(() => {
+    if (activeTab === 'chat' && isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, activeTab, isNearBottom]);
+
+  // Handle scroll events in chat container
+  const handleChatScroll = () => {
+    if (!chatScrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatScrollContainerRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    setIsNearBottom(distanceFromBottom < 100);
+  };
+
+  // Switch tabs
+  const handleSelectTab = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'chat') {
+      setUnreadChatCount(0);
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }, 50);
+    }
+  };
+
+  // Login handler
+  const handleSaveLogin = (e) => {
+    e.preventDefault();
+    if (!loginPin || loginPin.trim().length !== 4) {
+      setLoginError('PIN must be a 4-digit number.');
+      return;
+    }
+    const cleanPin = loginPin.trim();
+    setAuthManager(loginManager);
+    setAuthPin(cleanPin);
+    setLoginError('');
+    setShowLoginModal(false);
+
+    try {
+      localStorage.setItem('crffl_manager_name', loginManager);
+      localStorage.setItem('crffl_manager_pin', cleanPin);
+      sessionStorage.setItem('crffl_manager_name', loginManager);
+      sessionStorage.setItem('crffl_manager_pin', cleanPin);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleLogout = () => {
+    setAuthManager('');
+    setAuthPin('');
+    try {
+      localStorage.removeItem('crffl_manager_name');
+      localStorage.removeItem('crffl_manager_pin');
+      sessionStorage.removeItem('crffl_manager_name');
+      sessionStorage.removeItem('crffl_manager_pin');
+    } catch {
+      // ignore
+    }
+  };
+
+  // Send message
+  const handleSendMessage = async (e) => {
+    e?.preventDefault();
+    if (!chatInput.trim() || isSending) return;
+
+    if (!authManager || !authPin) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    const textToSend = chatInput.trim();
+    setIsSending(true);
+    setChatError('');
+
+    // Optimistic UI insertion
+    const currentMgrMeta = MANAGERS_OPTIONS.find((m) => m.name === authManager);
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      id: tempId,
+      created_at: new Date().toISOString(),
+      sender_type: 'manager',
+      sender_name: authManager,
+      sender_role: 'CRFFL Manager',
+      sender_avatar: currentMgrMeta?.logo || '/logos/league.png',
+      team_name: currentMgrMeta?.team || 'CRFFL Franchise',
+      message: textToSend,
+      is_pinned: false,
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setChatInput('');
+
+    try {
+      const res = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          manager_name: authManager,
+          pin: authPin,
+          message: textToSend,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setChatError(data.error || 'Failed to post message. Check PIN.');
+        // Revert optimistic message
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        setChatInput(textToSend);
+        if (res.status === 401) {
+          setShowLoginModal(true);
+        }
+      } else {
+        // Replace optimistic message with confirmed database record
+        if (data.message) {
+          setMessages((prev) => prev.map((m) => (m.id === tempId ? data.message : m)));
+        }
+      }
+    } catch (err) {
+      setChatError('Network error sending message.');
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setChatInput(textToSend);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Tag reporter helper
+  const handleTagReporter = (tag) => {
+    setChatInput((prev) => {
+      const trimmed = prev.trim();
+      if (!trimmed) return `${tag} `;
+      if (trimmed.includes(tag)) return prev;
+      return `${trimmed} ${tag} `;
+    });
+  };
+
+  // Format timestamp
+  const formatTime = (isoString) => {
+    if (!isoString) return '';
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    } catch {
+      return '';
+    }
+  };
+
+  // Helper for reporter styling
+  const getReporterStyle = (name) => {
+    if (name?.includes('Marcus') || name?.includes('Vance')) {
+      return {
+        badge: 'Dr. Marcus Vance • Analytics Desk',
+        border: 'border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)] bg-[#091829]',
+        tagBg: 'bg-cyan-900/60 text-cyan-300 border-cyan-500/40',
+        nameColor: 'text-cyan-300',
+      };
+    }
+    if (name?.includes('Buck') || name?.includes('Callahan')) {
+      return {
+        badge: 'Buck Callahan • The Grit Desk',
+        border: 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.15)] bg-[#241306]',
+        tagBg: 'bg-amber-900/60 text-amber-300 border-amber-500/40',
+        nameColor: 'text-amber-400',
+      };
+    }
+    if (name?.includes('Marty') || name?.includes('Sullivan')) {
+      return {
+        badge: 'Marty Sullivan • Tuesday Recap',
+        border: 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.15)] bg-[#091f14]',
+        tagBg: 'bg-emerald-900/60 text-emerald-300 border-emerald-500/40',
+        nameColor: 'text-emerald-300',
+      };
+    }
+    if (name?.includes('Chloe') || name?.includes('Carmichael')) {
+      return {
+        badge: 'Chloe Carmichael • The Spin Room',
+        border: 'border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.15)] bg-[#1e0a26]',
+        tagBg: 'bg-purple-900/60 text-purple-300 border-purple-500/40',
+        nameColor: 'text-purple-300',
+      };
+    }
+    return {
+      badge: 'Newsroom Reporter',
+      border: 'border-[#d4af37]/50 bg-[#161d2b]',
+      tagBg: 'bg-gray-800 text-[#d4af37] border-gray-700',
+      nameColor: 'text-[#d4af37]',
+    };
+  };
+
+  const matchups = matchupsData?.matchups || [];
+  const weekNum = matchupsData?.week || 1;
+
+  return (
+    <div className="min-h-screen bg-[#090d14] text-gray-100 flex flex-col font-sans pb-12">
+      {/* 1. GRITZone Top Master Bar */}
+      <div className="bg-[#101726] border-b border-red-900/40 sticky top-16 z-30 shadow-md">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
+          {/* Brand & Live Beacon */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <span className="flex h-3 w-3 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+            </span>
+            <div className="truncate">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-black text-base sm:text-lg tracking-wider text-white uppercase flex items-center gap-1">
+                  THE <span className="text-red-500 font-extrabold">GRIT</span>ZONE
+                </span>
+                <span className="text-[10px] font-mono font-bold uppercase bg-red-950/80 text-red-400 border border-red-700/50 px-1.5 py-0.5 rounded">
+                  Week {weekNum} Live
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sync Status & Manager Auth Pill */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* 60s Heartbeat countdown button */}
+            <button
+              onClick={() => fetchMatchups(true)}
+              disabled={isRefreshing}
+              title="Click to refresh scores"
+              className="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-lg bg-gray-900/90 border border-gray-800 hover:border-gray-700 text-gray-300 hover:text-white transition cursor-pointer"
+            >
+              <svg
+                className={`w-3.5 h-3.5 text-red-400 ${isRefreshing ? 'animate-spin' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              <span className="hidden xs:inline text-gray-400">Sync:</span>
+              <span className="font-bold text-red-400">{countdown}s</span>
+            </button>
+
+            {/* Auth Button / Current User */}
+            {authManager ? (
+              <div className="flex items-center gap-1.5 bg-[#172236] border border-[#d4af37]/40 px-2.5 py-1 rounded-lg">
+                <div className="w-5 h-5 rounded-full overflow-hidden border border-[#d4af37]/60 relative bg-black shrink-0">
+                  <Image
+                    src={MANAGERS_OPTIONS.find((m) => m.name === authManager)?.logo || '/logos/league.png'}
+                    alt={authManager}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <span className="text-xs font-bold text-gray-200 hidden sm:inline">{authManager}</span>
+                <button
+                  onClick={handleLogout}
+                  title="Switch Manager / Logout"
+                  className="text-[10px] text-gray-400 hover:text-red-400 underline ml-1 cursor-pointer"
+                >
+                  Exit
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="px-2.5 py-1.5 rounded-lg bg-[#d4af37] text-gray-950 hover:bg-[#e6c24d] font-bold text-xs flex items-center gap-1 transition shadow-sm cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>PIN Login</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Mobile-First Segmented Control (Tabs) */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 pb-2.5 lg:hidden">
+          <div className="grid grid-cols-2 gap-1.5 bg-[#090d14] p-1 rounded-xl border border-gray-800">
+            <button
+              onClick={() => handleSelectTab('matchups')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition min-h-[44px] cursor-pointer ${
+                activeTab === 'matchups'
+                  ? 'bg-red-600 text-white shadow-md shadow-red-950'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <span>🏈 Matchups</span>
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
+                  activeTab === 'matchups' ? 'bg-black/30 text-white' : 'bg-gray-800 text-gray-400'
+                }`}
+              >
+                5
+              </span>
+            </button>
+
+            <button
+              onClick={() => handleSelectTab('chat')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition min-h-[44px] relative cursor-pointer ${
+                activeTab === 'chat'
+                  ? 'bg-[#d4af37] text-gray-950 shadow-md shadow-amber-950 font-black'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <span>💬 War Room</span>
+              {unreadChatCount > 0 && activeTab !== 'chat' && (
+                <span className="animate-bounce bg-red-500 text-white text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold">
+                  {unreadChatCount}
+                </span>
+              )}
+              {activeTab === 'chat' && (
+                <span className="text-[10px] font-mono bg-black/20 text-gray-950 px-1.5 py-0.5 rounded-full">
+                  Live
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Dual-View / Tabbed Container */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 w-full flex-1">
+        {/* Desktop Split Layout or Mobile Tab switching */}
+        <div className="lg:grid lg:grid-cols-12 lg:gap-6">
+          {/* LEFT COLUMN: Matchups Center (Visible if activeTab === 'matchups' on mobile, always visible on lg) */}
+          <div
+            className={`lg:col-span-7 xl:col-span-7 space-y-4 ${
+              activeTab === 'matchups' ? 'block' : 'hidden lg:block'
+            }`}
+          >
+            {/* Quick Thriller Banner / Alert */}
+            <div className="bg-gradient-to-r from-red-950/60 via-[#131b2e] to-gray-900 border border-red-800/40 rounded-xl p-3 sm:p-4 flex items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-xl shrink-0">🔥</span>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
+                    Live CRFFL Action Desk
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-gray-400">
+                    5 Matchups • Instant Sleeper API sync • Win probability computed per snap
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => fetchMatchups(true)}
+                className="hidden sm:flex text-xs font-bold text-red-400 hover:text-red-300 border border-red-500/40 px-2.5 py-1 rounded bg-red-950/40 transition shrink-0"
+              >
+                Refresh Now
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {matchupsError && (
+              <div className="bg-red-950/40 border border-red-700/50 rounded-xl p-3 text-red-300 text-xs">
+                ⚠️ {matchupsError}
+              </div>
+            )}
+
+            {/* Matchup Cards Loading Skeleton */}
+            {matchupsLoading && (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="h-32 bg-gray-900/60 border border-gray-800 rounded-xl animate-pulse"
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Matchup Cards List */}
+            {!matchupsLoading && matchups.length === 0 && (
+              <div className="text-center py-12 bg-gray-900/40 rounded-xl border border-gray-800">
+                <p className="text-gray-400 text-sm">No live matchups available for Week {weekNum}.</p>
+                <p className="text-xs text-gray-500 mt-1">Check back on Sunday kickoff!</p>
+              </div>
+            )}
+
+            {!matchupsLoading &&
+              matchups.map((m) => {
+                const isExpanded = expandedMatchupId === m.matchupId;
+                const isThriller = m.isClose || m.projectedMargin <= 10;
+                const team1Prob = Math.round(m.team1.winProbability || 50);
+                const team2Prob = 100 - team1Prob;
+
+                return (
+                  <div
+                    key={m.matchupId}
+                    className={`rounded-xl border transition-all duration-200 overflow-hidden bg-[#0d131f] shadow-md ${
+                      isThriller
+                        ? 'border-red-600/70 shadow-[0_0_20px_rgba(220,38,38,0.15)] ring-1 ring-red-500/40'
+                        : 'border-gray-800/80 hover:border-gray-700'
+                    }`}
+                  >
+                    {/* Matchup Card Header */}
+                    <div className="bg-[#121929] px-3.5 py-2 border-b border-gray-800/80 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        {isThriller ? (
+                          <span className="flex items-center gap-1 text-[11px] font-black uppercase text-red-400 bg-red-950/80 border border-red-700/60 px-2 py-0.5 rounded">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                            Grit Thriller
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-mono font-bold text-gray-400 uppercase">
+                            Matchup #{m.matchupId}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-gray-400">
+                          Spread: <span className="font-mono font-bold text-gray-200">{m.projectedMargin} pts</span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] uppercase font-mono text-gray-400">
+                          {m.team1.startersRemaining + m.team2.startersRemaining} in-play
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Matchup Main Score Grid */}
+                    <div className="p-3 sm:p-4">
+                      <div className="grid grid-cols-12 items-center gap-2">
+                        {/* Team 1 (Left) */}
+                        <div className="col-span-5 flex flex-col items-start min-w-0">
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="w-10 h-10 rounded-full border border-gray-700/80 overflow-hidden relative bg-black shrink-0 shadow-sm">
+                              <Image
+                                src={m.team1.logo || '/logos/league.png'}
+                                alt={m.team1.managerName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 truncate">
+                              <div className="font-extrabold text-sm sm:text-base text-white truncate">
+                                {m.team1.managerName}
+                              </div>
+                              <div className="text-[10px] text-gray-400 truncate">
+                                {m.team1.teamName}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-2.5 w-full">
+                            <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                              {Number(m.team1.currentPoints || 0).toFixed(1)}
+                            </div>
+                            <div className="text-[11px] font-mono text-gray-400 flex items-center justify-between">
+                              <span>Proj: <span className="text-[#d4af37] font-bold">{Number(m.team1.projectedPoints || 0).toFixed(1)}</span></span>
+                              <span className="text-[10px] text-gray-400">{m.team1.startersRemaining} left</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Middle VS & Probability */}
+                        <div className="col-span-2 flex flex-col items-center justify-center text-center">
+                          <span className="text-xs font-black text-gray-400 font-mono tracking-wider">
+                            VS
+                          </span>
+                          <span className="text-[10px] font-mono text-gray-400 mt-1">
+                            {team1Prob}% - {team2Prob}%
+                          </span>
+                        </div>
+
+                        {/* Team 2 (Right) */}
+                        <div className="col-span-5 flex flex-col items-end min-w-0">
+                          <div className="flex items-center gap-2 w-full justify-end">
+                            <div className="min-w-0 truncate text-right">
+                              <div className="font-extrabold text-sm sm:text-base text-white truncate">
+                                {m.team2.managerName}
+                              </div>
+                              <div className="text-[10px] text-gray-400 truncate">
+                                {m.team2.teamName}
+                              </div>
+                            </div>
+                            <div className="w-10 h-10 rounded-full border border-gray-700/80 overflow-hidden relative bg-black shrink-0 shadow-sm">
+                              <Image
+                                src={m.team2.logo || '/logos/league.png'}
+                                alt={m.team2.managerName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="mt-2.5 w-full text-right">
+                            <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                              {Number(m.team2.currentPoints || 0).toFixed(1)}
+                            </div>
+                            <div className="text-[11px] font-mono text-gray-400 flex items-center justify-between flex-row-reverse">
+                              <span>Proj: <span className="text-[#d4af37] font-bold">{Number(m.team2.projectedPoints || 0).toFixed(1)}</span></span>
+                              <span className="text-[10px] text-gray-400">{m.team2.startersRemaining} left</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Win Probability Bar */}
+                      <div className="mt-3.5">
+                        <div className="h-2 w-full bg-gray-800 rounded-full overflow-hidden flex shadow-inner">
+                          <div
+                            style={{ width: `${team1Prob}%` }}
+                            className={`h-full transition-all duration-500 ${
+                              team1Prob >= 50
+                                ? 'bg-gradient-to-r from-red-600 to-amber-500'
+                                : 'bg-gray-600'
+                            }`}
+                          />
+                          <div
+                            style={{ width: `${team2Prob}%` }}
+                            className={`h-full transition-all duration-500 ${
+                              team2Prob > 50
+                                ? 'bg-gradient-to-r from-amber-500 to-red-600'
+                                : 'bg-gray-700'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Expand / Collapse Lineup Toggle */}
+                      <div className="mt-3 pt-2.5 border-t border-gray-800/60 flex items-center justify-between">
+                        <button
+                          onClick={() =>
+                            setExpandedMatchupId(isExpanded ? null : m.matchupId)
+                          }
+                          className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-gray-300 hover:text-white py-1.5 rounded-lg bg-gray-800/40 hover:bg-gray-800/70 border border-gray-700/40 transition min-h-[40px] cursor-pointer"
+                        >
+                          <span>{isExpanded ? 'Hide Lineups' : 'View Head-to-Head Starters'}</span>
+                          <svg
+                            className={`w-4 h-4 transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Expanded Starters Drawer */}
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-gray-800 space-y-1.5 animate-fadeIn">
+                          <div className="text-[10px] font-mono uppercase text-gray-400 text-center tracking-wider pb-1">
+                            Starter Points Comparison
+                          </div>
+
+                          {m.team1.starters?.map((p1, idx) => {
+                            const p2 = m.team2.starters?.[idx] || {};
+                            return (
+                              <div
+                                key={idx}
+                                className="grid grid-cols-12 items-center text-xs py-1.5 px-2 rounded-lg bg-[#0a0f19] border border-gray-800/60 gap-1.5"
+                              >
+                                {/* Team 1 Starter */}
+                                <div className="col-span-5 flex items-center justify-between min-w-0 pr-1">
+                                  <div className="truncate">
+                                    <div className="font-bold text-gray-200 truncate text-[11px] sm:text-xs">
+                                      {p1.name || 'Empty'}
+                                    </div>
+                                    <div className="text-[9px] text-gray-400 font-mono">
+                                      {p1.team ? `${p1.team} - ${p1.position}` : p1.position}
+                                    </div>
+                                  </div>
+                                  <span className="font-mono font-black text-white text-xs ml-1">
+                                    {Number(p1.points || 0).toFixed(1)}
+                                  </span>
+                                </div>
+
+                                {/* Position Badge */}
+                                <div className="col-span-2 text-center">
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">
+                                    {p1.position || 'SLOT'}
+                                  </span>
+                                </div>
+
+                                {/* Team 2 Starter */}
+                                <div className="col-span-5 flex items-center justify-between min-w-0 pl-1 flex-row-reverse">
+                                  <div className="truncate text-right">
+                                    <div className="font-bold text-gray-200 truncate text-[11px] sm:text-xs">
+                                      {p2.name || 'Empty'}
+                                    </div>
+                                    <div className="text-[9px] text-gray-400 font-mono">
+                                      {p2.team ? `${p2.team} - ${p2.position}` : p2.position}
+                                    </div>
+                                  </div>
+                                  <span className="font-mono font-black text-white text-xs mr-1">
+                                    {Number(p2.points || 0).toFixed(1)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* RIGHT COLUMN: The War Room Chat (Visible if activeTab === 'chat' on mobile, always visible on lg) */}
+          <div
+            className={`lg:col-span-5 xl:col-span-5 flex flex-col bg-[#0d131f] border border-gray-800 rounded-2xl overflow-hidden shadow-xl ${
+              activeTab === 'chat' ? 'flex h-[calc(100dvh-175px)]' : 'hidden lg:flex lg:h-[780px]'
+            }`}
+          >
+            {/* War Room Header */}
+            <div className="bg-[#121929] px-4 py-3 border-b border-gray-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-base">💬</span>
+                <div>
+                  <h2 className="font-black text-sm text-white tracking-wider uppercase">
+                    The War Room
+                  </h2>
+                  <p className="text-[10px] text-gray-400">
+                    Live Manager Banter &amp; Columnist Takes
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
+                  Connected
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Tag Chips Bar */}
+            <div className="bg-[#0f1523] px-3 py-2 border-b border-gray-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              <span className="text-[10px] font-mono uppercase text-gray-400 shrink-0 mr-1">
+                Summon:
+              </span>
+              {REPORTERS.map((r) => (
+                <button
+                  key={r.tag}
+                  onClick={() => handleTagReporter(r.tag)}
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition shrink-0 cursor-pointer ${r.color} hover:brightness-125`}
+                  title={`Prompt ${r.name}`}
+                >
+                  {r.tag}
+                </button>
+              ))}
+            </div>
+
+            {/* Message Stream Container */}
+            <div
+              ref={chatScrollContainerRef}
+              onScroll={handleChatScroll}
+              className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3 bg-[#0a0e17]"
+            >
+              {chatLoading && messages.length === 0 && (
+                <div className="text-center py-12 text-gray-500 text-xs animate-pulse">
+                  Connecting to Times-Herald live feed...
+                </div>
+              )}
+
+              {!chatLoading && messages.length === 0 && (
+                <div className="text-center py-12 text-gray-500 text-xs">
+                  The War Room is quiet. Drop a message or summon @Marcus, @Buck, @Marty, or @Chloe!
+                </div>
+              )}
+
+              {messages.map((msg) => {
+                const isReporter = msg.sender_type === 'reporter';
+                const isMine = !isReporter && msg.sender_name === authManager;
+                const repStyle = isReporter ? getReporterStyle(msg.sender_name) : null;
+
+                if (isReporter) {
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`p-3 rounded-xl border ${repStyle.border} transition-all animate-fadeIn`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full overflow-hidden border border-[#d4af37]/60 relative bg-black shrink-0">
+                            <Image
+                              src={msg.sender_avatar || '/reporters/default-avatar.png'}
+                              alt={msg.sender_name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <span className={`text-xs font-black ${repStyle.nameColor}`}>
+                              {msg.sender_name}
+                            </span>
+                            <span className={`ml-1.5 text-[9px] font-mono px-1.5 py-0.2 rounded border ${repStyle.tagBg}`}>
+                              {repStyle.badge}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-mono text-gray-400">
+                          {formatTime(msg.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-100 leading-relaxed pl-9">
+                        {msg.message}
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Manager Message
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} animate-fadeIn`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1 px-1">
+                      {!isMine && (
+                        <div className="w-5 h-5 rounded-full overflow-hidden border border-gray-700 relative bg-black shrink-0">
+                          <Image
+                            src={msg.sender_avatar || '/logos/league.png'}
+                            alt={msg.sender_name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <span className="text-xs font-bold text-gray-300">
+                        {msg.sender_name}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        ({msg.team_name})
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-mono ml-1">
+                        {formatTime(msg.created_at)}
+                      </span>
+                      {isMine && (
+                        <div className="w-5 h-5 rounded-full overflow-hidden border border-[#d4af37]/60 relative bg-black shrink-0">
+                          <Image
+                            src={msg.sender_avatar || '/logos/league.png'}
+                            alt={msg.sender_name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm leading-relaxed ${
+                        isMine
+                          ? 'bg-gradient-to-r from-red-700 to-red-600 text-white shadow-md rounded-tr-none'
+                          : 'bg-[#161f30] text-gray-100 border border-gray-800 rounded-tl-none'
+                      }`}
+                    >
+                      {msg.message}
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Jump to bottom indicator */}
+            {!isNearBottom && (
+              <div className="relative">
+                <button
+                  onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-gray-800/90 text-white border border-gray-700 px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1 hover:bg-gray-700 transition cursor-pointer"
+                >
+                  <span>↓ Jump to latest</span>
+                </button>
+              </div>
+            )}
+
+            {/* Sticky Chat Input Bar */}
+            <div className="bg-[#121929] border-t border-gray-800 p-2.5 sm:p-3 shrink-0">
+              {chatError && (
+                <div className="text-red-400 text-[11px] mb-2 px-1">
+                  ⚠️ {chatError}
+                </div>
+              )}
+
+              {authManager ? (
+                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder={`Banter as ${authManager}... (tag @Marcus, @Buck)`}
+                    className="flex-1 bg-[#0a0f19] border border-gray-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-red-500 min-h-[44px]"
+                    maxLength={300}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSending || !chatInput.trim()}
+                    className="bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center transition shadow-md cursor-pointer shrink-0"
+                  >
+                    {isSending ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span>Send</span>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <div className="flex items-center justify-between p-2 rounded-xl bg-[#172236] border border-[#d4af37]/40">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🔒</span>
+                    <span className="text-xs text-gray-300 font-medium">
+                      Authenticate with your 4-digit PIN to post.
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="bg-[#d4af37] text-gray-950 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-[#e6c24d] transition shadow-sm cursor-pointer shrink-0"
+                  >
+                    Login
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. PIN Authentication Drawer / Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0f1726] border border-[#d4af37]/50 rounded-2xl max-w-sm w-full p-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-3.5 right-3.5 text-gray-400 hover:text-white p-1"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">🏈</span>
+              <h3 className="text-base font-extrabold text-white">
+                Manager War Room Authentication
+              </h3>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">
+              Select your franchise and enter your 4-digit CRFFL security PIN to chat and banter with the columnists.
+            </p>
+
+            <form onSubmit={handleSaveLogin} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-gray-300 mb-1">
+                  Manager Identity
+                </label>
+                <select
+                  value={loginManager}
+                  onChange={(e) => setLoginManager(e.target.value)}
+                  className="w-full bg-[#090d14] border border-gray-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-[#d4af37] min-h-[44px]"
+                >
+                  {MANAGERS_OPTIONS.map((m) => (
+                    <option key={m.name} value={m.name}>
+                      {m.name} ({m.team})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-300 mb-1">
+                  4-Digit Security PIN
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={loginPin}
+                  onChange={(e) => setLoginPin(e.target.value)}
+                  placeholder="••••"
+                  className="w-full bg-[#090d14] border border-gray-700 rounded-xl px-3 py-2.5 text-center text-lg tracking-widest font-mono text-white focus:outline-none focus:border-[#d4af37] min-h-[44px]"
+                />
+              </div>
+
+              {loginError && (
+                <div className="text-xs text-red-400 font-medium">
+                  ⚠️ {loginError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-[#d4af37] hover:bg-[#e6c24d] text-gray-950 font-black py-2.5 rounded-xl text-xs transition shadow-md min-h-[44px] cursor-pointer"
+              >
+                Authorize &amp; Enter War Room
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
