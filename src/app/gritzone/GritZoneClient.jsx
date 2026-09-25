@@ -117,9 +117,7 @@ export default function GritZoneClient() {
       const res = await fetch('/api/chat/messages');
       const data = await res.json();
       if (data.success && Array.isArray(data.messages)) {
-        const cutoff = Date.now() - 15 * 60 * 1000;
-        const fresh = data.messages.filter((m) => new Date(m.created_at).getTime() >= cutoff);
-        setMessages(fresh);
+        setMessages(data.messages);
       }
     } catch (err) {
       console.error('Error fetching chat messages:', err);
@@ -265,7 +263,6 @@ export default function GritZoneClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          managerName: authManager,
           manager_name: authManager,
           pin: authPin,
           message: textToSend,
@@ -282,9 +279,15 @@ export default function GritZoneClient() {
           setShowLoginModal(true);
         }
       } else {
-        // Replace optimistic message with confirmed database record
+        // Replace optimistic message with confirmed database record and append reporter reply
         if (data.message) {
-          setMessages((prev) => prev.map((m) => (m.id === tempId ? data.message : m)));
+          setMessages((prev) => {
+            const updated = prev.map((m) => (m.id === tempId ? data.message : m));
+            if (data.reporterReply && !updated.some((m) => m.id === data.reporterReply.id)) {
+              return [...updated, data.reporterReply];
+            }
+            return updated;
+          });
         }
       }
     } catch (err) {
@@ -817,7 +820,7 @@ export default function GritZoneClient() {
                     The War Room
                   </h2>
                   <p className="text-[10px] text-gray-400">
-                    Live Manager Banter • Messages expire after 15m
+                    Live Manager Banter &amp; Columnist Takes
                   </p>
                 </div>
               </div>

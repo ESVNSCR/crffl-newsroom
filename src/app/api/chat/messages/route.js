@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { MANAGERS } from '@/lib/sleeper';
-import { generateReporterChatComment } from '@/lib/reporterChat';
+import { getInstantReporterQuip } from '@/lib/cannedReporterMessages';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,19 +54,9 @@ function resolveManager(name) {
 
 export async function GET() {
   try {
-    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-
-    // Opportunistically prune expired messages older than 15 minutes
-    await supabase
-      .from('newsroom_chat_messages')
-      .delete()
-      .lt('created_at', fifteenMinsAgo)
-      .catch(() => {});
-
     const { data: messages, error } = await supabase
       .from('newsroom_chat_messages')
       .select('*')
-      .gte('created_at', fifteenMinsAgo)
       .order('created_at', { ascending: true })
       .limit(60);
 
@@ -85,8 +75,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const managerName = body?.managerName || body?.manager_name;
-    const { pin, message, matchupContext } = body || {};
+    const { managerName, pin, message, matchupContext } = body || {};
 
     if (!managerName || !String(managerName).trim()) {
       return NextResponse.json({ error: 'Manager name is required.' }, { status: 400 });
@@ -136,8 +125,7 @@ export async function POST(request) {
 
     if (insertError) throw insertError;
 
-    // 3. Evaluate AI Reporter trigger
-    // Check if a specific reporter was tagged or if we should chime in
+    // 3. Evaluate Reporter trigger (Instant contextual response)
     const lowerMsg = trimmedMsg.toLowerCase();
     let mentionedReporter = null;
     if (lowerMsg.includes('@marcus') || lowerMsg.includes('marcus') || lowerMsg.includes('vance')) {
@@ -152,29 +140,42 @@ export async function POST(request) {
       mentionedReporter = 'random';
     }
 
-    // Trigger reporter take asynchronously if tagged or based on 1-in-4 probability
-    const shouldReply = Boolean(mentionedReporter) || Math.random() < 0.25;
+    // Trigger instant reporter take if tagged or 1-in-3 spontaneous probability
+    const shouldReply = Boolean(mentionedReporter) || Math.random() < 0.33;
+    let reporterReply = null;
 
     if (shouldReply) {
-      // Fetch the last few messages for context
-      const { data: recent } = await supabase
-        .from('newsroom_chat_messages')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      // Fire and forget reporter generation so user's message returns instantly
-      generateReporterChatComment({
+      const quip = getInstantReporterQuip({
         reporterId: mentionedReporter === 'random' ? null : mentionedReporter,
-        recentMessages: (recent || []).reverse(),
+        managerName: resolved.managerName,
+        teamName: resolved.teamName,
+        messageText: trimmedMsg,
         matchupContext: matchupContext || '',
-        triggerReason: mentionedReporter ? 'user_mention' : 'periodic_banter',
-      }).catch(err => console.warn('Background reporter quip error:', err.message));
+      });
+
+      // Insert reporter quip timestamped immediately after manager message
+      const replyTime = new Date(Date.now() + 1000).toISOString();
+      const { data: insertedQuip } = await supabase
+        .from('newsroom_chat_messages')
+        .insert({
+          created_at: replyTime,
+          sender_type: 'reporter',
+          sender_name: quip.name,
+          sender_role: quip.role,
+          sender_avatar: quip.avatar,
+          team_name: 'CRFFL Times-Herald',
+          message: quip.message,
+        })
+        .select()
+        .single();
+
+      reporterReply = insertedQuip;
     }
 
     return NextResponse.json({
       success: true,
       message: inserted,
+      reporterReply,
     });
   } catch (err) {
     console.error('Chat message post error:', err);
