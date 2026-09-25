@@ -54,9 +54,19 @@ function resolveManager(name) {
 
 export async function GET() {
   try {
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+
+    // Opportunistically prune expired messages older than 15 minutes
+    await supabase
+      .from('newsroom_chat_messages')
+      .delete()
+      .lt('created_at', fifteenMinsAgo)
+      .catch(() => {});
+
     const { data: messages, error } = await supabase
       .from('newsroom_chat_messages')
       .select('*')
+      .gte('created_at', fifteenMinsAgo)
       .order('created_at', { ascending: true })
       .limit(60);
 
@@ -75,7 +85,8 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { managerName, pin, message, matchupContext } = body || {};
+    const managerName = body?.managerName || body?.manager_name;
+    const { pin, message, matchupContext } = body || {};
 
     if (!managerName || !String(managerName).trim()) {
       return NextResponse.json({ error: 'Manager name is required.' }, { status: 400 });

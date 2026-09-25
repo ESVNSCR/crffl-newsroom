@@ -117,7 +117,9 @@ export default function GritZoneClient() {
       const res = await fetch('/api/chat/messages');
       const data = await res.json();
       if (data.success && Array.isArray(data.messages)) {
-        setMessages(data.messages);
+        const cutoff = Date.now() - 15 * 60 * 1000;
+        const fresh = data.messages.filter((m) => new Date(m.created_at).getTime() >= cutoff);
+        setMessages(fresh);
       }
     } catch (err) {
       console.error('Error fetching chat messages:', err);
@@ -263,6 +265,7 @@ export default function GritZoneClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          managerName: authManager,
           manager_name: authManager,
           pin: authPin,
           message: textToSend,
@@ -814,7 +817,7 @@ export default function GritZoneClient() {
                     The War Room
                   </h2>
                   <p className="text-[10px] text-gray-400">
-                    Live Manager Banter &amp; Columnist Takes
+                    Live Manager Banter • Messages expire after 15m
                   </p>
                 </div>
               </div>
