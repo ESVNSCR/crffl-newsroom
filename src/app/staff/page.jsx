@@ -121,6 +121,8 @@ export default function StaffDirectoryPage() {
             <img
               src="/commissioner-banner.png"
               alt="Office of the Commissioner"
+              loading="lazy"
+              decoding="async"
               className="w-full h-auto block"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#121824] via-transparent to-black/20" />

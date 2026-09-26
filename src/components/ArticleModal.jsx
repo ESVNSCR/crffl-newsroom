@@ -63,6 +63,8 @@ export default function ArticleModal({ article, onClose }) {
               <img
                 src={article.banner_url || '/commissioner-banner.png'}
                 alt="Office of the Commissioner"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-auto block"
               />
             </div>
