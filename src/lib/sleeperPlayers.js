@@ -3,9 +3,18 @@ import { supabase } from './supabase.js';
 /**
  * Fetches and returns a compact map of all NFL players from Sleeper (or Supabase cache).
  * Compact format: { [player_id]: { name: string, pos: string, team: string } }
- * Caches in Supabase for 24 hours to respect Sleeper's 1-call-per-day guideline.
+ * Caches in Supabase for 7 days (refreshed weekly on Thursday morning).
+ * Automatically triggers an on-demand refresh if any required player ID is missing (unidentified player)
+ * or if forceRefresh is explicitly requested.
+ * 
+ * @param {boolean|object} options - If boolean, forceRefresh. If object: { force = false, requiredIds = [] }
  */
-export async function getSleeperPlayerMap(forceRefresh = false) {
+export async function getSleeperPlayerMap(options = false) {
+  const forceRefresh = typeof options === 'boolean' ? options : Boolean(options?.force);
+  const requiredIds = Array.isArray(options?.requiredIds)
+    ? options.requiredIds
+    : (options?.requiredIds ? [options.requiredIds] : []);
+
   // 1. Check Supabase cache first
   if (!forceRefresh) {
     try {
@@ -19,8 +28,23 @@ export async function getSleeperPlayerMap(forceRefresh = false) {
         const updatedAt = new Date(data.updated_at);
         const hoursSinceUpdate = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60);
 
-        if (hoursSinceUpdate < 24) {
+        // Cache valid for 7 days (weekly schedule on Thursday morning)
+        const isFresh = hoursSinceUpdate < 24 * 7;
+
+        // Check for unidentified player IDs in active slate
+        const missingIds = requiredIds.filter(id => 
+          id && 
+          id !== 'Vacant' && 
+          !['TBD', 'FA', 'None', 'undefined'].includes(String(id)) && 
+          !data.players_data[id]
+        );
+
+        if (isFresh && missingIds.length === 0) {
           return data.players_data;
+        }
+
+        if (missingIds.length > 0) {
+          console.warn(`[sleeperPlayers] Unidentified player ID(s) encountered (${missingIds.join(', ')}). Refreshing Sleeper database on demand...`);
         }
       }
     } catch (err) {
@@ -98,6 +122,55 @@ export function resolvePlayerName(playerId, playerMap) {
   const p = playerMap?.[playerId];
   if (!p) return playerId;
   return `${p.name} (${p.pos} - ${p.team})`;
+}
+
+/**
+ * Checks whether all specified player IDs exist in playerMap.
+ * If any valid player ID is missing (unidentified player), automatically fetches
+ * the fresh Sleeper database on demand, merges it into playerMap, and returns the updated map.
+ */
+export async function ensurePlayerMapHas(playerMap, playerIds) {
+  if (!playerMap || !Array.isArray(playerIds) || playerIds.length === 0) {
+    return playerMap;
+  }
+
+  const missing = playerIds.filter(id => 
+    id && 
+    id !== 'Vacant' && 
+    !['TBD', 'FA', 'None', 'undefined'].includes(String(id)) && 
+    !playerMap[id]
+  );
+
+  if (missing.length === 0) {
+    return playerMap;
+  }
+
+  console.warn(`[sleeperPlayers] Unidentified player ID(s) detected (${missing.join(', ')}). Fetching fresh Sleeper database on demand...`);
+  const freshMap = await getSleeperPlayerMap(true);
+  if (freshMap && Object.keys(freshMap).length > 0) {
+    Object.assign(playerMap, freshMap);
+  }
+  return playerMap;
+}
+
+/**
+ * Resolves a player ID with automatic fallback:
+ * If the player ID is not found in the current playerMap, it automatically triggers
+ * a fresh fetch from Sleeper to identify newly added or recently activated players.
+ */
+export async function resolvePlayerWithFallback(playerId, playerMap) {
+  if (!playerId) return 'Vacant';
+  if (playerMap && playerMap[playerId]) {
+    return resolvePlayerName(playerId, playerMap);
+  }
+  if (playerId && playerId !== 'Vacant' && !['TBD', 'FA', 'None', 'undefined'].includes(String(playerId))) {
+    console.warn(`[sleeperPlayers] Unidentified player ID ${playerId} encountered. Fetching fresh Sleeper database on demand...`);
+    const freshMap = await getSleeperPlayerMap(true);
+    if (freshMap && freshMap[playerId]) {
+      return resolvePlayerName(playerId, freshMap);
+    }
+  }
+  return resolvePlayerName(playerId, playerMap);
 }
 
 /**
