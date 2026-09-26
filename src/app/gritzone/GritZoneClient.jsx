@@ -40,6 +40,11 @@ export default function GritZoneClient() {
   const [loginPin, setLoginPin] = useState('');
   const [loginError, setLoginError] = useState('');
 
+  // Reporter Typing State
+  const [typingReporter, setTypingReporter] = useState(null);
+  const typingTimeoutRef = useRef(null);
+  const channelRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const chatScrollContainerRef = useRef(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -123,6 +128,16 @@ export default function GritZoneClient() {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
+
+          // If a reporter reply arrived, clear any typing indicators
+          if (newMsg?.sender_type === 'reporter') {
+            setTypingReporter(null);
+            if (typingTimeoutRef.current) {
+              clearTimeout(typingTimeoutRef.current);
+              typingTimeoutRef.current = null;
+            }
+          }
+
           // Increment unread count if user is on matchups tab
           setActiveTab((cur) => {
             if (cur !== 'chat') {
@@ -132,7 +147,18 @@ export default function GritZoneClient() {
           });
         }
       )
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload?.payload) {
+          setTypingReporter(payload.payload);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => {
+            setTypingReporter(null);
+          }, 6000);
+        }
+      })
       .subscribe();
+
+    channelRef.current = channel;
 
     // Polling fallback
     const pollInterval = setInterval(() => {
@@ -140,17 +166,22 @@ export default function GritZoneClient() {
     }, 8000);
 
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(channel);
       clearInterval(pollInterval);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
     };
   }, [fetchMessages]);
 
-  // Scroll chat to bottom when new messages arrive (if near bottom)
+  // Scroll chat to bottom when new messages arrive or when reporter is typing
   useEffect(() => {
     if (activeTab === 'chat' && isNearBottom) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, activeTab, isNearBottom]);
+  }, [messages, typingReporter, activeTab, isNearBottom]);
 
   // Handle scroll events in chat container
   const handleChatScroll = () => {
@@ -225,6 +256,43 @@ export default function GritZoneClient() {
     setMessages((prev) => [...prev, optimisticMessage]);
     setChatInput('');
 
+    // Eagerly detect tagged reporter to show typing dots immediately upon send
+    const lower = textToSend.toLowerCase();
+    let taggedReporter = null;
+    if (lower.includes('@chloe') || lower.includes('chloe') || lower.includes('carmichael')) {
+      taggedReporter = {
+        name: 'Chloe Carmichael',
+        role: 'The Spin Room',
+        avatar: '/reporters/chloe-carmichael-avatar.png',
+      };
+    } else if (lower.includes('@marcus') || lower.includes('marcus') || lower.includes('vance')) {
+      taggedReporter = {
+        name: 'Dr. Marcus Vance',
+        role: 'Analytics Desk',
+        avatar: '/reporters/marcus-vance-avatar.png',
+      };
+    } else if (lower.includes('@buck') || lower.includes('buck') || lower.includes('callahan')) {
+      taggedReporter = {
+        name: 'Buck Callahan',
+        role: 'The Grit Desk',
+        avatar: '/reporters/buck-callahan-avatar.png',
+      };
+    } else if (lower.includes('@marty') || lower.includes('marty') || lower.includes('sullivan')) {
+      taggedReporter = {
+        name: 'Marty Sullivan',
+        role: 'Tuesday Recap',
+        avatar: '/reporters/marty-sullivan-avatar.png',
+      };
+    }
+
+    if (taggedReporter) {
+      setTypingReporter(taggedReporter);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setTypingReporter(null);
+      }, 7000);
+    }
+
     try {
       const res = await fetch('/api/chat/messages', {
         method: 'POST',
@@ -242,11 +310,12 @@ export default function GritZoneClient() {
         // Revert optimistic message
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
         setChatInput(textToSend);
+        setTypingReporter(null);
         if (res.status === 401) {
           setShowLoginModal(true);
         }
       } else {
-        // Replace optimistic message with confirmed database record and append reporter reply
+        // Replace optimistic message with confirmed database record
         if (data.message) {
           setMessages((prev) => {
             const updated = prev.map((m) => (m.id === tempId ? data.message : m));
@@ -255,6 +324,29 @@ export default function GritZoneClient() {
             }
             return updated;
           });
+        }
+
+        // If a reporter is scheduled to reply after typing delay
+        if (data.typingReporter) {
+          setTypingReporter(data.typingReporter);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => {
+            setTypingReporter(null);
+          }, (data.typingReporter.delayMs || 3500) + 2500);
+
+          // Broadcast typing status to any other active users
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: data.typingReporter,
+          });
+
+          // Fallback poll in case realtime socket is latent
+          setTimeout(() => {
+            fetchMessages();
+          }, (data.typingReporter.delayMs || 3500) + 1500);
+        } else if (!taggedReporter) {
+          setTypingReporter(null);
         }
       }
     } catch (err) {
@@ -925,6 +1017,30 @@ export default function GritZoneClient() {
                   </div>
                 );
               })}
+
+              {/* Reporter Typing Indicator */}
+              {typingReporter && (
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl border border-gray-800 bg-[#121929]/90 shadow-md animate-fadeIn transition-all">
+                  <div className="w-6 h-6 rounded-full overflow-hidden border border-[#d4af37]/60 relative bg-black shrink-0">
+                    <Image
+                      src={typingReporter.avatar || '/reporters/default-avatar.png'}
+                      alt={typingReporter.name || 'Reporter'}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-gray-200 truncate">
+                      {typingReporter.name} is typing
+                    </span>
+                    <span className="inline-flex items-center gap-1 shrink-0 px-1 py-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-bounce" />
+                    </span>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 

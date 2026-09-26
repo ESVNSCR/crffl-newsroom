@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { resolveManager } from '@/lib/managers';
 import { getInstantReporterQuip } from '@/lib/cannedReporterMessages';
@@ -107,7 +107,7 @@ export async function POST(request) {
 
     // Trigger instant reporter take if tagged or 1-in-3 spontaneous probability
     const shouldReply = Boolean(mentionedReporter) || Math.random() < 0.33;
-    let reporterReply = null;
+    let typingReporterMeta = null;
 
     if (shouldReply) {
       const quip = getInstantReporterQuip({
@@ -118,29 +118,42 @@ export async function POST(request) {
         matchupContext: matchupContext || '',
       });
 
-      // Insert reporter quip timestamped immediately after manager message
-      const replyTime = new Date(Date.now() + 1000).toISOString();
-      const { data: insertedQuip } = await supabase
-        .from('newsroom_chat_messages')
-        .insert({
-          created_at: replyTime,
-          sender_type: 'reporter',
-          sender_name: quip.name,
-          sender_role: quip.role,
-          sender_avatar: quip.avatar,
-          team_name: 'CRFFL Times-Herald',
-          message: quip.message,
-        })
-        .select()
-        .single();
+      // Realistic typing delay: 2.2s to 4.0s based on message length (~18ms per character)
+      const typingDelayMs = Math.min(4000, Math.max(2200, Math.round(quip.message.length * 18)));
 
-      reporterReply = insertedQuip;
+      typingReporterMeta = {
+        name: quip.name,
+        role: quip.role,
+        avatar: quip.avatar,
+        delayMs: typingDelayMs,
+      };
+
+      // Delay insertion in the background so it feels naturally typed
+      after(async () => {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, typingDelayMs));
+          const replyTime = new Date().toISOString();
+          await supabase
+            .from('newsroom_chat_messages')
+            .insert({
+              created_at: replyTime,
+              sender_type: 'reporter',
+              sender_name: quip.name,
+              sender_role: quip.role,
+              sender_avatar: quip.avatar,
+              team_name: 'CRFFL Times-Herald',
+              message: quip.message,
+            });
+        } catch (err) {
+          console.error('Error inserting delayed reporter reply:', err);
+        }
+      });
     }
 
     return NextResponse.json({
       success: true,
       message: inserted,
-      reporterReply,
+      typingReporter: typingReporterMeta,
     });
   } catch (err) {
     console.error('Chat message post error:', err);
