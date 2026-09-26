@@ -46,6 +46,10 @@ export default function GritZoneClient() {
   const typingTimeoutRef = useRef(null);
   const channelRef = useRef(null);
 
+  // Active Managers Presence State
+  const [activeManagers, setActiveManagers] = useState([]);
+  const [showActivePopover, setShowActivePopover] = useState(false);
+
   const isCommissioner =
     authManager === 'Eric' ||
     authManager === 'The Commissioner' ||
@@ -124,9 +128,15 @@ export default function GritZoneClient() {
   useEffect(() => {
     fetchMessages();
 
-    // Supabase Realtime channel
+    // Supabase Realtime channel with Presence tracking
     const channel = supabase
-      .channel('gritzone_war_room')
+      .channel('gritzone_war_room', {
+        config: {
+          presence: {
+            key: authManager || 'Guest',
+          },
+        },
+      })
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'newsroom_chat_messages' },
@@ -164,7 +174,35 @@ export default function GritZoneClient() {
           }, 6000);
         }
       })
-      .subscribe();
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const activeMap = new Map();
+        Object.values(state).forEach((presences) => {
+          presences.forEach((p) => {
+            if (p.managerName && p.managerName !== 'Guest') {
+              activeMap.set(p.managerName, {
+                managerName: p.managerName,
+                teamName: p.teamName || '',
+                logo: p.logo || '/logos/league.png',
+                isCommissioner: Boolean(p.isCommissioner),
+              });
+            }
+          });
+        });
+        setActiveManagers(Array.from(activeMap.values()));
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED' && authManager) {
+          const currentMgrMeta = MANAGERS_OPTIONS.find((m) => m.name === authManager);
+          await channel.track({
+            managerName: authManager,
+            teamName: currentMgrMeta?.team || '',
+            logo: currentMgrMeta?.logo || '/logos/league.png',
+            isCommissioner: authManager === 'Eric' || authManager === 'The Commissioner',
+            onlineAt: new Date().toISOString(),
+          }).catch(() => {});
+        }
+      });
 
     channelRef.current = channel;
 
@@ -190,6 +228,22 @@ export default function GritZoneClient() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, typingReporter, activeTab, isNearBottom]);
+
+  // Track presence when manager identity updates
+  useEffect(() => {
+    if (channelRef.current && authManager) {
+      const currentMgrMeta = MANAGERS_OPTIONS.find((m) => m.name === authManager);
+      channelRef.current
+        .track({
+          managerName: authManager,
+          teamName: currentMgrMeta?.team || '',
+          logo: currentMgrMeta?.logo || '/logos/league.png',
+          isCommissioner: authManager === 'Eric' || authManager === 'The Commissioner',
+          onlineAt: new Date().toISOString(),
+        })
+        .catch(() => {});
+    }
+  }, [authManager]);
 
   // Handle scroll events in chat container
   const handleChatScroll = () => {
@@ -229,7 +283,11 @@ export default function GritZoneClient() {
   const handleLogout = () => {
     setAuthManager('');
     setAuthPin('');
+    setPostAsReporter(null);
     clearStoredManagerCredentials();
+    if (channelRef.current) {
+      channelRef.current.untrack().catch(() => {});
+    }
   };
 
   // Send message
@@ -554,21 +612,29 @@ export default function GritZoneClient() {
 
             <button
               onClick={() => handleSelectTab('chat')}
-              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition min-h-[44px] relative cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-bold transition min-h-[44px] relative cursor-pointer ${
                 activeTab === 'chat'
                   ? 'bg-[#d4af37] text-gray-950 shadow-md shadow-amber-950 font-black'
                   : 'text-gray-400 hover:text-gray-200'
               }`}
             >
               <span>💬 War Room</span>
+              {activeManagers.length > 0 && (
+                <span
+                  className={`inline-flex items-center gap-1 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === 'chat'
+                      ? 'bg-black/25 text-gray-950'
+                      : 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/40'
+                  }`}
+                  title={`${activeManagers.length} active`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {activeManagers.length}
+                </span>
+              )}
               {unreadChatCount > 0 && activeTab !== 'chat' && (
                 <span className="animate-bounce bg-red-500 text-white text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold">
                   {unreadChatCount}
-                </span>
-              )}
-              {activeTab === 'chat' && (
-                <span className="text-[10px] font-mono bg-black/20 text-gray-950 px-1.5 py-0.5 rounded-full">
-                  Live
                 </span>
               )}
             </button>
@@ -907,11 +973,90 @@ export default function GritZoneClient() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
-                  Connected
-                </span>
+
+              {/* Active Managers Presence Counter & Popover */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowActivePopover((prev) => !prev)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0a0f19] border border-gray-700/80 hover:border-gray-600 transition cursor-pointer text-left shadow-sm group"
+                  title="Click to view online managers"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="text-[11px] font-mono font-bold text-emerald-400 group-hover:text-emerald-300">
+                    {activeManagers.length} {activeManagers.length === 1 ? 'Manager' : 'Managers'} Active
+                  </span>
+                  <svg
+                    className={`w-3 h-3 text-gray-400 transition-transform ${showActivePopover ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Active Managers Dropdown Popover */}
+                {showActivePopover && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-[#0f1726] border border-gray-700 rounded-xl shadow-2xl p-3 z-30 animate-fadeIn">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-800">
+                      <span className="text-[11px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+                        <span>🟢 Active in Room</span>
+                        <span className="text-gray-400 font-mono">({activeManagers.length})</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowActivePopover(false)}
+                        className="text-gray-400 hover:text-white text-xs p-0.5 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {activeManagers.length === 0 ? (
+                      <p className="text-xs text-gray-400 py-1">
+                        No managers currently authenticated. Enter your PIN to join!
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {activeManagers.map((m) => (
+                          <div
+                            key={m.managerName}
+                            className="flex items-center gap-2 p-1.5 rounded-lg bg-[#141d2e] border border-gray-800/80"
+                          >
+                            <div className="w-5 h-5 rounded-full overflow-hidden relative border border-gray-700 bg-black shrink-0">
+                              <Image
+                                src={m.logo || '/logos/league.png'}
+                                alt={m.managerName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1 truncate">
+                              <div className="text-xs font-bold text-white truncate flex items-center gap-1">
+                                <span>{m.managerName}</span>
+                                {m.isCommissioner && (
+                                  <span className="text-[9px] font-mono px-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                    Commish
+                                  </span>
+                                )}
+                              </div>
+                              {m.teamName && (
+                                <div className="text-[10px] text-gray-400 truncate">
+                                  {m.teamName}
+                                </div>
+                              )}
+                            </div>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
