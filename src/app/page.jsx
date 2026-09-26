@@ -62,6 +62,8 @@ export default async function HomePage({ searchParams }) {
             <img
               src="/logos/league.png"
               alt="Columbia River Fantasy Football League"
+              loading="eager"
+              fetchPriority="high"
               className="max-w-full max-h-full object-contain"
             />
           </div>
