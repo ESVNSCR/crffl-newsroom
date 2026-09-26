@@ -324,6 +324,12 @@ const CHLOE_CARMICHAEL_QUIPS = {
     Eric: [
       "Sources inside the Commissioner's suite say Eric is already preparing a league-wide memo about 'competitive balance' after today's slate.",
       "Eric's trade hotline is notoriously busy on Sunday nights, but after this score, he might have to sweeten the pot.",
+      "Word around the league is the Commissioner is reviewing today's decimal scoring with a fine-tooth comb.",
+      "Insider report: Rebel Scum front office is operating under code-red radio silence until the Monday night whistle.",
+      "I'm hearing whispers that Eric has already drafted three different trade proposals for Tuesday morning's waiver window.",
+      "Commissioner Eric running a tight ship as always, though rival GMs are watching his lineup moves very closely today.",
+      "Front-office sources tell me Eric's veto pen is resting peacefully in its holster... for now.",
+      "The buzz around HQ is that Eric has already planned the playoff seeding scenarios three weeks in advance.",
     ],
     Corey: [
       "Corey's high-stakes swagger is legendary, but insiders are asking if Team CoreyCash is about to declare fantasy bankruptcy this week.",
@@ -659,10 +665,32 @@ export function getInstantReporterQuip({
   // Special handling for Chloe Carmichael
   if (targetId === 'chloe_carmichael') {
     if (isEric) {
-      // Chloe responds to Eric / The Commissioner exclusively with witty, charming, slightly flirty banter
-      candidateQuotes.push(...(pool.eric_flirty || []));
-      if (pool.manager_callouts?.Eric) {
-        candidateQuotes.push(...pool.manager_callouts.Eric);
+      // Chloe only occasionally uses her charming/flirty banter with Eric (~20% normal, ~50% if Eric is playful/flirty)
+      const flirtyChance = isFlirtyAttempt ? 0.50 : 0.20;
+      const shouldUseFlirty = (pool.eric_flirty?.length > 0) && (Math.random() < flirtyChance);
+
+      if (shouldUseFlirty) {
+        candidateQuotes = [...pool.eric_flirty];
+      } else {
+        // Standard professional insider & Spin Room reporting for the Commissioner
+        if (isDirectTag && pool.direct_reply?.length) {
+          candidateQuotes.push(...pool.direct_reply);
+        }
+        if (pool.manager_callouts?.Eric?.length) {
+          candidateQuotes.push(...pool.manager_callouts.Eric);
+        }
+        if (lowerMsg.includes('bench') || lowerMsg.includes('pine') || lowerMsg.includes('started the wrong')) {
+          if (pool.bench_points?.length) candidateQuotes.push(...pool.bench_points);
+        }
+        const lowerCtx = (matchupContext || '').toLowerCase();
+        if (lowerCtx.includes('thriller') || lowerCtx.includes('close') || lowerCtx.includes('under 10')) {
+          if (pool.thriller?.length) candidateQuotes.push(...pool.thriller);
+        } else if (lowerCtx.includes('blowout') || lowerCtx.includes('30+') || lowerCtx.includes('40+')) {
+          if (pool.blowout?.length) candidateQuotes.push(...pool.blowout);
+        }
+        if (candidateQuotes.length === 0) {
+          candidateQuotes = [...(pool.general || []), ...(pool.direct_reply || [])];
+        }
       }
     } else if (isFlirtyAttempt) {
       // Non-Eric manager attempting flirtation or sexual comments: IMMEDIATELY shut down!
