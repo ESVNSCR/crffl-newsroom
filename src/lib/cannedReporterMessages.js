@@ -4,7 +4,7 @@
  * for Dr. Marcus Vance, Buck Callahan, Marty Sullivan, and Chloe Carmichael.
  */
 
-import { COLUMNISTS } from './columnists';
+import { COLUMNISTS } from './columnists.js';
 
 export const REPORTERS_META = COLUMNISTS;
 
@@ -288,6 +288,7 @@ const MARTY_SULLIVAN_QUIPS = {
 };
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // CHLOE CARMICHAEL — TRANSACTIONS & THE SPIN ROOM
 // ---------------------------------------------------------------------------
 const CHLOE_CARMICHAEL_QUIPS = {
@@ -366,6 +367,238 @@ const CHLOE_CARMICHAEL_QUIPS = {
     "Reminder: the waiver wire unlocks at 12:01 AM Tuesday. Start counting your FAAB pennies now, folks.",
     "My sources confirm that Sunday evening trade negotiations are 80% alcohol, 15% desperation, and 5% actual logic.",
   ],
+
+  // EXCLUSIVELY for Eric / The Commissioner — charming, witty, slightly flirty insider banter
+  eric_flirty: [
+    "Now you know I can never say no to an exclusive with the Commissioner, Eric.",
+    "Is it getting hot in the press box, or did the Commissioner just walk into the room?",
+    "Off the record, Eric? You're looking exceptionally sharp on the leaderboards today.",
+    "I'd leak league secrets for you anytime, Eric... but let's keep that between us.",
+    "You run this league with an iron fist, Commissioner, but you always have a soft spot for my scoops, don't you?",
+    "Careful, Eric. Keep looking at me like that from the Commissioner's suite and people are going to start talking.",
+    "A private briefing with the Commish? Tell me when and where, Eric, I'll bring the notepad.",
+    "I hear all the league gossip, Eric, but my favorite stories are always the ones about you.",
+    "Are you reviewing league bylaws, Eric, or just finding an excuse to ping me in the War Room?",
+    "You don't need a waiver claim to get my attention, Eric. You've already got it.",
+    "I'm supposed to remain an unbiased journalist, Commissioner, but you make that very difficult.",
+    "Everyone else in this chat gets the cold press release, Eric. You get the VIP headline.",
+    "They say absolute power corrupts, Eric, but honestly? It looks pretty good on you.",
+    "I've got a front-page scoop with your name on it, Commissioner... if you play your cards right.",
+    "Did you adjust the fantasy scoring today, Eric, or are you just trying to impress me?",
+    "You know, Eric, you're the only manager in this league who could pull off that bold starting lineup.",
+    "My sources tell me the Commissioner is in a good mood today. Should I take credit for that?",
+    "I could listen to you explain the playoff tiebreaker formulas all night, Eric.",
+    "I turned down five interviews with other managers today just to see what you were up to, Eric.",
+    "Between you and me, Eric, Rebel Scum is the only franchise that truly commands the room.",
+    "If following the Commissioner around the sideline is a conflict of interest, consider me guilty.",
+    "They're calling it an upset, Eric, but I always knew you had that winning instinct.",
+    "A smile from the Commish is worth more than 100% of my FAAB budget, Eric.",
+    "You run a tight ship, Eric, but I know how to make the captain blush.",
+    "I'm putting our conversation in my private diary instead of the Monday morning recap, Eric.",
+    "I love a man who knows how to wield veto power with confidence, Commissioner.",
+    "Is that a championship ring in your pocket, Eric, or are you just excited to see me on the sideline?",
+    "You can order an executive review on me anytime you want, Eric.",
+    "The other managers think they're playing for a trophy, Eric, but I know they're just trying to keep up with you.",
+    "I've got breaking news for you, Eric: my eyes haven't left your matchup all afternoon.",
+    "Don't worry about what the analytics say about Rebel Scum, Eric. You've already won my vote.",
+    "I brought an extra coffee up to the press box, Eric. Any chance you need a refill down on the field?",
+    "You don't have to call an official press conference just to talk to me, Eric. My line is always open.",
+    "I usually protect my sources, Eric, but I'd give up anything to keep you smiling today.",
+    "Commissioner's discretion is my favorite rule in the handbook, especially when it involves you.",
+    "Are you always this charming on Sunday afternoons, Eric, or am I just getting the special edition?",
+    "I saw you reviewing the rosters earlier, Eric. Very focused. Very commanding. Very attractive.",
+    "If you need an alibi during the next trade controversy, Eric, you were having coffee with me.",
+    "The rest of the league is stressing over decimal points, while you're just over here looking effortlessly cool.",
+    "You have no idea how good that commissioner confidence looks from the front row of the press corps, Eric.",
+    "I'd gladly trade my top draft pick just for twenty uninterrupted minutes of your time, Eric.",
+    "Just between us, Eric, I only showed up to the stadium today because I knew you'd be here.",
+    "You make running a ten-team league look effortless, Eric. How do you do that?",
+    "I had a whole column prepared about the waiver wire, Eric, but then you walked by and I lost my train of thought.",
+    "You don't need a golden ticket to the Spin Room, Eric. The velvet rope is always down for you.",
+    "Tell me another story about how you founded this league, Eric. I love the way your eyes light up.",
+    "I'm filing this conversation under 'strictly confidential' and 'too cute to publish,' Commissioner.",
+    "They say the Commissioner always gets the last word, but I bet I could talk you into a few concessions, Eric.",
+    "Keep looking at me across the press room like that, Eric, and Marty is going to write an exposé on us.",
+    "I love that Rebel Scum swagger, Eric. Confidence is definitely your best statistic.",
+    "You're the only manager who doesn't need to spin anything with me, Eric. You had me at kickoff.",
+    "If you ever need a personal press secretary, Eric, consider this my official application.",
+    "You've got that championship glow today, Eric. Did you make another brilliant trade?",
+    "I'd let you veto my plans any day of the week, Commissioner.",
+    "You're distracting me from my deadline, Eric... not that I'm complaining.",
+    "Is there room for two in the Commissioner's luxury box, Eric? The view up there is tempting.",
+    "Every time Rebel Scum scores a touchdown, my heart does a little extra leap. Purely journalistic, of course.",
+    "I could write a whole feature piece on that smile of yours, Eric.",
+    "You hold all the cards in this league, Eric, but you play them so charmingly.",
+    "Don't tell Buck Callahan, but I'd rather talk strategy with you over dinner than watch trench warfare tape.",
+    "You have this way of walking into the War Room and instantly making everything more exciting, Eric.",
+    "Is it against league regulations to admit you're my favorite manager, Eric?",
+    "I've got a lock of the week for you, Eric: you and me celebrating after the championship.",
+    "You make the toughest executive decisions look smooth as silk, Commissioner.",
+    "I'm keeping track of your stats today, Eric, but my favorite metric is your charm rating.",
+    "You don't need Dr. Vance's models to tell you you've got a 100% win probability with me, Eric.",
+    "I was going to interview Corey, but honestly Eric, you're a thousand times more interesting.",
+    "Whenever you speak at the league banquet, Eric, nobody is paying attention to the speeches—they're all looking at you.",
+    "I'd let you review my drafts anytime, Eric. Every single page.",
+    "Let's make a bet on your game today, Eric. If you win, you take me to dinner. If you lose, I take you.",
+    "You've got that quiet authority that just makes everyone in the room stop and listen, Eric.",
+    "I know you're busy running the league, Eric, but save a few minutes for me before the late games kick off.",
+    "I heard a rumor that the Commissioner is single-handedly carrying the league's aesthetic this year.",
+    "You look great in that Rebel Scum cap, Eric, but you know that already.",
+    "I'm working on a special column titled 'The Anatomy of a Commish,' and you're the star, Eric.",
+    "I'd happily forfeit my media credentials if it meant sitting next to you on the sideline, Eric.",
+    "You've got that sparkle in your eye today, Eric. What league-altering plot are you cooking up?",
+    "I always save my best questions for you, Eric. And maybe my best smiles too.",
+    "You don't need a high projection to impress me, Eric. You're already at the top of my power rankings.",
+    "I told the editors my column was late because of breaking news, but really I was just daydreaming about you, Eric.",
+    "Any chance you're offering private tours of the Commissioner's headquarters, Eric?",
+    "I think you need a personal consultation on league PR, Eric. Over drinks, perhaps?",
+    "You're playing chess while the other managers are playing checkers, Eric. It's captivating to watch.",
+    "I get hundreds of emails a day, Eric, but I only get butterflies when your name pops up.",
+    "You can challenge the ruling on the field anytime you want, Eric, as long as it's with me.",
+    "They broke the mold when they appointed you Commissioner, Eric. Truly one of a kind.",
+    "I'm sworn to neutrality, Eric, but my heart definitely roots for Rebel Scum.",
+    "You have that classic leading-man presence, Eric. Are we sure this is just fantasy football?",
+    "I brought you your favorite sideline report, Eric. Complete with personal commentary.",
+    "Let's sneak away from the press room for five minutes, Eric. The beat reporters won't even notice.",
+    "You're the only person who can make waiver wire wire-taps sound romantic, Eric.",
+    "I saw that knowing glance you gave me earlier, Eric. Don't think I missed it.",
+    "If there were fantasy points awarded for style and leadership, Eric, you'd be undefeated.",
+    "I'd travel to any away game on the schedule as long as you're on the team flight, Eric.",
+    "You have this quiet confidence, Eric, that completely commands the room without saying a word.",
+    "I saved a front-row seat for you in the media room, Eric. Right next to me.",
+    "Tell me the truth, Eric: did you draft that sleeper pick just so you'd have something clever to tell me?",
+    "You're the real MVP of this league, Eric, and don't let anyone ever tell you otherwise.",
+    "I'm keeping my tape recorder running, Eric, just in case you say something sweet off the record.",
+    "I'd give you all my FAAB dollars and the rest of my budget just for a wink, Commissioner.",
+    "You make Sunday afternoons feel like the premiere of a Hollywood movie, Eric.",
+    "I've interviewed a lot of managers, Eric, but you're the only one who makes my pulse race.",
+    "I love how passionate you get about the league, Eric. It's really endearing.",
+    "Are you trying to charm me into giving Rebel Scum an A-plus draft grade, Eric? Because it's working.",
+    "I have an exclusive insider scoop, Eric: you're looking exceptionally handsome today.",
+    "You hold the keys to the kingdom, Eric, and you look fantastic holding them.",
+    "I'm ready for our one-on-one recap whenever you are, Commissioner. Take your time.",
+    "You're the only manager in this league who knows how to keep me on my toes, Eric.",
+    "I'd follow your leadership into any overtime thriller, Eric.",
+    "They talk about home field advantage, Eric, but your advantage is pure charisma.",
+    "I promise I won't leak our little chats to the press, Eric. Your secrets are safe with me.",
+    "You've got that effortless commissioner swagger, Eric. It never gets old.",
+    "I think we need an emergency commissioner briefing, Eric. Just you, me, and some good coffee.",
+    "You're the headliner of this league, Eric. Everyone else is just an opening act.",
+    "I'm writing your name at the top of every draft sheet, Eric. In permanent ink.",
+    "You have no idea the effect that voice has over the league conference call, Eric.",
+    "I'll defend your roster moves to the death in the Spin Room, Eric. Just say the word.",
+    "You're the standard of excellence around here, Eric. On and off the fantasy gridiron.",
+    "I saw you smiling at my last article, Eric. Made my whole week.",
+    "You can draft me to your front office anytime, Commissioner.",
+    "I'd take your roster advice over Dr. Vance's algorithm any day of the week, Eric.",
+    "You're looking sharp on the sidelines today, Eric. Definitely the best-dressed GM in the CRFFL.",
+    "Every time you text the group chat, Eric, my screen lights up in more ways than one.",
+    "I'd give you first priority on every scoop I ever break, Eric.",
+    "You have this way of making the chaos of game day feel completely calm, Eric.",
+    "I was going to stay neutral today, Eric, but you make favoritism feel so right.",
+    "You don't need a hail mary to get my attention, Eric. You're already in the end zone.",
+    "I'd vote for you as Commissioner for life, Eric. No question about it.",
+    "I heard the other managers complaining about you, Eric. They're just jealous of that natural charm.",
+    "You're the franchise quarterback of my heart, Eric... off the record, of course.",
+    "Let's skip the post-game press conference and just grab a bite together, Eric.",
+    "You've got that golden touch, Eric. Everything you touch turns into a championship contender.",
+    "I could sit in the press box and watch you run this league from sunup to sundown, Eric.",
+    "You make Sunday football feel like a private celebration, Eric.",
+    "I'll always have an exclusive ready for you, Commissioner. You're my favorite headline.",
+    "You're the only manager who can make a 4th-down gamble look sophisticated, Eric.",
+    "I'd trade every trade piece on my roster just for five minutes of your undivided attention, Eric.",
+    "You bring the prestige to this league, Eric. And a whole lot of style.",
+    "I'm saving the Sunday cover story for you, Eric. Make it a good one today.",
+    "You have that look in your eye that says you're about to win everything, Eric. I love it.",
+    "You're the undisputed champion of the room, Eric. Don't ever forget it.",
+    "I've got you penciled in for my Manager of the Year award, Eric. Purely based on merit... and a little charm.",
+    "You make the rules, Eric, but you're also the only one who knows how to bend them with style.",
+    "I'd share my last cup of press box coffee with you anytime, Eric.",
+    "You're the only headline I care about this week, Commissioner.",
+    "Keep looking that sharp on Sundays, Eric, and they'll have to upgrade the press credentials.",
+    "You've got the ultimate front-office aura, Eric. Powerful, poised, and irresistible.",
+    "I'm ready to file my report whenever you give the signal, Eric. Always at your service.",
+    "You bring the magic to this league, Eric. Sundays wouldn't be the same without you.",
+    "I'm counting down the minutes until our post-game debrief, Commissioner.",
+    "You're my absolute favorite interview, Eric. Every single time.",
+    "You're the star of the show, Eric. Everyone else is just in the background.",
+    "I'd sign an exclusive lifetime contract with you, Eric, no negotiation needed.",
+    "You look like a champion today, Eric. But then again, you always do.",
+    "You're the heartbeat of this league, Eric. And you definitely know how to make mine skip a beat.",
+    "I've got my eyes on you today, Eric. Don't let me down!",
+    "A quiet smile from the Commissioner is the only Sunday update I need, Eric.",
+    "You make running this league look like an art form, Eric.",
+    "Let's celebrate your victory in style tonight, Eric. You pick the spot.",
+    "You're the real franchise player in this league, Eric. Top tier all the way.",
+    "I'm always in your corner, Commissioner. Always.",
+    "You have this undeniable presence, Eric. The whole room shifts when you speak.",
+    "I'll hold the front page for you whenever you need, Eric. You're the priority.",
+    "You're simply the best, Eric. Don't let any of these other managers tell you otherwise."
+],
+
+  // EXCLUSIVELY for non-Eric managers who attempt flirtation, sexual comments, or romance — immediate shut downs
+  manager_shutdowns: [
+    "Down, boy. I'm a credentialed sports journalist, {manager}, not a prize in your waiver pool.",
+    "Save the pickup lines for someone who hasn't seen your tragic sub-90 point projection, {manager}.",
+    "My press credentials say 'Reporter', {manager}, not 'Desperate Enough to Date You.' Back to the waiver wire.",
+    "I'd rather interview Dr. Vance about standard deviation for 48 straight hours than entertain this, {manager}.",
+    "{manager}, your flirting is somehow even less effective than your red-zone play-calling today.",
+    "I don't date managers whose teams are currently battling for the toilet bowl bracket, {manager}.",
+    "Unsubscribe. Blocked. Reported to the Commissioner. Try managing your bench instead, {manager}.",
+    "Is that your best attempt at game, {manager}? Because your kicker has better accuracy.",
+    "That line was flatter than your third-down conversion rate today, {manager}. Hard pass.",
+    "Professional boundaries exist for a reason, {manager}, and your roster isn't nearly good enough to cross them.",
+    "I cover the news, {manager}. I don't provide charity sympathy for lonely fantasy owners.",
+    "File that comment under 'Things that will never happen,' right next to your championship hopes, {manager}.",
+    "HR has already drafted the cease-and-desist, {manager}. Stick to trading draft picks.",
+    "Did you draft that pickup line in the 15th round? Because it's completely unstartable, {manager}.",
+    "{manager}, I have an exclusive scoop for you: I am 100% out of your league. Literally and figuratively.",
+    "Nice try, {manager}. Now go fix your starting lineup before you embarrass yourself on the scoreboard too.",
+    "I'm looking for breaking news, {manager}, not cheap pickup lines from someone clinging to 8th place.",
+    "I only speak to contenders, {manager}. Come back when you're above .500 and wearing professional decorum.",
+    "That was cringe on every level, {manager}. I'm forwarding the transcript directly to the league group chat.",
+    "My standards are higher than your quarterback's passer rating, {manager}. Which isn't saying much today.",
+    "I have zero interest in your personal life, {manager}. Do you have an injury update or can I get back to real work?",
+    "That comment just dropped your trade value to zero, {manager}. Keep it strictly professional.",
+    "I'd rather sit through a four-hour Buck Callahan lecture on fullbacks than hear another line from you, {manager}.",
+    "You're in the friend zone of the waiver wire, {manager}. Actually, make that the dropped-without-waivers zone.",
+    "My microphone is strictly for post-game quotes, {manager}, not for whatever cheesy romantic delusion that was.",
+    "Strike one, strike two, and strike three all in one message, {manager}. You're out.",
+    "I'm an award-winning reporter, {manager}. You're a manager who left 30 points on the bench. Know your place.",
+    "Did you really think that line was going to work, {manager}? Even Dr. Vance's algorithm gives that a 0.00% success rate.",
+    "I'd laugh, {manager}, but honestly your fantasy lineup is already doing that for me.",
+    "Keep your hands on your keyboard and your eyes on your matchup, {manager}. We are strictly business here.",
+    "I'm calling an official personal foul on that comment, {manager}. 15 yards and loss of down.",
+    "Please refrain from flattering yourself, {manager}. My interest in your franchise begins and ends with your turnover margin.",
+    "That was embarrassing to read, {manager}. Take a lap and hydrate.",
+    "I don't do sidelines romance with managers who miss the playoffs three years in a row, {manager}.",
+    "You're barking up the wrong press box tree, {manager}. Go check the free agent pool.",
+    "I've rejected better trade offers than you, {manager}, and I'm rejecting this one instantly.",
+    "Stick to football, {manager}. Your personal charm is currently projected for negative points.",
+    "I'm going to pretend you didn't just embarrass yourself in front of the entire league, {manager}.",
+    "If cringe were a fantasy category, {manager}, you'd be the undisputed #1 overall seed.",
+    "I have a strict policy against entertaining desperate managers, {manager}. Case closed.",
+    "Don't flatter yourself, {manager}. The only reason I know your name is because of your turnover differential.",
+    "I'd sooner start an inactive kicker in my championship lineup than go out with you, {manager}.",
+    "That comment belongs on the waiver wire junk heap, {manager}.",
+    "I report on professional football, {manager}. That amateur pickup attempt belongs on junior varsity.",
+    "Delete your draft, {manager}. Both on Sleeper and in your head.",
+    "I am completely unreceptive to your advances, {manager}. Now, what is the status of your starting running back?",
+    "You're out of bounds, {manager}. Flag on the play, illegal procedure, automatic disqualification.",
+    "That pickup line had all the finesse of a botched snap on 4th-and-goal, {manager}.",
+    "I have a front-row seat to your bad decisions every Sunday, {manager}. I certainly won't become one of them.",
+    "Let me make this crystal clear, {manager}: No. Never. Not in this season or the next.",
+    "You couldn't afford my FAAB price, {manager}, even if you traded your whole roster.",
+    "Your flirtation was intercepted and returned for a pick-six, {manager}. Game over.",
+    "I'm busy covering championship contenders, {manager}. Don't waste my airtime.",
+    "Save the sweet talk for your waiver claims, {manager}. You're going to need all the luck you can get.",
+    "I don't mingle with the roster rabble, {manager}. Check your standing in the division and quiet down.",
+    "That was painful to witness, {manager}. For your own dignity, never try that again.",
+    "I'm shutting that down faster than a goal-line stand against your backup running back, {manager}.",
+    "You're not on my radar, {manager}, and you never will be. Keep it to football.",
+    "I report the news, {manager}. And today's breaking news is: you have zero chance.",
+    "Consider yourself officially benched, {manager}. Zero snaps for you."
+],
 };
 
 const ALL_REPORTER_POOLS = {
@@ -395,9 +628,12 @@ export function getInstantReporterQuip({
   const pool = ALL_REPORTER_POOLS[targetId];
   const meta = REPORTERS_META[targetId];
   const lowerMsg = (messageText || '').toLowerCase();
+  const cleanMgr = (managerName || '').trim();
 
-  // 2. Determine best contextual category
-  let candidateQuotes = [];
+  // Check if sender is Eric / The Commissioner
+  const isEric = cleanMgr.toLowerCase() === 'eric' ||
+    cleanMgr.toLowerCase().includes('commissioner') ||
+    cleanMgr.toLowerCase() === 'the commissioner';
 
   // Check for direct tag / reply
   const isDirectTag = lowerMsg.includes('@marcus') ||
@@ -406,39 +642,79 @@ export function getInstantReporterQuip({
     lowerMsg.includes('@chloe') ||
     lowerMsg.includes('@reporter');
 
-  if (isDirectTag && pool.direct_reply?.length) {
-    candidateQuotes.push(...pool.direct_reply);
+  // Check if non-Eric manager is attempting flirtatious / romantic / sexual comments
+  const flirtyTriggers = [
+    /\b(babe|baby|honey|sweetheart|cutie|cutey|sexy|gorgeous|beautiful|pretty|hot|hottie)\b/i,
+    /\b(date|dinner|drinks|coffee|marry|marriage|kiss|crush|single|taken)\b/i,
+    /\b(flirt|flirting|flirty|slide into|dm me|text me|call me|your number)\b/i,
+    /\b(love you|fall in love|take you out|take me out|girlfriend|boyfriend|bae)\b/i,
+    /\b(fine|smokin|smokeshow|looking good|darlin|darling|sugar|attractive)\b/i,
+    /\b(bedroom|sleep with|hook up|make out|sexy voice|pretty face)\b/i,
+    /\b(eyes|smile|lips|dress|outfit|body|legs|look good)\b/i,
+  ];
+  const isFlirtyAttempt = flirtyTriggers.some((rgx) => rgx.test(lowerMsg));
+
+  let candidateQuotes = [];
+
+  // Special handling for Chloe Carmichael
+  if (targetId === 'chloe_carmichael') {
+    if (isEric) {
+      // Chloe responds to Eric / The Commissioner exclusively with witty, charming, slightly flirty banter
+      candidateQuotes.push(...(pool.eric_flirty || []));
+      if (pool.manager_callouts?.Eric) {
+        candidateQuotes.push(...pool.manager_callouts.Eric);
+      }
+    } else if (isFlirtyAttempt) {
+      // Non-Eric manager attempting flirtation or sexual comments: IMMEDIATELY shut down!
+      candidateQuotes = [...(pool.manager_shutdowns || [])];
+    } else {
+      // Non-Eric manager: strictly professional reporter & spin room demeanor. NEVER flirty!
+      if (isDirectTag && pool.direct_reply?.length) {
+        candidateQuotes.push(...pool.direct_reply);
+      }
+      if (cleanMgr && pool.manager_callouts?.[cleanMgr]?.length) {
+        candidateQuotes.push(...pool.manager_callouts[cleanMgr]);
+      }
+      if (lowerMsg.includes('bench') || lowerMsg.includes('pine') || lowerMsg.includes('started the wrong')) {
+        if (pool.bench_points?.length) candidateQuotes.push(...pool.bench_points);
+      }
+      const lowerCtx = (matchupContext || '').toLowerCase();
+      if (lowerCtx.includes('thriller') || lowerCtx.includes('close') || lowerCtx.includes('under 10')) {
+        if (pool.thriller?.length) candidateQuotes.push(...pool.thriller);
+      } else if (lowerCtx.includes('blowout') || lowerCtx.includes('30+') || lowerCtx.includes('40+')) {
+        if (pool.blowout?.length) candidateQuotes.push(...pool.blowout);
+      }
+      if (candidateQuotes.length === 0) {
+        candidateQuotes = [...(pool.general || []), ...(pool.direct_reply || [])];
+      }
+    }
+  } else {
+    // Other reporters (Marcus, Buck, Marty)
+    if (isDirectTag && pool.direct_reply?.length) {
+      candidateQuotes.push(...pool.direct_reply);
+    }
+    if (lowerMsg.includes('bench') || lowerMsg.includes('pine') || lowerMsg.includes('started the wrong')) {
+      if (pool.bench_points?.length) candidateQuotes.push(...pool.bench_points);
+    }
+    const lowerCtx = (matchupContext || '').toLowerCase();
+    if (lowerCtx.includes('thriller') || lowerCtx.includes('close') || lowerCtx.includes('under 10')) {
+      if (pool.thriller?.length) candidateQuotes.push(...pool.thriller);
+    } else if (lowerCtx.includes('blowout') || lowerCtx.includes('30+') || lowerCtx.includes('40+')) {
+      if (pool.blowout?.length) candidateQuotes.push(...pool.blowout);
+    }
+    if (cleanMgr && pool.manager_callouts?.[cleanMgr]?.length) {
+      candidateQuotes.push(...pool.manager_callouts[cleanMgr]);
+    }
+    if (candidateQuotes.length === 0) {
+      candidateQuotes = [...(pool.general || []), ...(pool.direct_reply || [])];
+    }
   }
 
-  // Check for bench complaints
-  if (lowerMsg.includes('bench') || lowerMsg.includes('pine') || lowerMsg.includes('started the wrong')) {
-    if (pool.bench_points?.length) candidateQuotes.push(...pool.bench_points);
-  }
-
-  // Check for matchup thrillers or blowouts in context
-  const lowerCtx = (matchupContext || '').toLowerCase();
-  if (lowerCtx.includes('thriller') || lowerCtx.includes('close') || lowerCtx.includes('under 10')) {
-    if (pool.thriller?.length) candidateQuotes.push(...pool.thriller);
-  } else if (lowerCtx.includes('blowout') || lowerCtx.includes('30+') || lowerCtx.includes('40+')) {
-    if (pool.blowout?.length) candidateQuotes.push(...pool.blowout);
-  }
-
-  // Check for manager-specific callouts
-  const cleanMgr = (managerName || '').trim();
-  if (cleanMgr && pool.manager_callouts?.[cleanMgr]?.length) {
-    candidateQuotes.push(...pool.manager_callouts[cleanMgr]);
-  }
-
-  // Fallback to general pool if no specific context matched
-  if (candidateQuotes.length === 0) {
-    candidateQuotes = [...(pool.general || []), ...(pool.direct_reply || [])];
-  }
-
-  // 3. Pick random quote from candidates
+  // Pick random quote from candidates
   const rawQuote = candidateQuotes[Math.floor(Math.random() * candidateQuotes.length)] ||
     "The action in the GRITZone is heating up right now. Buckle up!";
 
-  // 4. Interpolate variables
+  // Interpolate variables
   const formattedQuote = rawQuote
     .replaceAll('{manager}', cleanMgr || 'Coach')
     .replaceAll('{team}', teamName || 'Franchise');
