@@ -40,10 +40,18 @@ export default function GritZoneClient() {
   const [loginPin, setLoginPin] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Reporter Typing State
+  // Reporter Typing & Spoofing State
   const [typingReporter, setTypingReporter] = useState(null);
+  const [postAsReporter, setPostAsReporter] = useState(null);
   const typingTimeoutRef = useRef(null);
   const channelRef = useRef(null);
+
+  const isCommissioner =
+    authManager === 'Eric' ||
+    authManager === 'The Commissioner' ||
+    Boolean(authManager?.toLowerCase().includes('commissioner'));
+
+  const selectedReporterMeta = (isCommissioner && postAsReporter) ? COLUMNISTS[postAsReporter] : null;
 
   const messagesEndRef = useRef(null);
   const chatScrollContainerRef = useRef(null);
@@ -240,57 +248,72 @@ export default function GritZoneClient() {
 
     // Optimistic UI insertion
     const currentMgrMeta = MANAGERS_OPTIONS.find((m) => m.name === authManager);
+    const activeReporterMeta = (isCommissioner && postAsReporter) ? COLUMNISTS[postAsReporter] : null;
     const tempId = `temp-${Date.now()}`;
-    const optimisticMessage = {
-      id: tempId,
-      created_at: new Date().toISOString(),
-      sender_type: 'manager',
-      sender_name: authManager,
-      sender_role: 'CRFFL Manager',
-      sender_avatar: currentMgrMeta?.logo || '/logos/league.png',
-      team_name: currentMgrMeta?.team || 'CRFFL Franchise',
-      message: textToSend,
-      is_pinned: false,
-    };
+    const optimisticMessage = activeReporterMeta
+      ? {
+          id: tempId,
+          created_at: new Date().toISOString(),
+          sender_type: 'reporter',
+          sender_name: activeReporterMeta.name,
+          sender_role: activeReporterMeta.chatRole || activeReporterMeta.title || 'Columnist',
+          sender_avatar: activeReporterMeta.avatar,
+          team_name: 'CRFFL Times-Herald',
+          message: textToSend,
+          is_pinned: false,
+        }
+      : {
+          id: tempId,
+          created_at: new Date().toISOString(),
+          sender_type: 'manager',
+          sender_name: authManager,
+          sender_role: 'CRFFL Manager',
+          sender_avatar: currentMgrMeta?.logo || '/logos/league.png',
+          team_name: currentMgrMeta?.team || 'CRFFL Franchise',
+          message: textToSend,
+          is_pinned: false,
+        };
 
     setMessages((prev) => [...prev, optimisticMessage]);
     setChatInput('');
 
-    // Eagerly detect tagged reporter to show typing dots immediately upon send
-    const lower = textToSend.toLowerCase();
-    let taggedReporter = null;
-    if (lower.includes('@chloe') || lower.includes('chloe') || lower.includes('carmichael')) {
-      taggedReporter = {
-        name: 'Chloe Carmichael',
-        role: 'The Spin Room',
-        avatar: '/reporters/chloe-carmichael-avatar.png',
-      };
-    } else if (lower.includes('@marcus') || lower.includes('marcus') || lower.includes('vance')) {
-      taggedReporter = {
-        name: 'Dr. Marcus Vance',
-        role: 'Analytics Desk',
-        avatar: '/reporters/marcus-vance-avatar.png',
-      };
-    } else if (lower.includes('@buck') || lower.includes('buck') || lower.includes('callahan')) {
-      taggedReporter = {
-        name: 'Buck Callahan',
-        role: 'The Grit Desk',
-        avatar: '/reporters/buck-callahan-avatar.png',
-      };
-    } else if (lower.includes('@marty') || lower.includes('marty') || lower.includes('sullivan')) {
-      taggedReporter = {
-        name: 'Marty Sullivan',
-        role: 'Tuesday Recap',
-        avatar: '/reporters/marty-sullivan-avatar.png',
-      };
-    }
+    // Eagerly detect tagged reporter to show typing dots only if NOT manually posting as a reporter
+    if (!activeReporterMeta) {
+      const lower = textToSend.toLowerCase();
+      let taggedReporter = null;
+      if (lower.includes('@chloe') || lower.includes('chloe') || lower.includes('carmichael')) {
+        taggedReporter = {
+          name: 'Chloe Carmichael',
+          role: 'The Spin Room',
+          avatar: '/reporters/chloe-carmichael-avatar.png',
+        };
+      } else if (lower.includes('@marcus') || lower.includes('marcus') || lower.includes('vance')) {
+        taggedReporter = {
+          name: 'Dr. Marcus Vance',
+          role: 'Analytics Desk',
+          avatar: '/reporters/marcus-vance-avatar.png',
+        };
+      } else if (lower.includes('@buck') || lower.includes('buck') || lower.includes('callahan')) {
+        taggedReporter = {
+          name: 'Buck Callahan',
+          role: 'The Grit Desk',
+          avatar: '/reporters/buck-callahan-avatar.png',
+        };
+      } else if (lower.includes('@marty') || lower.includes('marty') || lower.includes('sullivan')) {
+        taggedReporter = {
+          name: 'Marty Sullivan',
+          role: 'Tuesday Recap',
+          avatar: '/reporters/marty-sullivan-avatar.png',
+        };
+      }
 
-    if (taggedReporter) {
-      setTypingReporter(taggedReporter);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(() => {
-        setTypingReporter(null);
-      }, 7000);
+      if (taggedReporter) {
+        setTypingReporter(taggedReporter);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+          setTypingReporter(null);
+        }, 7000);
+      }
     }
 
     try {
@@ -301,6 +324,7 @@ export default function GritZoneClient() {
           manager_name: authManager,
           pin: authPin,
           message: textToSend,
+          as_reporter: (isCommissioner && postAsReporter) ? postAsReporter : undefined,
         }),
       });
 
@@ -1065,27 +1089,93 @@ export default function GritZoneClient() {
               )}
 
               {authManager ? (
-                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder={`Banter as ${authManager}... (tag @Marcus, @Buck)`}
-                    className="flex-1 bg-[#0a0f19] border border-gray-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-red-500 min-h-[44px]"
-                    maxLength={300}
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSending || !chatInput.trim()}
-                    className="bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center transition shadow-md cursor-pointer shrink-0"
-                  >
-                    {isSending ? (
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <span>Send</span>
-                    )}
-                  </button>
-                </form>
+                <div className="space-y-2">
+                  {/* Commissioner Exclusive: Post as Reporter Toolbar */}
+                  {isCommissioner && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold shrink-0 flex items-center gap-1 mr-0.5">
+                        <span>👑 Post As:</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPostAsReporter(null)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition shrink-0 cursor-pointer flex items-center gap-1 ${
+                          postAsReporter === null
+                            ? 'border-amber-400 bg-amber-500/20 text-amber-300 shadow-sm ring-1 ring-amber-400/40'
+                            : 'border-gray-800 bg-[#0f1523] text-gray-400 hover:text-gray-200'
+                        }`}
+                        title="Post as yourself"
+                      >
+                        <span>👤 {authManager || 'Commish'}</span>
+                      </button>
+                      {REPORTERS_CHAT_LIST.map((r) => {
+                        const isSelected = postAsReporter === r.id;
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setPostAsReporter(isSelected ? null : r.id)}
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                              isSelected
+                                ? `${r.chatBorder} ring-1 ring-white/40 scale-105`
+                                : 'border-gray-800 bg-[#0f1523] text-gray-400 hover:text-gray-200'
+                            }`}
+                            title={`Insert comment as ${r.name}`}
+                          >
+                            <div className="w-3.5 h-3.5 rounded-full overflow-hidden relative shrink-0">
+                              <Image src={r.avatar} alt={r.name} fill className="object-cover" />
+                            </div>
+                            <span className={isSelected ? r.nameColor : ''}>{r.name.split(' ')[0]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder={
+                        selectedReporterMeta
+                          ? `Draft take as ${selectedReporterMeta.name} (${selectedReporterMeta.chatRole})...`
+                          : `Banter as ${authManager}... (tag @Marcus, @Buck)`
+                      }
+                      className={`flex-1 bg-[#0a0f19] border rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white focus:outline-none min-h-[44px] transition-all ${
+                        selectedReporterMeta
+                          ? `${selectedReporterMeta.chatBorder} focus:ring-1 focus:ring-amber-400`
+                          : 'border-gray-700 focus:border-red-500'
+                      }`}
+                      maxLength={400}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSending || !chatInput.trim()}
+                      className={`disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center transition shadow-md cursor-pointer shrink-0 ${
+                        selectedReporterMeta
+                          ? selectedReporterMeta.id === 'chloe_carmichael'
+                            ? 'bg-purple-600 hover:bg-purple-500'
+                            : selectedReporterMeta.id === 'marcus_vance'
+                            ? 'bg-cyan-600 hover:bg-cyan-500'
+                            : selectedReporterMeta.id === 'buck_callahan'
+                            ? 'bg-amber-600 hover:bg-amber-500'
+                            : 'bg-emerald-600 hover:bg-emerald-500'
+                          : 'bg-red-600 hover:bg-red-500'
+                      }`}
+                    >
+                      {isSending ? (
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <span>
+                          {selectedReporterMeta
+                            ? `Post as ${selectedReporterMeta.name.split(' ')[0]}`
+                            : 'Send'}
+                        </span>
+                      )}
+                    </button>
+                  </form>
+                </div>
               ) : (
                 <div className="flex items-center justify-between p-2 rounded-xl bg-[#172236] border border-[#d4af37]/40">
                   <div className="flex items-center gap-2">

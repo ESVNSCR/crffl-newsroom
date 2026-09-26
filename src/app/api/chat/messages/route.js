@@ -2,6 +2,7 @@ import { NextResponse, after } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { resolveManager } from '@/lib/managers';
 import { getInstantReporterQuip } from '@/lib/cannedReporterMessages';
+import { COLUMNISTS } from '@/lib/columnists';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -74,7 +75,43 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Incorrect PIN. Chat transmission rejected.' }, { status: 401 });
     }
 
-    // 2. Insert verified manager message
+    // 2. Check if posting as a Times-Herald reporter (Commissioner-only feature)
+    const asReporter = body?.asReporter || body?.as_reporter || body?.post_as_reporter;
+    if (asReporter) {
+      if (resolved.authName !== 'Eric') {
+        return NextResponse.json(
+          { error: 'Only the Commissioner can post as a Times-Herald columnist.' },
+          { status: 403 }
+        );
+      }
+
+      const reporterMeta = COLUMNISTS[asReporter];
+      if (!reporterMeta) {
+        return NextResponse.json({ error: 'Invalid reporter ID.' }, { status: 400 });
+      }
+
+      const { data: insertedReporter, error: insertError } = await supabase
+        .from('newsroom_chat_messages')
+        .insert({
+          sender_type: 'reporter',
+          sender_name: reporterMeta.name,
+          sender_role: reporterMeta.chatRole || reporterMeta.title || 'Columnist',
+          sender_avatar: reporterMeta.avatar,
+          team_name: 'CRFFL Times-Herald',
+          message: trimmedMsg,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      return NextResponse.json({
+        success: true,
+        message: insertedReporter,
+      });
+    }
+
+    // 3. Insert verified manager message
     const { data: inserted, error: insertError } = await supabase
       .from('newsroom_chat_messages')
       .insert({
