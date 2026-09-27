@@ -711,10 +711,10 @@ export default function GritZoneClient() {
                 const margin = m.projectedMargin ?? m.margin ?? Math.abs((t1.points || 0) - (t2.points || 0));
                 const isThriller = m.isThriller || m.isClose || margin <= 10;
 
-                const t1Points = Number(t1.currentPoints ?? t1.points ?? 0).toFixed(1);
-                const t2Points = Number(t2.currentPoints ?? t2.points ?? 0).toFixed(1);
-                const t1Proj = Number(t1.projectedPoints ?? t1.projected ?? 0).toFixed(1);
-                const t2Proj = Number(t2.projectedPoints ?? t2.projected ?? 0).toFixed(1);
+                const t1Points = Number(t1.currentPoints ?? t1.points ?? 0).toFixed(2);
+                const t2Points = Number(t2.currentPoints ?? t2.points ?? 0).toFixed(2);
+                const t1Proj = Number(t1.projectedPoints ?? t1.projected ?? 0).toFixed(2);
+                const t2Proj = Number(t2.projectedPoints ?? t2.projected ?? 0).toFixed(2);
                 const t1Remaining = t1.startersRemaining ?? 0;
                 const t2Remaining = t2.startersRemaining ?? 0;
                 const startersInPlay = t1Remaining + t2Remaining;
@@ -746,7 +746,7 @@ export default function GritZoneClient() {
                           </span>
                         )}
                         <span className="text-[11px] text-gray-400">
-                          Spread: <span className="font-mono font-bold text-gray-200">{margin} pts</span>
+                          Spread: <span className="font-mono font-bold text-gray-200">{Number(margin).toFixed(2)} pts</span>
                         </span>
                       </div>
 
@@ -917,7 +917,7 @@ export default function GritZoneClient() {
                                       </div>
                                     </div>
                                     <span className="font-mono font-black text-white text-xs ml-1">
-                                      {Number(p1.points || 0).toFixed(1)}
+                                      {Number(p1.points || 0).toFixed(2)}
                                     </span>
                                   </div>
 
@@ -939,7 +939,7 @@ export default function GritZoneClient() {
                                       </div>
                                     </div>
                                     <span className="font-mono font-black text-white text-xs mr-1">
-                                      {Number(p2.points || 0).toFixed(1)}
+                                      {Number(p2.points || 0).toFixed(2)}
                                     </span>
                                   </div>
                                 </div>

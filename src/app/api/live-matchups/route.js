@@ -104,7 +104,7 @@ export async function GET(request) {
 
       const currentPoints = Number((typeof m.points === 'number' ? m.points : 0).toFixed(2));
       // Projected final points = current banked + (starters remaining * league average per starter ~14.8)
-      const projected = Number((currentPoints + (startersRemaining * 14.8)).toFixed(1));
+      const projected = Number((currentPoints + (startersRemaining * 14.8)).toFixed(2));
 
       grouped[mid].push({
         rosterId: m.roster_id,
@@ -167,7 +167,7 @@ export async function GET(request) {
         teamA,
         teamB,
         margin,
-        projectedMargin: Number(Math.abs(projA - projB).toFixed(1)),
+        projectedMargin: Number(Math.abs(projA - projB).toFixed(2)),
         leader,
         winProbA,
         winProbB,
