@@ -11,16 +11,6 @@ export async function GET() {
   try {
     const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
-    // Opportunistically prune expired messages older than 15 minutes
-    try {
-      await supabase
-        .from('newsroom_chat_messages')
-        .delete()
-        .lt('created_at', fifteenMinsAgo);
-    } catch {
-      // ignore opportunistic prune error
-    }
-
     const { data: messages, error } = await supabase
       .from('newsroom_chat_messages')
       .select('*')

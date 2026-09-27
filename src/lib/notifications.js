@@ -6,9 +6,9 @@
  */
 
 export const COMMISSIONER_CONFIG = {
-  phone: process.env.COMMISSIONER_PHONE || '4802097790',
+  phone: process.env.COMMISSIONER_PHONE || '',
   carrier: process.env.COMMISSIONER_CARRIER || 'verizon',
-  gatewayEmail: (process.env.COMMISSIONER_PHONE || '4802097790') + '@vtext.com',
+  gatewayEmail: process.env.COMMISSIONER_GATEWAY_EMAIL || (process.env.COMMISSIONER_PHONE ? `${process.env.COMMISSIONER_PHONE}@vtext.com` : ''),
   discordUsername: process.env.DISCORD_USERNAME || 'NAZQAR',
   discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL || '',
   resendApiKey: process.env.RESEND_API_KEY || '',

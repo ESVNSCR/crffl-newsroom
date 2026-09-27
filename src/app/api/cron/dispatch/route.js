@@ -43,12 +43,10 @@ async function handleDispatch(request) {
     const adminCheck = await verifyAdminSession(request);
 
     if (!adminCheck.authorized) {
-      if (cronSecret) {
-        const isBearerValid = authHeader === `Bearer ${cronSecret}`;
-        const isQueryValid = secret === cronSecret;
-        if (!isBearerValid && !isQueryValid) {
-          return NextResponse.json({ error: 'Unauthorized: Invalid Cron Secret or Commissioner clearance required' }, { status: 401 });
-        }
+      const isBearerValid = Boolean(cronSecret && authHeader === `Bearer ${cronSecret}`);
+      const isQueryValid = Boolean(cronSecret && secret === cronSecret);
+      if (!isBearerValid && !isQueryValid) {
+        return NextResponse.json({ error: 'Unauthorized: Invalid Cron Secret or Commissioner clearance required' }, { status: 401 });
       }
     }
 

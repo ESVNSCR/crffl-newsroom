@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { VAPID_PUBLIC_KEY } from '@/lib/pushConfig';
+import { VAPID_PUBLIC_KEY } from '@/lib/pushClientConfig';
 
 const MANAGERS_LIST = [
   { name: 'Eric', team: 'Rebel Scum' },

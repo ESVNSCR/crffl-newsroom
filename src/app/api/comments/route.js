@@ -232,7 +232,8 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Missing required credentials to delete comment.' }, { status: 400 });
     }
 
-    const authManager = resolveAuthManager(managerName);
+    const resolved = resolveManager(managerName);
+    const authManager = resolved ? resolved.authName : managerName.trim();
 
     // If type is explicitly 'ranking', call delete_power_ranking_comment
     if (type === 'ranking') {

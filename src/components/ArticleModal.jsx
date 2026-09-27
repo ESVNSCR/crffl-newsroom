@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { COLUMNISTS } from '@/lib/columnists';
 import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import ArticleComments from './ArticleComments';
 
 export default function ArticleModal({ article, onClose }) {
@@ -105,7 +106,7 @@ export default function ArticleModal({ article, onClose }) {
           {/* Formatted Article Content */}
           <div
             className="article-content text-sm sm:text-base"
-            dangerouslySetInnerHTML={{ __html: article.content_html || `<p>${article.summary}</p>` }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content_html || `<p>${article.summary}</p>`) }}
           />
 
           {/* Manager Comment Section */}

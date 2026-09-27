@@ -6,8 +6,16 @@ import { generateMarcusPowerRankings } from '@/lib/reporters/marcusVance';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const auth = await verifyAdminSession(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: auth.error || 'Unauthorized: Commissioner clearance required.' },
+        { status: 401 }
+      );
+    }
+
     const overview = await getLeagueOverview();
     const currentWeek = overview.state.week || 1;
 
