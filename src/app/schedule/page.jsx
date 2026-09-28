@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const TEAM_LOGOS = {
@@ -191,10 +191,144 @@ const SCHEDULE_DATA = [
   },
 ];
 
+// Pre-baked completed matchup results for finalized weeks (zero layout shift on first paint)
+const INITIAL_COMPLETED_RESULTS = {
+  // Week 1 Final Results
+  '1_Team CoreyCash___Team GardenGoddess': {
+    winner: 'Team CoreyCash',
+    loser: 'Team GardenGoddess',
+    points: { 'Team CoreyCash': 243.12, 'Team GardenGoddess': 191.36 },
+    margin: 51.76,
+    isCompleted: true,
+  },
+  '1_Rebel Scum___Stars & Stripes': {
+    winner: 'Stars & Stripes',
+    loser: 'Rebel Scum',
+    points: { 'Stars & Stripes': 259.29, 'Rebel Scum': 219.93 },
+    margin: 39.36,
+    isCompleted: true,
+  },
+  '1_Generic Football Team___Team RaiderRose510': {
+    winner: 'Team RaiderRose510',
+    loser: 'Generic Football Team',
+    points: { 'Team RaiderRose510': 189.45, 'Generic Football Team': 158.29 },
+    margin: 31.16,
+    isCompleted: true,
+  },
+  '1_Hickory Huskers___Team Killa MC': {
+    winner: 'Team Killa MC',
+    loser: 'Hickory Huskers',
+    points: { 'Team Killa MC': 216.01, 'Hickory Huskers': 179.97 },
+    margin: 36.04,
+    isCompleted: true,
+  },
+  '1_Moore Better___Shortbus Superstars': {
+    winner: 'Shortbus Superstars',
+    loser: 'Moore Better',
+    points: { 'Shortbus Superstars': 196.35, 'Moore Better': 151.23 },
+    margin: 45.12,
+    isCompleted: true,
+  },
+  // Week 2 Final Results
+  '2_Stars & Stripes___Team GardenGoddess': {
+    winner: 'Team GardenGoddess',
+    loser: 'Stars & Stripes',
+    points: { 'Team GardenGoddess': 160.18, 'Stars & Stripes': 157.97 },
+    margin: 2.21,
+    isCompleted: true,
+  },
+  '2_Shortbus Superstars___Team CoreyCash': {
+    winner: 'Shortbus Superstars',
+    loser: 'Team CoreyCash',
+    points: { 'Shortbus Superstars': 219.24, 'Team CoreyCash': 199.33 },
+    margin: 19.91,
+    isCompleted: true,
+  },
+  '2_Hickory Huskers___Team RaiderRose510': {
+    winner: 'Hickory Huskers',
+    loser: 'Team RaiderRose510',
+    points: { 'Hickory Huskers': 194.81, 'Team RaiderRose510': 178.65 },
+    margin: 16.16,
+    isCompleted: true,
+  },
+  '2_Generic Football Team___Moore Better': {
+    winner: 'Moore Better',
+    loser: 'Generic Football Team',
+    points: { 'Moore Better': 255.29, 'Generic Football Team': 218.26 },
+    margin: 37.03,
+    isCompleted: true,
+  },
+  '2_Rebel Scum___Team Killa MC': {
+    winner: 'Team Killa MC',
+    loser: 'Rebel Scum',
+    points: { 'Team Killa MC': 181.74, 'Rebel Scum': 181.03 },
+    margin: 0.71,
+    isCompleted: true,
+  },
+};
+
+const getGameKey = (weekNum, teamA, teamB) => {
+  const sorted = [(teamA || '').trim(), (teamB || '').trim()].sort();
+  return `${weekNum}_${sorted[0]}___${sorted[1]}`;
+};
+
 export default function SchedulePage() {
   const [selectedTeam, setSelectedTeam] = useState('All');
+  const [matchupResults, setMatchupResults] = useState(INITIAL_COMPLETED_RESULTS);
+  const [currentWeek, setCurrentWeek] = useState(3);
 
   const cleanName = (name) => name.replace(/^Team\s+/, '');
+
+  // Live dynamic fetch for concluded weeks (auto-updates every week as games conclude)
+  useEffect(() => {
+    let isMounted = true;
+    async function loadScheduleResults() {
+      try {
+        const res = await fetch('/api/schedule-results');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && isMounted) {
+            if (data.currentWeek) setCurrentWeek(data.currentWeek);
+            if (data.matchupLookup) {
+              setMatchupResults((prev) => ({
+                ...prev,
+                ...data.matchupLookup,
+              }));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch dynamic schedule results:', err);
+      }
+    }
+
+    loadScheduleResults();
+    // Auto-poll every 60 seconds to detect week conclusion in real time
+    const interval = setInterval(loadScheduleResults, 60000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Compute selected team's completed record
+  const completedTeamGames =
+    selectedTeam !== 'All'
+      ? SCHEDULE_DATA.filter((item) => item.type === 'week').flatMap((w) => {
+          const weekNum = parseInt(w.title.replace(/\D/g, ''), 10);
+          return w.games
+            .filter((g) => g.away === selectedTeam || g.home === selectedTeam)
+            .map((g) => {
+              const res = matchupResults[getGameKey(weekNum, g.away, g.home)];
+              return res?.isCompleted ? res : null;
+            })
+            .filter(Boolean);
+        })
+      : [];
+
+  const teamWins = completedTeamGames.filter((g) => g.winner === selectedTeam).length;
+  const teamLosses = completedTeamGames.filter((g) => g.loser === selectedTeam).length;
+  const teamTies = completedTeamGames.filter((g) => g.isTie).length;
 
   return (
     <div className="min-h-screen bg-[#0b0f17] text-gray-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -252,7 +386,7 @@ export default function SchedulePage() {
           </h1>
 
           <p className="max-w-xl mx-auto text-sm text-gray-300">
-            Full 14-week regular season slate. Click any franchise to view and print their dedicated team schedule.
+            Full 14-week regular season slate. Final scores and victory crowns 👑 update automatically at the conclusion of each week. Click any franchise to view their dedicated schedule.
           </p>
 
           <div className="flex items-center justify-center gap-3 pt-1 no-print">
@@ -317,6 +451,22 @@ export default function SchedulePage() {
                 <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-wide print-black-text">
                   {cleanName(selectedTeam)}
                 </h2>
+
+                {/* Team Season Record Banner */}
+                {completedTeamGames.length > 0 && (
+                  <div className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-black/50 border border-[#d4af37]/40 text-xs font-mono shadow-sm">
+                    <span className="text-gray-400 uppercase tracking-wider font-semibold">Completed Record:</span>
+                    <span className="text-emerald-400 font-black text-sm">{teamWins}W</span>
+                    <span className="text-gray-600">-</span>
+                    <span className="text-rose-400 font-black text-sm">{teamLosses}L</span>
+                    {teamTies > 0 && (
+                      <>
+                        <span className="text-gray-600">-</span>
+                        <span className="text-amber-400 font-black text-sm">{teamTies}T</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-center gap-3 pt-2 no-print">
@@ -337,24 +487,58 @@ export default function SchedulePage() {
 
             {/* Team Games Rows */}
             <div className="space-y-2.5">
-              {SCHEDULE_DATA.filter((item) => item.type === 'week').flatMap((w) =>
-                w.games
+              {SCHEDULE_DATA.filter((item) => item.type === 'week').flatMap((w) => {
+                const weekNum = parseInt(w.title.replace(/\D/g, ''), 10);
+                return w.games
                   .filter((g) => g.away === selectedTeam || g.home === selectedTeam)
                   .map((game, idx) => {
                     const opponent = game.home === selectedTeam ? game.away : game.home;
+                    const res = matchupResults[getGameKey(weekNum, game.away, game.home)];
+                    const isOver = res?.isCompleted === true;
+                    const myTeamWon = isOver && res?.winner === selectedTeam;
+                    const oppWon = isOver && res?.winner === opponent;
+                    const isTie = isOver && res?.isTie;
+                    const myScore = res?.points?.[selectedTeam];
+                    const oppScore = res?.points?.[opponent];
+
                     return (
                       <div
                         key={idx}
                         onClick={() => opponent !== 'TBD' && setSelectedTeam(opponent)}
-                        className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-[#121824] hover:bg-[#161f30] border border-gray-800 hover:border-gray-700 cursor-pointer transition shadow-md print-clean-card group"
+                        className={`flex items-center justify-between p-3.5 sm:p-4 rounded-xl border transition shadow-md print-clean-card group cursor-pointer ${
+                          isOver
+                            ? myTeamWon
+                              ? 'bg-[#121c1f]/90 hover:bg-[#142327] border-emerald-500/40 hover:border-emerald-500/70'
+                              : 'bg-[#1a1215]/90 hover:bg-[#201418] border-rose-500/30 hover:border-rose-500/60'
+                            : 'bg-[#121824] hover:bg-[#161f30] border-gray-800 hover:border-gray-700'
+                        }`}
                       >
                         <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
                           <span className="w-14 sm:w-20 font-mono font-bold text-xs sm:text-sm text-[#d4af37] print-black-text flex-shrink-0">
                             {w.title}
                           </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-black bg-[#d4af37] text-gray-950 shadow-sm flex-shrink-0">
-                            VS
-                          </span>
+
+                          {/* Status Badge: W / L / TIE / VS */}
+                          {isOver ? (
+                            myTeamWon ? (
+                              <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-black bg-gradient-to-r from-emerald-500 to-emerald-600 text-gray-950 shadow flex items-center gap-1 flex-shrink-0">
+                                <span>👑</span> W
+                              </span>
+                            ) : isTie ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex-shrink-0">
+                                TIE
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex-shrink-0">
+                                L
+                              </span>
+                            )
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-black bg-[#d4af37] text-gray-950 shadow-sm flex-shrink-0">
+                              VS
+                            </span>
+                          )}
+
                           <div className="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 print-logo">
                             <img
                               src={TEAM_LOGOS[opponent]}
@@ -362,22 +546,59 @@ export default function SchedulePage() {
                               className="max-w-full max-h-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]"
                             />
                           </div>
+
                           <div className="min-w-0">
-                            <span className="font-bold text-xs sm:text-base text-white group-hover:text-[#d4af37] transition-colors truncate block print-black-text">
-                              {cleanName(opponent)}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-xs sm:text-base text-white group-hover:text-[#d4af37] transition-colors truncate block print-black-text">
+                                {cleanName(opponent)}
+                              </span>
+                              {oppWon && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-black text-amber-300 bg-amber-400/20 border border-amber-400/40 shadow-sm">
+                                  <span>👑</span> WIN
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Final Score Breakdown */}
+                            {isOver && myScore != null && oppScore != null && (
+                              <span className="font-mono text-xs text-gray-400 block mt-0.5 print-black-text">
+                                <span className={myTeamWon ? 'text-emerald-400 font-bold' : 'text-gray-300'}>
+                                  {myScore.toFixed(2)}
+                                </span>
+                                {' — '}
+                                <span className={oppWon ? 'text-amber-400 font-bold' : 'text-gray-400'}>
+                                  {oppScore.toFixed(2)}
+                                </span>
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        {game.tag && (
-                          <span className="text-[10px] font-mono uppercase bg-[#d4af37]/15 text-[#d4af37] px-2 py-0.5 rounded font-semibold border border-[#d4af37]/30">
-                            {game.tag}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {isOver && myScore != null && oppScore != null && (
+                            <span
+                              className={`text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded ${
+                                myTeamWon
+                                  ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30'
+                                  : 'text-gray-400 bg-gray-800/60 border border-gray-700/50'
+                              }`}
+                            >
+                              {myTeamWon
+                                ? `+${(myScore - oppScore).toFixed(2)}`
+                                : `-${(oppScore - myScore).toFixed(2)}`}
+                            </span>
+                          )}
+
+                          {game.tag && (
+                            <span className="text-[10px] font-mono uppercase bg-[#d4af37]/15 text-[#d4af37] px-2 py-0.5 rounded font-semibold border border-[#d4af37]/30">
+                              {game.tag}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
-                  })
-              )}
+                  });
+              })}
             </div>
           </div>
         ) : (
@@ -397,6 +618,8 @@ export default function SchedulePage() {
                 );
               }
 
+              const weekNum = parseInt(item.title.replace(/\D/g, ''), 10);
+
               return (
                 <div
                   key={idx}
@@ -412,58 +635,139 @@ export default function SchedulePage() {
                   </div>
 
                   <div className="p-4 sm:p-5 space-y-3">
-                    {item.games.map((g, gIdx) => (
-                      <div
-                        key={gIdx}
-                        className="flex items-center justify-between p-3 rounded-xl bg-gray-900/60 hover:bg-gray-800/70 border border-gray-800/80 transition print-clean-card"
-                      >
-                        {/* Team 1 */}
-                        <div
-                          onClick={() => g.away !== 'TBD' && setSelectedTeam(g.away)}
-                          className="flex items-center gap-2 sm:gap-3 w-[42%] min-w-0 cursor-pointer group"
-                        >
-                          <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
-                            <img
-                              src={TEAM_LOGOS[g.away]}
-                              alt={g.away}
-                              className="max-w-full max-h-full object-contain group-hover:scale-105 transition drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                            />
-                          </div>
-                          <span className="text-xs sm:text-sm font-bold text-white group-hover:text-[#d4af37] transition truncate print-black-text">
-                            {cleanName(g.away)}
-                          </span>
-                        </div>
+                    {item.games.map((g, gIdx) => {
+                      const res = matchupResults[getGameKey(weekNum, g.away, g.home)];
+                      const isOver = res?.isCompleted === true;
+                      const awayWon = isOver && res?.winner === g.away;
+                      const homeWon = isOver && res?.winner === g.home;
+                      const isTie = isOver && res?.isTie;
+                      const awayScore = res?.points?.[g.away];
+                      const homeScore = res?.points?.[g.home];
 
-                        {/* Center VS Badge */}
-                        <div className="w-[16%] text-center flex flex-col items-center justify-center flex-shrink-0">
-                          <span className="text-[10px] sm:text-xs font-black bg-[#d4af37] text-gray-950 px-1.5 sm:px-2 py-0.5 rounded shadow">
-                            VS
-                          </span>
-                          {g.tag && (
-                            <span className="text-[8px] sm:text-[9px] font-mono text-gray-400 uppercase mt-0.5 tracking-tight truncate max-w-full">
-                              {g.tag}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Team 2 */}
+                      return (
                         <div
-                          onClick={() => g.home !== 'TBD' && setSelectedTeam(g.home)}
-                          className="flex items-center justify-end gap-2 sm:gap-3 w-[42%] min-w-0 cursor-pointer group text-right"
+                          key={gIdx}
+                          className={`flex items-center justify-between p-3 rounded-xl border transition print-clean-card ${
+                            isOver
+                              ? 'bg-gray-900/80 border-gray-700/60 shadow-inner'
+                              : 'bg-gray-900/60 hover:bg-gray-800/70 border-gray-800/80'
+                          }`}
                         >
-                          <span className="text-xs sm:text-sm font-bold text-white group-hover:text-[#d4af37] transition truncate print-black-text">
-                            {cleanName(g.home)}
-                          </span>
-                          <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
-                            <img
-                              src={TEAM_LOGOS[g.home]}
-                              alt={g.home}
-                              className="max-w-full max-h-full object-contain group-hover:scale-105 transition drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                            />
+                          {/* Team 1 (Away) */}
+                          <div
+                            onClick={() => g.away !== 'TBD' && setSelectedTeam(g.away)}
+                            className="flex items-center gap-2 sm:gap-3 w-[42%] min-w-0 cursor-pointer group"
+                          >
+                            <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
+                              <img
+                                src={TEAM_LOGOS[g.away]}
+                                alt={g.away}
+                                className="max-w-full max-h-full object-contain group-hover:scale-105 transition drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                              />
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span
+                                  className={`text-xs sm:text-sm font-bold truncate print-black-text ${
+                                    awayWon
+                                      ? 'text-[#d4af37] font-black'
+                                      : 'text-white group-hover:text-[#d4af37]'
+                                  }`}
+                                >
+                                  {cleanName(g.away)}
+                                </span>
+                                {awayWon && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-black text-amber-300 bg-amber-400/20 border border-amber-400/40 shadow-sm flex-shrink-0">
+                                    <span>👑</span> WIN
+                                  </span>
+                                )}
+                              </div>
+
+                              {isOver && awayScore != null && (
+                                <span
+                                  className={`text-[11px] sm:text-xs font-mono block mt-0.5 ${
+                                    awayWon ? 'text-[#d4af37] font-bold' : 'text-gray-400'
+                                  }`}
+                                >
+                                  {awayScore.toFixed(2)} pts
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Center VS or FINAL Badge */}
+                          <div className="w-[16%] text-center flex flex-col items-center justify-center flex-shrink-0">
+                            {isOver ? (
+                              <div className="flex flex-col items-center">
+                                <span className="text-[9px] sm:text-[10px] font-black font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded shadow tracking-wider">
+                                  FINAL
+                                </span>
+                                {res.margin != null && (
+                                  <span className="text-[8px] sm:text-[9px] font-mono text-gray-400 mt-0.5 print-black-text">
+                                    +{res.margin.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-[10px] sm:text-xs font-black bg-[#d4af37] text-gray-950 px-1.5 sm:px-2 py-0.5 rounded shadow">
+                                  VS
+                                </span>
+                                {g.tag && (
+                                  <span className="text-[8px] sm:text-[9px] font-mono text-gray-400 uppercase mt-0.5 tracking-tight truncate max-w-full">
+                                    {g.tag}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* Team 2 (Home) */}
+                          <div
+                            onClick={() => g.home !== 'TBD' && setSelectedTeam(g.home)}
+                            className="flex items-center justify-end gap-2 sm:gap-3 w-[42%] min-w-0 cursor-pointer group text-right"
+                          >
+                            <div className="min-w-0 text-right">
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                {homeWon && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-black text-amber-300 bg-amber-400/20 border border-amber-400/40 shadow-sm flex-shrink-0">
+                                    <span>👑</span> WIN
+                                  </span>
+                                )}
+                                <span
+                                  className={`text-xs sm:text-sm font-bold truncate print-black-text ${
+                                    homeWon
+                                      ? 'text-[#d4af37] font-black'
+                                      : 'text-white group-hover:text-[#d4af37]'
+                                  }`}
+                                >
+                                  {cleanName(g.home)}
+                                </span>
+                              </div>
+
+                              {isOver && homeScore != null && (
+                                <span
+                                  className={`text-[11px] sm:text-xs font-mono block mt-0.5 ${
+                                    homeWon ? 'text-[#d4af37] font-bold' : 'text-gray-400'
+                                  }`}
+                                >
+                                  {homeScore.toFixed(2)} pts
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center flex-shrink-0 print-logo">
+                              <img
+                                src={TEAM_LOGOS[g.home]}
+                                alt={g.home}
+                                className="max-w-full max-h-full object-contain group-hover:scale-105 transition drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -474,4 +778,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
