@@ -50,18 +50,18 @@ async function handleDispatch(request) {
       }
     }
 
-    if (!reporter) {
-      return NextResponse.json(
-        { error: 'Missing reporter parameter. Valid options: marty, chloe, marcus, buck' },
-        { status: 400 }
-      );
+    // Auto Mode: evaluates day/time and dispatches overdue reporters
+    if (reporter === 'auto' || !reporter) {
+      const { autoDispatchOverdueReporters } = await import('@/lib/selfHealing');
+      const autoResult = await autoDispatchOverdueReporters();
+      return NextResponse.json({ success: true, mode: 'auto', ...autoResult });
     }
 
     const normId = normalizeReporterId(reporter);
     const validReporters = ['marty_sullivan', 'chloe_carmichael', 'marcus_vance', 'buck_callahan'];
     if (!validReporters.includes(normId)) {
       return NextResponse.json(
-        { error: `Unknown reporter: "${reporter}". Valid options: marty, chloe, marcus, buck` },
+        { error: `Unknown reporter: "${reporter}". Valid options: marty, chloe, marcus, buck, auto` },
         { status: 400 }
       );
     }

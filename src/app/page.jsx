@@ -5,6 +5,7 @@ import HeroLeadStory from '@/components/HeroLeadStory';
 import DispatchesClient from '@/components/DispatchesClient';
 import MastheadMotto from '@/components/MastheadMotto';
 import AlertsCtaCard from '@/components/AlertsCtaCard';
+import { selfHealMarcusPowerRankings } from '@/lib/selfHealing';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,13 +23,28 @@ export default async function HomePage({ searchParams }) {
     .limit(50);
 
   // 2. Fetch latest power rankings for the Apex sidebar widget
-  const { data: powerRankingsRows } = await supabase
+  let { data: powerRankingsRows } = await supabase
     .from('power_rankings')
     .select('*')
     .order('week_number', { ascending: false })
     .limit(1);
 
-  const currentRankings = powerRankingsRows?.[0];
+  let currentRankings = powerRankingsRows?.[0];
+
+  // Self-Healing check: If missing current week rankings past deadline, heal
+  const healResult = await selfHealMarcusPowerRankings(currentRankings?.week_number ? currentRankings.week_number + 1 : undefined);
+  if (healResult?.generated) {
+    const { data: refreshedRows } = await supabase
+      .from('power_rankings')
+      .select('*')
+      .order('week_number', { ascending: false })
+      .limit(1);
+    if (refreshedRows && refreshedRows.length > 0) {
+      powerRankingsRows = refreshedRows;
+      currentRankings = refreshedRows[0];
+    }
+  }
+
   const topTeams = (currentRankings?.rankings || [])
     .filter((t) => t.rank <= 3)
     .sort((a, b) => a.rank - b.rank);

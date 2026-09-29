@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { MANAGERS } from '@/lib/sleeper';
 import { getSleeperPlayerMap, sanitizeManagerNames } from '@/lib/sleeperPlayers';
 import PowerRankingComments from '@/components/PowerRankingComments';
+import { selfHealMarcusPowerRankings } from '@/lib/selfHealing';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -23,8 +24,25 @@ export default async function PowerRankingsPage({ searchParams }) {
     query = query.eq('week_number', requestedWeek);
   }
 
-  const { data: rows } = await query;
-  const currentRankings = rows?.[0];
+  let { data: rows } = await query;
+  let currentRankings = rows?.[0];
+
+  // Self-Healing Fail-Safe:
+  // If viewing latest (no specific week requested) and current week rankings are missing past Tuesday 2:00 PM PT,
+  // trigger on-demand generation immediately!
+  if (!requestedWeek) {
+    const healResult = await selfHealMarcusPowerRankings();
+    if (healResult?.generated) {
+      const { data: refreshedRows } = await supabase
+        .from('power_rankings')
+        .select('*')
+        .order('week_number', { ascending: false });
+      if (refreshedRows && refreshedRows.length > 0) {
+        rows = refreshedRows;
+        currentRankings = refreshedRows[0];
+      }
+    }
+  }
 
   // Also query available weeks for archive selector
   const { data: allWeeks } = await supabase
