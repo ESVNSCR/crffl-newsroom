@@ -6,7 +6,7 @@ import { verifyAdminSession } from '@/lib/adminAuth';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 async function handleAdjudication(request) {
   const { searchParams } = new URL(request.url);

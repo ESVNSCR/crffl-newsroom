@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { getNflState } from '@/lib/sleeper';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // 60s timeout for serverless generation
+export const maxDuration = 120; // 120s timeout for Vercel Pro serverless generation
 
 const SCHEDULED_DAYS_FALLBACK = {
   marty: 'Tuesday',

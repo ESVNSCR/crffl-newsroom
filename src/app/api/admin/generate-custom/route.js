@@ -3,7 +3,7 @@ import { verifyAdminSession } from '@/lib/adminAuth';
 import { generateCustomReporterArticle, REPORTER_PERSONAS } from '@/lib/customArticleGenerator';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(request) {
   try {
