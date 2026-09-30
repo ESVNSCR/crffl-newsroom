@@ -192,6 +192,10 @@ export async function GET(request) {
       seasonType: nflState?.season_type || 'regular',
       lastUpdated: new Date().toISOString(),
       matchups,
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+      },
     });
   } catch (err) {
     console.error('live-matchups route error:', err);
