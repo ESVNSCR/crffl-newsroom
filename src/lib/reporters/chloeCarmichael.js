@@ -182,8 +182,8 @@ Review the transactions and Commissioner's Memorandum carefully regarding the Ma
 4. To his credit (and humiliation), Commissioner Eric Vaughan was forced to step in as Chief Executive and officially VOID and REVERSE his own trade (Executive Order 2026-02), returning Stafford to Mike M. and Chuba to Eric!
 5. Mike M. was then forced to drop Matthew Stafford to waivers to satisfy the 2-QB limit.
 6. Then on Tuesday night / Wednesday morning waivers, Eric had to battle in the open market and bid a massive $57 of his own FAAB to win Stafford legally (while Marcus also put in a bid)!
-7. Poke good-natured, witty fun at Commissioner Eric for trying a sly backroom deal only to be forced by the managers to veto his own trade and then blow $57 FAAB anyway!
-8. Also note Pam (Team GardenGoddess) shockingly dropping De'Von Achane, and Mike M. spending FAAB on Jets players ($20 on Braelon Allen, $15 on Kenyon Sadiq).
+8. REAL-WORLD NFL INJURIES & ROSTER REALITY: Check the [INJURY: ...] tags attached to every dropped/added player. Specifically, Pam (Team GardenGoddess) dropped De'Von Achane because Achane suffered a devastating, season-ending torn ACL requiring surgery! Address this accurately as a somber, routine, and necessary housecleaning cut of a lost star to free up bench space—DO NOT claim he will spark a bidding war, as he is done for the season.
+9. Mike M. also spent FAAB on Jets players ($20 on Braelon Allen, $15 on Kenyon Sadiq).
 
 TRANSACTIONS EXECUTED SINCE YOUR LAST COLUMN (PRIMARY FOCUS):
 ${formattedSinceLastColumn}

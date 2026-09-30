@@ -81,6 +81,8 @@ export async function getSleeperPlayerMap(options = false) {
         pos: p.position || 'N/A',
         team: p.team || 'FA',
         injury_status: p.injury_status || null,
+        injury_body_part: p.injury_body_part || null,
+        injury_notes: p.injury_notes || null,
         status: p.status || 'Active',
       };
     }
@@ -236,8 +238,12 @@ export function enrichTransactionsWithPlayerNames(transactions, playerMap, roste
     if (t.adds) {
       for (const [pid, rosterId] of Object.entries(t.adds)) {
         const pName = resolvePlayerName(pid, playerMap);
+        const p = playerMap?.[pid];
+        const injuryDetails = p && (p.injury_status || p.injury_notes || p.injury_body_part)
+          ? ` [INJURY: ${[p.injury_status, p.injury_body_part, p.injury_notes].filter(Boolean).join(' - ')}]`
+          : '';
         addsNamed[pName] = rosterId;
-        addedPlayerNames.push(pName);
+        addedPlayerNames.push(`${pName}${injuryDetails}`);
       }
     }
 
@@ -246,8 +252,12 @@ export function enrichTransactionsWithPlayerNames(transactions, playerMap, roste
     if (t.drops) {
       for (const [pid, rosterId] of Object.entries(t.drops)) {
         const pName = resolvePlayerName(pid, playerMap);
+        const p = playerMap?.[pid];
+        const injuryDetails = p && (p.injury_status || p.injury_notes || p.injury_body_part)
+          ? ` [INJURY: ${[p.injury_status, p.injury_body_part, p.injury_notes].filter(Boolean).join(' - ')}]`
+          : '';
         dropsNamed[pName] = rosterId;
-        droppedPlayerNames.push(pName);
+        droppedPlayerNames.push(`${pName}${injuryDetails}`);
       }
     }
 
