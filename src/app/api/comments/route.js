@@ -61,6 +61,35 @@ export async function GET(request) {
   }
 }
 
+const LEDGER_SECRET = 'crffl-secure-ledger-internal-key-2026';
+
+/**
+ * Easter Egg: Awards 10 Gritcoin to a manager's Sportsbook bankroll upon commenting.
+ */
+async function creditGritcoinEasterEgg(managerName) {
+  if (!managerName) return null;
+  try {
+    const { data: creditData, error: creditErr } = await supabase.rpc('credit_manager_bankroll', {
+      p_manager: managerName,
+      p_amount: 10,
+      p_secret: LEDGER_SECRET,
+    });
+
+    if (!creditErr && creditData?.success) {
+      return {
+        awarded: 10,
+        newBalance: creditData.new_balance,
+        previousBalance: creditData.previous_balance,
+      };
+    } else if (creditErr) {
+      console.warn('Gritcoin easter egg RPC error:', creditErr.message);
+    }
+  } catch (err) {
+    console.warn('Gritcoin credit failed:', err.message);
+  }
+  return null;
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -185,10 +214,14 @@ export async function POST(request) {
         console.warn('Power ranking reporter auto-reply error:', repErr.message);
       }
 
+      // Credit 10 Gritcoin Easter Egg
+      const gritcoin = await creditGritcoinEasterEgg(authManager);
+
       return NextResponse.json({
         success: true,
         comment: newComment,
-        reporterReply
+        reporterReply,
+        gritcoin
       });
     }
 
@@ -249,10 +282,14 @@ export async function POST(request) {
       console.warn('Article reporter auto-reply error:', repErr.message);
     }
 
+    // Credit 10 Gritcoin Easter Egg
+    const gritcoin = await creditGritcoinEasterEgg(authManager);
+
     return NextResponse.json({
       success: true,
       comment: newComment,
-      reporterReply
+      reporterReply,
+      gritcoin
     });
   } catch (err) {
     console.error('Error posting comment:', err);

@@ -121,10 +121,14 @@ export default function PowerRankingComments({ rankingId, weekNumber }) {
 
       if (res.ok && data.success) {
         setCommentText('');
-        setSuccessMsg('Your testimony has been entered into the record!');
+        if (data.gritcoin?.awarded) {
+          setSuccessMsg(`🪙 Dispatch Bounty Unlocked! +${data.gritcoin.awarded} Gritcoin credited to your Sportsbook bankroll! (New Balance: ᴳ${Number(data.gritcoin.newBalance).toLocaleString()})`);
+        } else {
+          setSuccessMsg('Your testimony has been entered into the record!');
+        }
         cacheCredentials(managerName, pin);
         await fetchComments();
-        setTimeout(() => setSuccessMsg(''), 4000);
+        setTimeout(() => setSuccessMsg(''), 6000);
       } else {
         setErrorMsg(data.error || 'Failed to post comment. Check your security PIN.');
       }
@@ -177,6 +181,10 @@ export default function PowerRankingComments({ rankingId, weekNumber }) {
       if (res.ok && data.success) {
         setReplyText('');
         setReplyingTo(null);
+        if (data.gritcoin?.awarded) {
+          setSuccessMsg(`🪙 Dispatch Bounty Unlocked! +${data.gritcoin.awarded} Gritcoin credited to your Sportsbook bankroll! (New Balance: ᴳ${Number(data.gritcoin.newBalance).toLocaleString()})`);
+          setTimeout(() => setSuccessMsg(''), 6000);
+        }
         cacheCredentials(managerName, pin);
         await fetchComments();
       } else {
