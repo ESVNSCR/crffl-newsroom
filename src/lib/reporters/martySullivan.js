@@ -209,31 +209,57 @@ ${recordAudit.formattedReport}
   }
 
   // Save to Supabase (only for published live runs)
-  const { data: dbArticle, error: dbError } = await supabase
+  const targetWeek = isPreSeason ? 0 : weekToRecap;
+  const { data: existingArticle } = await supabase
     .from('newsroom_articles')
-    .insert([
-      {
-        author_id: 'marty_sullivan',
-        author_name: 'Marty Sullivan',
-        week_number: isPreSeason ? 0 : weekToRecap,
-        season: 2026,
+    .select('id')
+    .eq('author_id', 'marty_sullivan')
+    .eq('season', 2026)
+    .eq('week_number', targetWeek)
+    .maybeSingle();
+
+  let dbArticle = null;
+  if (existingArticle) {
+    const { data: updated, error: updateError } = await supabase
+      .from('newsroom_articles')
+      .update({
         title,
-        slug: wpResult?.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        category_name: 'The Tuesday Recap',
-        category_id: 16,
         content_html: cleanHtml,
         summary,
         rival_author: rivalInfo.rivalName,
-        wordpress_post_id: wpResult?.id || null,
-        wordpress_url: wpResult?.link || null,
         status: 'published',
-      },
-    ])
-    .select()
-    .single();
-
-  if (dbError) {
-    console.error('Failed to save Marty Sullivan article to DB:', dbError);
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingArticle.id)
+      .select()
+      .single();
+    if (updateError) console.error('Failed to update Marty Sullivan article in DB:', updateError);
+    dbArticle = updated;
+  } else {
+    const { data: inserted, error: insertError } = await supabase
+      .from('newsroom_articles')
+      .insert([
+        {
+          author_id: 'marty_sullivan',
+          author_name: 'Marty Sullivan',
+          week_number: targetWeek,
+          season: 2026,
+          title,
+          slug: wpResult?.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          category_name: 'The Tuesday Recap',
+          category_id: 16,
+          content_html: cleanHtml,
+          summary,
+          rival_author: rivalInfo.rivalName,
+          wordpress_post_id: wpResult?.id || null,
+          wordpress_url: wpResult?.link || null,
+          status: 'published',
+        },
+      ])
+      .select()
+      .single();
+    if (insertError) console.error('Failed to save Marty Sullivan article to DB:', insertError);
+    dbArticle = inserted;
   }
 
   return {

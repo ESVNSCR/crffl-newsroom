@@ -28,18 +28,26 @@ export default async function PowerRankingsPage({ searchParams }) {
   let currentRankings = rows?.[0];
 
   // Self-Healing Fail-Safe:
-  // If viewing latest (no specific week requested) and current week rankings are missing past Tuesday 2:00 PM PT,
-  // trigger on-demand generation immediately!
+  // Only attempt self-healing if latest rankings are behind the current NFL week and past Tuesday 2:00 PM PT
   if (!requestedWeek) {
-    const healResult = await selfHealMarcusPowerRankings();
-    if (healResult?.generated) {
-      const { data: refreshedRows } = await supabase
-        .from('power_rankings')
-        .select('*')
-        .order('week_number', { ascending: false });
-      if (refreshedRows && refreshedRows.length > 0) {
-        rows = refreshedRows;
-        currentRankings = refreshedRows[0];
+    let state = null;
+    try {
+      const { getNflState } = await import('@/lib/sleeper');
+      state = await getNflState();
+    } catch (e) {}
+    const currentNflWeek = state?.week || 1;
+
+    if (!currentRankings || currentRankings.week_number < currentNflWeek) {
+      const healResult = await selfHealMarcusPowerRankings(currentNflWeek);
+      if (healResult?.generated) {
+        const { data: refreshedRows } = await supabase
+          .from('power_rankings')
+          .select('*')
+          .order('week_number', { ascending: false });
+        if (refreshedRows && refreshedRows.length > 0) {
+          rows = refreshedRows;
+          currentRankings = refreshedRows[0];
+        }
       }
     }
   }

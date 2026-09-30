@@ -156,31 +156,56 @@ ${JSON.stringify(upcomingMatchups, null, 2)}
   }
 
   // Save to Supabase (only for published live runs)
-  const { data: dbArticle, error: dbError } = await supabase
+  const { data: existingArticle } = await supabase
     .from('newsroom_articles')
-    .insert([
-      {
-        author_id: 'buck_callahan',
-        author_name: 'Buck Callahan',
-        week_number: currentWeek,
-        season: 2026,
+    .select('id')
+    .eq('author_id', 'buck_callahan')
+    .eq('season', 2026)
+    .eq('week_number', currentWeek)
+    .maybeSingle();
+
+  let dbArticle = null;
+  if (existingArticle) {
+    const { data: updated, error: updateError } = await supabase
+      .from('newsroom_articles')
+      .update({
         title,
-        slug: wpResult?.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        category_name: 'The Grit Desk',
-        category_id: 107,
         content_html: cleanHtml,
         summary,
         rival_author: rivalInfo.rivalName,
-        wordpress_post_id: wpResult?.id || null,
-        wordpress_url: wpResult?.link || null,
         status: 'published',
-      },
-    ])
-    .select()
-    .single();
-
-  if (dbError) {
-    console.error('Failed to save Buck Callahan article to DB:', dbError);
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingArticle.id)
+      .select()
+      .single();
+    if (updateError) console.error('Failed to update Buck Callahan article in DB:', updateError);
+    dbArticle = updated;
+  } else {
+    const { data: inserted, error: insertError } = await supabase
+      .from('newsroom_articles')
+      .insert([
+        {
+          author_id: 'buck_callahan',
+          author_name: 'Buck Callahan',
+          week_number: currentWeek,
+          season: 2026,
+          title,
+          slug: wpResult?.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          category_name: 'The Grit Desk',
+          category_id: 107,
+          content_html: cleanHtml,
+          summary,
+          rival_author: rivalInfo.rivalName,
+          wordpress_post_id: wpResult?.id || null,
+          wordpress_url: wpResult?.link || null,
+          status: 'published',
+        },
+      ])
+      .select()
+      .single();
+    if (insertError) console.error('Failed to save Buck Callahan article to DB:', insertError);
+    dbArticle = inserted;
   }
 
   return {

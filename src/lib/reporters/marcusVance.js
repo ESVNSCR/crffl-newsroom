@@ -398,24 +398,46 @@ Apply your secret directive to Rebel Scum.`;
   // If dryRun, return results without saving to newsroom_articles
   if (!dryRun) {
     // Save to newsroom_articles for continuity/rival memories (only for published live runs)
-    await supabase.from('newsroom_articles').insert([
-      {
-        author_id: 'marcus_vance',
-        author_name: 'Dr. Marcus Vance',
-        week_number: currentWeek,
-        season: 2026,
-        title: `Week ${currentWeek} Power Rankings`,
-        slug: `week-${currentWeek}-power-rankings`,
-        category_name: 'Power Rankings',
-        category_id: 32,
-        content_html: sanitizedIntroBlurb,
-        summary: sanitizedIntroBlurb.slice(0, 350) + '...',
-        rival_author: rivalInfo.rivalName,
-        wordpress_post_id: wpResult?.id || null,
-        wordpress_url: wpResult?.link || null,
-        status: 'published',
-      },
-    ]);
+    const { data: existingArticle } = await supabase
+      .from('newsroom_articles')
+      .select('id')
+      .eq('author_id', 'marcus_vance')
+      .eq('season', 2026)
+      .eq('week_number', currentWeek)
+      .maybeSingle();
+
+    if (existingArticle) {
+      await supabase
+        .from('newsroom_articles')
+        .update({
+          title: `Week ${currentWeek} Power Rankings`,
+          content_html: sanitizedIntroBlurb,
+          summary: sanitizedIntroBlurb.slice(0, 350) + '...',
+          rival_author: rivalInfo.rivalName,
+          status: 'published',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingArticle.id);
+    } else {
+      await supabase.from('newsroom_articles').insert([
+        {
+          author_id: 'marcus_vance',
+          author_name: 'Dr. Marcus Vance',
+          week_number: currentWeek,
+          season: 2026,
+          title: `Week ${currentWeek} Power Rankings`,
+          slug: `week-${currentWeek}-power-rankings`,
+          category_name: 'Power Rankings',
+          category_id: 32,
+          content_html: sanitizedIntroBlurb,
+          summary: sanitizedIntroBlurb.slice(0, 350) + '...',
+          rival_author: rivalInfo.rivalName,
+          wordpress_post_id: wpResult?.id || null,
+          wordpress_url: wpResult?.link || null,
+          status: 'published',
+        },
+      ]);
+    }
   }
 
   return {
