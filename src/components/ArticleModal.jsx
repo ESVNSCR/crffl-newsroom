@@ -95,12 +95,6 @@ export default function ArticleModal({ article, onClose }) {
                 </p>
               </div>
             </div>
-
-            {article.rival_author && (
-              <span className="text-xs text-gray-400 bg-gray-900/80 px-3 py-1.5 rounded-lg border border-gray-800">
-                Foil in Focus: <strong className="text-gray-200">{article.rival_author}</strong>
-              </span>
-            )}
           </div>
 
           {/* Formatted Article Content */}

@@ -2,17 +2,18 @@ import { ai, DEFAULT_MODEL } from '../gemini.js';
 import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueMatchups } from '../sleeper.js';
 import { getPffNews } from '../pff.js';
-import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { getAuthorMemory, getDynamicRival, getCommissionerMemory } from '../memory.js';
 import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
 
 export async function generateBuckPreview({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo, playerMap, buckPromptInfo] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, commissionerDispatches, playerMap, buckPromptInfo] = await Promise.all([
     getLeagueOverview(),
     getPffNews(4),
-    getAuthorMemory('buck_callahan', 3),
+    getAuthorMemory('buck_callahan'),
     getDynamicRival('buck_callahan'),
+    getCommissionerMemory(2026),
     getSleeperPlayerMap(),
     getEffectiveReporterPrompt('buck_callahan'),
   ]);
@@ -110,10 +111,13 @@ ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 
 CURRENT REAL-WORLD NFL NEWS:
 ${newsSummary}
 
-YOUR PAST ARTICLES (Continuity Archive):
+YOUR PAST ARTICLES (Continuity Archive & Anti-Repetition Guidelines):
 ${pastArticles}
 
 ${rivalInfo.promptContext}
+
+COMMISSIONER'S OFFICIAL EXECUTIVE MEMORANDUMS (OFFICIAL LEAGUE RULINGS):
+${commissionerDispatches}
 
 RAW SLEEPER DATA:
 Current Week: Week ${currentWeek}
@@ -174,7 +178,7 @@ ${JSON.stringify(upcomingMatchups, null, 2)}
         summary,
         rival_author: rivalInfo.rivalName,
         status: 'published',
-        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       })
       .eq('id', existingArticle.id)
       .select()

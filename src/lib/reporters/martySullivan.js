@@ -2,7 +2,7 @@ import { ai, DEFAULT_MODEL } from '../gemini.js';
 import { supabase } from '../supabase.js';
 import { getNflState, getLeagueOverview, getLeagueMatchups } from '../sleeper.js';
 import { getPffNews } from '../pff.js';
-import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { getAuthorMemory, getDynamicRival, getCommissionerMemory } from '../memory.js';
 import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 import { calculateWeeklyBenchAudit } from '../benchAudit.js';
@@ -10,11 +10,12 @@ import { auditWeeklyRecordsAgainstHallOfFame } from '../recordAudit.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
 
 export async function generateMartyRecap({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo, playerMap, martyPromptInfo] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, commissionerDispatches, playerMap, martyPromptInfo] = await Promise.all([
     getLeagueOverview(),
     getPffNews(3),
-    getAuthorMemory('marty_sullivan', 3),
+    getAuthorMemory('marty_sullivan'),
     getDynamicRival('marty_sullivan'),
+    getCommissionerMemory(2026),
     getSleeperPlayerMap(),
     getEffectiveReporterPrompt('marty_sullivan'),
   ]);
@@ -153,10 +154,13 @@ ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 
 CURRENT REAL-WORLD NFL NEWS:
 ${newsSummary}
 
-YOUR PAST ARTICLES (Continuity Archive):
+YOUR PAST ARTICLES (Continuity Archive & Anti-Repetition Guidelines):
 ${pastArticles}
 
 ${rivalInfo.promptContext}
+
+COMMISSIONER'S OFFICIAL EXECUTIVE MEMORANDUMS (OFFICIAL LEAGUE RULINGS):
+${commissionerDispatches}
 
 WEEKLY CONTEST DATA (Current & Upcoming):
 ${contestSummary}
@@ -228,7 +232,7 @@ ${recordAudit.formattedReport}
         summary,
         rival_author: rivalInfo.rivalName,
         status: 'published',
-        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       })
       .eq('id', existingArticle.id)
       .select()

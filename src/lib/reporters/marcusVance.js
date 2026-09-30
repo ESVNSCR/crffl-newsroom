@@ -1,7 +1,7 @@
 import { ai, DEFAULT_MODEL } from '../gemini.js';
 import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueMatchups, MANAGERS } from '../sleeper.js';
-import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { getAuthorMemory, getDynamicRival, getCommissionerMemory } from '../memory.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, sanitizeManagerNames } from '../sleeperPlayers.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
 
@@ -46,10 +46,11 @@ function calculateAlgorithmicBaseline(rosters, isPreseason = false) {
 }
 
 export async function generateMarcusPowerRankings({ dryRun = false, forcePreseason = false } = {}) {
-  const [overview, pastArticles, rivalInfo, playerMap, marcusPromptInfo] = await Promise.all([
+  const [overview, pastArticles, rivalInfo, commissionerDispatches, playerMap, marcusPromptInfo] = await Promise.all([
     getLeagueOverview(),
-    getAuthorMemory('marcus_vance', 2),
+    getAuthorMemory('marcus_vance'),
     getDynamicRival('marcus_vance'),
+    getCommissionerMemory(2026),
     getSleeperPlayerMap(),
     getEffectiveReporterPrompt('marcus_vance'),
   ]);
@@ -273,6 +274,12 @@ CRITICAL: NEVER use generic placeholder names like "Team 10", "Team 4", "Team 8"
 CRITICAL: NEVER use account usernames or Sleeper handles (NEVER write "mikef5630", "XWINGBLUE", "KillaMC", "GardenGoddess", "RaiderRose510", "coreycash", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "iammichael2u") in blurbs or intro blurbs. Refer to people by their real human names!
 
 ${rivalInfo.promptContext}
+
+YOUR PAST ARTICLES (Continuity Archive & Anti-Repetition Guidelines):
+${pastArticles}
+
+COMMISSIONER'S OFFICIAL EXECUTIVE MEMORANDUMS (OFFICIAL LEAGUE RULINGS):
+${commissionerDispatches}
 ${moversPromptSection}
 
 ---
@@ -415,7 +422,7 @@ Apply your secret directive to Rebel Scum.`;
           summary: sanitizedIntroBlurb.slice(0, 350) + '...',
           rival_author: rivalInfo.rivalName,
           status: 'published',
-          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         })
         .eq('id', existingArticle.id);
     } else {

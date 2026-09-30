@@ -2,17 +2,18 @@ import { ai, DEFAULT_MODEL } from '../gemini.js';
 import { supabase } from '../supabase.js';
 import { getLeagueOverview, getLeagueTransactions, getLeagueMatchups } from '../sleeper.js';
 import { getPffNews } from '../pff.js';
-import { getAuthorMemory, getDynamicRival } from '../memory.js';
+import { getAuthorMemory, getDynamicRival, getCommissionerMemory } from '../memory.js';
 import { parseModelOutput } from '../wordpress.js';
 import { getSleeperPlayerMap, resolvePlayerName, enrichTransactionsWithPlayerNames, enrichMatchupsWithPlayerNames, sanitizeTextPlayerIds, sanitizeManagerNames } from '../sleeperPlayers.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
 
 export async function generateChloeTransactions({ dryRun = false } = {}) {
-  const [overview, nflNews, pastArticles, rivalInfo, playerMap, chloePromptInfo] = await Promise.all([
+  const [overview, nflNews, pastArticles, rivalInfo, commissionerDispatches, playerMap, chloePromptInfo] = await Promise.all([
     getLeagueOverview(),
     getPffNews(4),
-    getAuthorMemory('chloe_carmichael', 3),
+    getAuthorMemory('chloe_carmichael'),
     getDynamicRival('chloe_carmichael'),
+    getCommissionerMemory(2026),
     getSleeperPlayerMap(),
     getEffectiveReporterPrompt('chloe_carmichael'),
   ]);
@@ -28,23 +29,14 @@ export async function generateChloeTransactions({ dryRun = false } = {}) {
     };
   }
 
-  // Fetch recent transactions across current week and prior round to capture the full waiver run
+  // 1. Fetch transactions across all rounds up to current week to ensure zero blind spots
   let allRawTx = [];
-  try {
-    const curTx = await getLeagueTransactions(currentWeek);
-    allRawTx = allRawTx.concat(curTx || []);
-  } catch {}
-
-  if (currentWeek > 1) {
-    try {
-      const prevTx = await getLeagueTransactions(currentWeek - 1);
-      allRawTx = allRawTx.concat(prevTx || []);
-    } catch {}
-  } else {
-    try {
-      const r1Tx = await getLeagueTransactions(1);
-      allRawTx = allRawTx.concat(r1Tx || []);
-    } catch {}
+  const rounds = Array.from({ length: Math.max(1, currentWeek) }, (_, i) => i + 1);
+  const txResults = await Promise.allSettled(rounds.map((r) => getLeagueTransactions(r)));
+  for (const res of txResults) {
+    if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+      allRawTx = allRawTx.concat(res.value);
+    }
   }
 
   // Deduplicate by transaction_id
@@ -62,13 +54,29 @@ export async function generateChloeTransactions({ dryRun = false } = {}) {
 
   const transactions = enrichTransactionsWithPlayerNames(dedupedTx, playerMap, overview.rosters);
 
-  // Group into Last Night / Today vs Earlier Transactions
-  const lastNightMoves = transactions.filter((t) => t.is_recent);
-  const earlierMoves = transactions.filter((t) => !t.is_recent).slice(0, 15);
+  // 2. Identify Chloe's previous column publication time to capture all moves since her last article
+  const { data: previousChloeArticles } = await supabase
+    .from('newsroom_articles')
+    .select('created_at')
+    .eq('author_id', 'chloe_carmichael')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(3);
 
-  const formattedRecentSection = lastNightMoves.length > 0
-    ? lastNightMoves.map((t) => `• [LAST NIGHT / TODAY] ${t.summary}`).join('\n')
-    : '• No waiver claims processed overnight. Highlight recent free agent churning and upcoming waiver strategy.';
+  const now = Date.now();
+  // Find the previous week's article (older than 12 hours ago)
+  const priorArticle = (previousChloeArticles || []).find(
+    (a) => now - new Date(a.created_at).getTime() > 12 * 60 * 60 * 1000
+  );
+  const cutoffTime = priorArticle ? new Date(priorArticle.created_at).getTime() : now - 7 * 24 * 60 * 60 * 1000;
+
+  // Group into moves since last column vs earlier archive
+  const movesSinceLastColumn = transactions.filter((t) => (t.timestamp || 0) >= cutoffTime);
+  const earlierMoves = transactions.filter((t) => (t.timestamp || 0) < cutoffTime).slice(0, 15);
+
+  const formattedSinceLastColumn = movesSinceLastColumn.length > 0
+    ? movesSinceLastColumn.map((t) => `• ${t.summary}`).join('\n')
+    : '• No transactions recorded since previous column.';
 
   const formattedEarlierSection = earlierMoves.length > 0
     ? earlierMoves.map((t) => `• ${t.summary}`).join('\n')
@@ -158,20 +166,33 @@ ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 
 CURRENT REAL-WORLD NFL NEWS:
 ${newsSummary}
 
-YOUR PAST ARTICLES (Continuity Archive):
+YOUR PAST ARTICLES (Continuity Archive & Anti-Repetition Guidelines):
 ${pastArticles}
 
 ${rivalInfo.promptContext}
 
-TRANSACTIONS DOSSIER (LAST NIGHT & RECENT MOVES):
-OVERNIGHT & RECENT BREAKTHROUGH MOVES (LAST NIGHT / TODAY):
-${formattedRecentSection}
+COMMISSIONER'S OFFICIAL EXECUTIVE MEMORANDUMS (OFFICIAL LEAGUE RULINGS):
+${commissionerDispatches}
 
-EARLIER WAIVER & FREE AGENT CHURNING:
+CRITICAL INVESTIGATIVE INSIDER BRIEFING (MUST COVER WITH WIT & ACCURACY):
+Review the transactions and Commissioner's Memorandum carefully regarding the Matthew Stafford / Moore Better / Rebel Scum saga:
+1. Moore Better (Mike M.) was harboring an ineligible player on IR, creating an illicit 3rd quarterback on his roster in violation of the strict 2-QB league cap.
+2. Rather than dropping a QB to waivers, Mike M. executed a trade with Commissioner Eric (Rebel Scum): Stafford for Chuba Hubbard.
+3. The league exploded in protest over fair play and sheltering ineligible assets behind platform glitches.
+4. To his credit (and humiliation), Commissioner Eric Vaughan was forced to step in as Chief Executive and officially VOID and REVERSE his own trade (Executive Order 2026-02), returning Stafford to Mike M. and Chuba to Eric!
+5. Mike M. was then forced to drop Matthew Stafford to waivers to satisfy the 2-QB limit.
+6. Then on Tuesday night / Wednesday morning waivers, Eric had to battle in the open market and bid a massive $57 of his own FAAB to win Stafford legally (while Marcus also put in a bid)!
+7. Poke good-natured, witty fun at Commissioner Eric for trying a sly backroom deal only to be forced by the managers to veto his own trade and then blow $57 FAAB anyway!
+8. Also note Pam (Team GardenGoddess) shockingly dropping De'Von Achane, and Mike M. spending FAAB on Jets players ($20 on Braelon Allen, $15 on Kenyon Sadiq).
+
+TRANSACTIONS EXECUTED SINCE YOUR LAST COLUMN (PRIMARY FOCUS):
+${formattedSinceLastColumn}
+
+HISTORICAL / EARLIER TRANSACTIONS IN THE ARCHIVE:
 ${formattedEarlierSection}
 
-FULL TRANSACTIONS DATA FEED:
-${JSON.stringify(transactions.slice(0, 25), null, 2)}
+FULL RECENT TRANSACTIONS DATA FEED:
+${JSON.stringify(transactions.slice(0, 30), null, 2)}
 
 LEAGUE ROSTERS (FOR CONTEXT ON TEAM NEEDS):
 ${JSON.stringify(namedRosters, null, 2)}
@@ -230,7 +251,7 @@ ${JSON.stringify(matchups.map((m) => ({ manager: m.manager_name, team: m.team_na
         summary,
         rival_author: rivalInfo.rivalName,
         status: 'published',
-        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
       })
       .eq('id', existingArticle.id)
       .select()
