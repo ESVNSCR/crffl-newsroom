@@ -221,53 +221,45 @@ export default function PowerRankingComments({ rankingId, weekNumber }) {
     const isReporter = Boolean(comment?.is_reporter);
     const lower = name.toLowerCase();
 
-    if (isReporter || lower.includes('marcus vance')) {
-      if (lower.includes('marcus') || isReporter) {
-        return {
-          isReporter: true,
-          label: 'Dr. Marcus Vance',
-          role: 'AUTHOR • ANALYTICS DESK',
-          avatar: '/reporters/marcus-vance-avatar.png',
-          badgeBg: 'bg-cyan-950/80 border-cyan-500/70 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]',
-          cardStyle: 'border-cyan-500/40 bg-[#061424] shadow-[0_0_20px_rgba(6,182,212,0.06)]'
-        };
-      }
+    if (lower.includes('marcus') || lower.includes('vance')) {
+      return {
+        isReporter: true,
+        label: 'Dr. Marcus Vance',
+        role: 'AUTHOR • ANALYTICS DESK',
+        avatar: '/reporters/marcus-vance-avatar.png',
+        badgeBg: 'bg-cyan-950/80 border-cyan-500/70 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]',
+        cardStyle: 'border-cyan-500/40 bg-[#061424] shadow-[0_0_20px_rgba(6,182,212,0.06)]'
+      };
     }
-    if (isReporter || lower.includes('chloe carmichael')) {
-      if (lower.includes('chloe') || isReporter) {
-        return {
-          isReporter: true,
-          label: 'Chloe Carmichael',
-          role: 'AUTHOR • THE SPIN ROOM',
-          avatar: '/reporters/chloe-carmichael-avatar.png',
-          badgeBg: 'bg-purple-950/80 border-purple-500/70 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
-          cardStyle: 'border-purple-500/40 bg-[#150a22] shadow-[0_0_20px_rgba(168,85,247,0.06)]'
-        };
-      }
+    if (lower.includes('chloe') || lower.includes('carmichael')) {
+      return {
+        isReporter: true,
+        label: 'Chloe Carmichael',
+        role: 'AUTHOR • THE SPIN ROOM',
+        avatar: '/reporters/chloe-carmichael-avatar.png',
+        badgeBg: 'bg-purple-950/80 border-purple-500/70 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
+        cardStyle: 'border-purple-500/40 bg-[#150a22] shadow-[0_0_20px_rgba(168,85,247,0.06)]'
+      };
     }
-    if (isReporter || lower.includes('marty sullivan')) {
-      if (lower.includes('marty') || isReporter) {
-        return {
-          isReporter: true,
-          label: 'Marty Sullivan',
-          role: 'AUTHOR • TUESDAY RECAP',
-          avatar: '/reporters/marty-sullivan-avatar.png',
-          badgeBg: 'bg-emerald-950/80 border-emerald-500/70 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
-          cardStyle: 'border-emerald-500/40 bg-[#061810] shadow-[0_0_20px_rgba(16,185,129,0.06)]'
-        };
-      }
+    if (lower.includes('marty') || lower.includes('sullivan')) {
+      return {
+        isReporter: true,
+        label: 'Marty Sullivan',
+        role: 'AUTHOR • TUESDAY RECAP',
+        avatar: '/reporters/marty-sullivan-avatar.png',
+        badgeBg: 'bg-emerald-950/80 border-emerald-500/70 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
+        cardStyle: 'border-emerald-500/40 bg-[#061810] shadow-[0_0_20px_rgba(16,185,129,0.06)]'
+      };
     }
-    if (isReporter || lower.includes('buck callahan')) {
-      if (lower.includes('buck') || isReporter) {
-        return {
-          isReporter: true,
-          label: 'Buck Callahan',
-          role: 'AUTHOR • THE GRIT DESK',
-          avatar: '/reporters/buck-callahan-avatar.png',
-          badgeBg: 'bg-amber-950/80 border-amber-500/70 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
-          cardStyle: 'border-amber-500/40 bg-[#1a1005] shadow-[0_0_20px_rgba(245,158,11,0.06)]'
-        };
-      }
+    if (lower.includes('buck') || lower.includes('callahan')) {
+      return {
+        isReporter: true,
+        label: 'Buck Callahan',
+        role: 'AUTHOR • THE GRIT DESK',
+        avatar: '/reporters/buck-callahan-avatar.png',
+        badgeBg: 'bg-amber-950/80 border-amber-500/70 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
+        cardStyle: 'border-amber-500/40 bg-[#1a1005] shadow-[0_0_20px_rgba(245,158,11,0.06)]'
+      };
     }
     if (lower.includes('commissioner')) {
       return {
@@ -278,6 +270,17 @@ export default function PowerRankingComments({ rankingId, weekNumber }) {
         avatar: '/logos/league.png',
         badgeBg: 'bg-[#d4af37]/20 border-[#d4af37]/60 text-[#d4af37]',
         cardStyle: 'border-[#d4af37]/30 bg-[#13120b]'
+      };
+    }
+
+    if (isReporter) {
+      return {
+        isReporter: true,
+        label: name || 'Dr. Marcus Vance',
+        role: 'AUTHOR • ANALYTICS DESK',
+        avatar: '/reporters/marcus-vance-avatar.png',
+        badgeBg: 'bg-cyan-950/80 border-cyan-500/70 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]',
+        cardStyle: 'border-cyan-500/40 bg-[#061424] shadow-[0_0_20px_rgba(6,182,212,0.06)]'
       };
     }
 
