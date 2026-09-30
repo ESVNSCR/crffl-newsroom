@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 import { resolveManager } from '@/lib/managers';
+import { generateAndSaveReporterReply } from '@/lib/reporterComments';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -165,9 +166,29 @@ export async function POST(request) {
 
       if (insertError) throw insertError;
 
+      // Automatically generate in-character reporter response (Dr. Marcus Vance)
+      let reporterReply = null;
+      try {
+        const replyResult = await generateAndSaveReporterReply({
+          targetType: 'power_ranking',
+          rankingId: targetRankingId,
+          weekNumber: targetWeekNumber || 1,
+          commentId: newComment.id,
+          managerName: manager_name.trim(),
+          managerComment: trimmedComment,
+          parentId: parent_id || null,
+        });
+        if (replyResult?.reply) {
+          reporterReply = replyResult.reply;
+        }
+      } catch (repErr) {
+        console.warn('Power ranking reporter auto-reply error:', repErr.message);
+      }
+
       return NextResponse.json({
         success: true,
-        comment: newComment
+        comment: newComment,
+        reporterReply
       });
     }
 
@@ -210,9 +231,28 @@ export async function POST(request) {
 
     if (insertError) throw insertError;
 
+    // Automatically generate in-character reporter response (Article author)
+    let reporterReply = null;
+    try {
+      const replyResult = await generateAndSaveReporterReply({
+        targetType: 'article',
+        articleId,
+        commentId: newComment.id,
+        managerName: manager_name.trim(),
+        managerComment: trimmedComment,
+        parentId: parent_id || null,
+      });
+      if (replyResult?.reply) {
+        reporterReply = replyResult.reply;
+      }
+    } catch (repErr) {
+      console.warn('Article reporter auto-reply error:', repErr.message);
+    }
+
     return NextResponse.json({
       success: true,
-      comment: newComment
+      comment: newComment,
+      reporterReply
     });
   } catch (err) {
     console.error('Error posting comment:', err);

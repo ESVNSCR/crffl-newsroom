@@ -199,17 +199,78 @@ export default function ArticleComments({ articleId }) {
     }
   };
 
-  const getManagerBadge = (name) => {
-    const isCommish = (name || '').toLowerCase().includes('commissioner');
-    if (isCommish) {
+  const getAuthorBadge = (comment) => {
+    const name = comment?.manager_name || '';
+    const isReporter = Boolean(comment?.is_reporter);
+    const lower = name.toLowerCase();
+
+    if (isReporter || lower.includes('marcus vance')) {
+      if (lower.includes('marcus') || isReporter) {
+        return {
+          isReporter: true,
+          label: 'Dr. Marcus Vance',
+          role: 'AUTHOR • ANALYTICS DESK',
+          avatar: '/reporters/marcus-vance-avatar.png',
+          badgeBg: 'bg-cyan-950/80 border-cyan-500/70 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.25)]',
+          cardStyle: 'border-cyan-500/40 bg-[#061424] shadow-[0_0_20px_rgba(6,182,212,0.06)]'
+        };
+      }
+    }
+    if (isReporter || lower.includes('chloe carmichael')) {
+      if (lower.includes('chloe') || isReporter) {
+        return {
+          isReporter: true,
+          label: 'Chloe Carmichael',
+          role: 'AUTHOR • THE SPIN ROOM',
+          avatar: '/reporters/chloe-carmichael-avatar.png',
+          badgeBg: 'bg-purple-950/80 border-purple-500/70 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)]',
+          cardStyle: 'border-purple-500/40 bg-[#150a22] shadow-[0_0_20px_rgba(168,85,247,0.06)]'
+        };
+      }
+    }
+    if (isReporter || lower.includes('marty sullivan')) {
+      if (lower.includes('marty') || isReporter) {
+        return {
+          isReporter: true,
+          label: 'Marty Sullivan',
+          role: 'AUTHOR • TUESDAY RECAP',
+          avatar: '/reporters/marty-sullivan-avatar.png',
+          badgeBg: 'bg-emerald-950/80 border-emerald-500/70 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
+          cardStyle: 'border-emerald-500/40 bg-[#061810] shadow-[0_0_20px_rgba(16,185,129,0.06)]'
+        };
+      }
+    }
+    if (isReporter || lower.includes('buck callahan')) {
+      if (lower.includes('buck') || isReporter) {
+        return {
+          isReporter: true,
+          label: 'Buck Callahan',
+          role: 'AUTHOR • THE GRIT DESK',
+          avatar: '/reporters/buck-callahan-avatar.png',
+          badgeBg: 'bg-amber-950/80 border-amber-500/70 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
+          cardStyle: 'border-amber-500/40 bg-[#1a1005] shadow-[0_0_20px_rgba(245,158,11,0.06)]'
+        };
+      }
+    }
+    if (lower.includes('commissioner')) {
       return {
+        isReporter: false,
+        isCommish: true,
         label: '👑 Office of the Commissioner',
-        bg: 'bg-[#d4af37]/20 border-[#d4af37]/60 text-[#d4af37]'
+        role: 'LEAGUE INTEGRITY',
+        avatar: '/logos/league.png',
+        badgeBg: 'bg-[#d4af37]/20 border-[#d4af37]/60 text-[#d4af37]',
+        cardStyle: 'border-[#d4af37]/30 bg-[#13120b]'
       };
     }
+
     return {
+      isReporter: false,
       label: `👤 ${name}`,
-      bg: 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300'
+      role: null,
+      avatar: null,
+      badgeBg: 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300',
+      cardStyle: 'border-white/10 hover:border-white/20 bg-[#0b0f19]'
     };
   };
 
@@ -355,7 +416,7 @@ export default function ArticleComments({ articleId }) {
           </div>
         ) : (
           rootComments.map((root) => {
-            const rootBadge = getManagerBadge(root.manager_name);
+            const rootBadge = getAuthorBadge(root);
             const isRootAuthor = managerName && root.manager_name.toLowerCase() === managerName.toLowerCase();
             const isCommish = managerName && managerName.toLowerCase().includes('commissioner');
             const replies = repliesByParent[root.id] || [];
@@ -364,12 +425,24 @@ export default function ArticleComments({ articleId }) {
             return (
               <div key={root.id} className="space-y-2.5">
                 {/* Root Comment Card */}
-                <div className="p-4 sm:p-4.5 rounded-xl bg-[#0b0f19] border border-white/10 hover:border-white/20 transition space-y-2.5">
+                <div className={`p-4 sm:p-4.5 rounded-xl border transition space-y-2.5 ${rootBadge.cardStyle}`}>
                   <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${rootBadge.bg}`}>
+                      {rootBadge.avatar && (
+                        <img
+                          src={rootBadge.avatar}
+                          alt={rootBadge.label}
+                          className="w-5 h-5 rounded-full border border-white/20 object-cover"
+                        />
+                      )}
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold border flex items-center gap-1 ${rootBadge.badgeBg}`}>
                         {rootBadge.label}
                       </span>
+                      {rootBadge.role && (
+                        <span className="text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-gray-300 font-semibold uppercase">
+                          {rootBadge.role}
+                        </span>
+                      )}
                       <span className="text-[11px] text-gray-400 font-mono" suppressHydrationWarning>
                         {formatDatePacific(root.created_at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                       </span>
@@ -388,7 +461,7 @@ export default function ArticleComments({ articleId }) {
                         <span>↩</span> Reply
                       </button>
 
-                      {(isRootAuthor || isCommish) && (
+                      {(!rootBadge.isReporter && (isRootAuthor || isCommish)) && (
                         <button
                           type="button"
                           onClick={() => handleDelete(root.id)}
@@ -414,18 +487,30 @@ export default function ArticleComments({ articleId }) {
                 {replies.length > 0 && (
                   <div className="ml-4 sm:ml-8 pl-3 sm:pl-4 border-l-2 border-[#d4af37]/30 space-y-2.5">
                     {replies.map((reply) => {
-                      const replyBadge = getManagerBadge(reply.manager_name);
+                      const replyBadge = getAuthorBadge(reply);
                       const isReplyAuthor = managerName && reply.manager_name.toLowerCase() === managerName.toLowerCase();
                       const isReplyingToThisReply = replyingTo?.commentId === reply.id;
 
                       return (
                         <div key={reply.id} className="space-y-2">
-                          <div className="p-3.5 sm:p-4 rounded-xl bg-[#090d16] border border-white/5 hover:border-white/15 transition space-y-2">
+                          <div className={`p-3.5 sm:p-4 rounded-xl border transition space-y-2 ${replyBadge.cardStyle}`}>
                             <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
                               <div className="flex items-center gap-2">
-                                <span className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold border ${replyBadge.bg}`}>
+                                {replyBadge.avatar && (
+                                  <img
+                                    src={replyBadge.avatar}
+                                    alt={replyBadge.label}
+                                    className="w-5 h-5 rounded-full border border-white/20 object-cover"
+                                  />
+                                )}
+                                <span className={`px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold border flex items-center gap-1 ${replyBadge.badgeBg}`}>
                                   {replyBadge.label}
                                 </span>
+                                {replyBadge.role && (
+                                  <span className="text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-gray-300 font-semibold uppercase">
+                                    {replyBadge.role}
+                                  </span>
+                                )}
                                 <span className="text-[10px] text-gray-500 font-mono">
                                   ↳ in reply to @{root.manager_name}
                                 </span>
@@ -447,7 +532,7 @@ export default function ArticleComments({ articleId }) {
                                   <span>↩</span> Reply
                                 </button>
 
-                                {(isReplyAuthor || isCommish) && (
+                                {(!replyBadge.isReporter && (isReplyAuthor || isCommish)) && (
                                   <button
                                     type="button"
                                     onClick={() => handleDelete(reply.id)}

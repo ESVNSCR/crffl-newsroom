@@ -72,3 +72,4 @@ export async function getNflNews(limit = 10) {
 export async function getPffNews(limit = 6) {
   return getNflNews(limit);
 }
+
