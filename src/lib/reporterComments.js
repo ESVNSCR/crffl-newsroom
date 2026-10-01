@@ -1,4 +1,4 @@
-import { ai, DEFAULT_MODEL } from './gemini.js';
+import { ai, FAST_MODEL, DEFAULT_MODEL } from './gemini.js';
 import { supabase } from './supabase.js';
 import { REPORTER_PERSONAS } from './reporterPersonas.js';
 import { resolveManager } from './managers.js';
@@ -136,13 +136,13 @@ ${threadContext}COMMENT FROM ${humanName} (${teamName}): "${managerComment}"
 
 Reply in character as ${reporterPersona.name}:`;
 
-    // Call Gemini with timeout protection (8 seconds max)
+    // Call Gemini with timeout protection (15 seconds max)
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Reporter reply timeout')), 8000)
+      setTimeout(() => reject(new Error('Reporter reply timeout')), 15000)
     );
 
     const geminiPromise = ai.models.generateContent({
-      model: DEFAULT_MODEL,
+      model: FAST_MODEL || DEFAULT_MODEL,
       contents: prompt,
       config: {
         systemInstruction,

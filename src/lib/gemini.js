@@ -8,3 +8,4 @@ if (!apiKey) {
 
 export const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 export const DEFAULT_MODEL = 'gemini-3.6-flash';
+export const FAST_MODEL = 'gemini-3.5-flash-lite';
