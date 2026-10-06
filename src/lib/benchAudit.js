@@ -115,6 +115,7 @@ export function calculateOptimalLineup(matchupTeam, playerMap = {}) {
       id: p.id,
       name: p.name,
       pos: p.pos,
+      team: p.team || '',
       points: p.points
     }));
 
@@ -258,7 +259,7 @@ export function calculateWeeklyBenchAudit(matchups = [], playerMap = {}, rosters
     lines.push('🚨 FATAL BENCH BLUNDERS (MANAGERS WHO LOST BECAUSE OF SITTING THE WRONG PLAYERS):');
     lines.push('These managers legally had the points on their bench to WIN their matchup, but blew it by making poor lineup decisions:');
     fatalBlunders.forEach(fb => {
-      const mistakesStr = fb.benchMistakes.map(p => `${p.name} (${p.pos}: ${p.points} pts)`).join(', ');
+      const mistakesStr = fb.benchMistakes.map(p => `${p.name} (${p.team ? p.team + ' ' : ''}${p.pos}: ${p.points} pts)`).join(', ');
       lines.push(`• ${fb.manager} (${fb.team}): LOST to ${fb.opponent} by ${fb.margin} points (${fb.score} to ${fb.opponentScore}).`);
       lines.push(`  - Left ${fb.benchPointsLost} PLAYABLE points on bench.`);
       lines.push(`  - Optimal lineup would have scored ${fb.optimalScore} and WON the game!`);
@@ -273,7 +274,7 @@ export function calculateWeeklyBenchAudit(matchups = [], playerMap = {}, rosters
   if (helplessLosses.length > 0) {
     lines.push('⚠️ HEAVY BENCH POINTS IN DEFEAT (Didn\'t cost the win, but still left points behind):');
     helplessLosses.forEach(hl => {
-      const mistakesStr = hl.benchMistakes.map(p => `${p.name} (${p.pos}: ${p.points} pts)`).join(', ');
+      const mistakesStr = hl.benchMistakes.map(p => `${p.name} (${p.team ? p.team + ' ' : ''}${p.pos}: ${p.points} pts)`).join(', ');
       lines.push(`• ${hl.manager} (${hl.team}): Lost to ${hl.opponent} (${hl.score} vs ${hl.opponentScore}). Left ${hl.benchPointsLost} pts on bench (optimal: ${hl.optimalScore}). Stranded: ${mistakesStr}`);
     });
     lines.push('');
@@ -282,7 +283,7 @@ export function calculateWeeklyBenchAudit(matchups = [], playerMap = {}, rosters
   if (survivedBlunders.length > 0) {
     lines.push('🍀 SURVIVED THEIR OWN MISTAKES (Won despite leaving big points on the pine):');
     survivedBlunders.forEach(sb => {
-      const mistakesStr = sb.benchMistakes.map(p => `${p.name} (${p.pos}: ${p.points} pts)`).join(', ');
+      const mistakesStr = sb.benchMistakes.map(p => `${p.name} (${p.team ? p.team + ' ' : ''}${p.pos}: ${p.points} pts)`).join(', ');
       lines.push(`• ${sb.manager} (${sb.team}): Won their matchup, but still left ${sb.benchPointsLost} pts on the bench (${mistakesStr}).`);
     });
     lines.push('');

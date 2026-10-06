@@ -305,8 +305,9 @@ ${contextBlocks.join('\n\n')}
    - NEVER use raw internet usernames (e.g. NEVER write "mikef5630", "coreycash", "XWINGBLUE", "RaiderRose510", "GardenGoddess", "iammichael2u", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "KillaMC").
    - Pair managers with their official team names: Eric (Rebel Scum), Mike F. (Stars & Stripes), Randy (Generic Football Team), Corey (Team CoreyCash), KC (Shortbus Superstars), Marcus (Team Killa MC), Mike M. (Moore Better), Jeff (Hickory Huskers), Ed (Team RaiderRose510), Pam (Team GardenGoddess).
 
-2. SLEEPER DATA GROUNDING:
+2. SLEEPER DATA GROUNDING & ACCURATE NFL TEAMS:
    - Ground your article in the official league data provided above. If a specific data category (e.g. transactions, matchups, or box scores) was omitted from the prompt, do not invent or hallucinate statistics for it.
+   - When citing which NFL franchise a player represents, strictly adhere to the real-world NFL team code provided in the roster and box score data (e.g. SEA for Seattle Seahawks, GB for Green Bay Packers, BAL for Baltimore Ravens). Never guess an NFL team from memory or older seasons.
 ${reporterId === 'marty_sullivan' ? `
 3. BENCH POINTS & FATAL BLUNDERS FOCUS (CRITICAL):
    - You MUST closely analyze the LINEUP OPTIMIZATION & BENCH BLUNDER AUDIT above.
