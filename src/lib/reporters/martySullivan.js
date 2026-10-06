@@ -8,6 +8,7 @@ import { getSleeperPlayerMap, resolvePlayerName, enrichMatchupsWithPlayerNames, 
 import { calculateWeeklyBenchAudit } from '../benchAudit.js';
 import { auditWeeklyRecordsAgainstHallOfFame } from '../recordAudit.js';
 import { getEffectiveReporterPrompt } from '../promptManager.js';
+import { adjudicateWeekContest } from '../contestAdjudicator.js';
 
 export async function generateMartyRecap({ dryRun = false } = {}) {
   const [overview, nflNews, pastArticles, rivalInfo, commissionerDispatches, playerMap, martyPromptInfo] = await Promise.all([
@@ -56,17 +57,44 @@ export async function generateMartyRecap({ dryRun = false } = {}) {
     season: 2026,
   });
 
-  // Fetch contest data from Supabase
-  const { data: contestData } = await supabase
-    .from('weekly_contests')
-    .select('*')
-    .in('week_number', [weekToRecap, upcomingWeek]);
+  // Fetch contest data from Supabase and live adjudication preview
+  const [{ data: contestData }, adjudication] = await Promise.all([
+    supabase
+      .from('weekly_contests')
+      .select('*')
+      .in('week_number', [weekToRecap, upcomingWeek]),
+    adjudicateWeekContest(weekToRecap, { preview: true }).catch((err) => {
+      console.warn('Adjudication preview notice in martySullivan:', err.message);
+      return null;
+    }),
+  ]);
 
   const lastWeekContest = contestData?.find((c) => c.week_number === weekToRecap);
   const thisWeekContest = contestData?.find((c) => c.week_number === upcomingWeek);
 
+  let completedContestReport = '';
+  if (lastWeekContest) {
+    if (adjudication?.status === 'completed' && adjudication.winner_manager) {
+      completedContestReport = `"${lastWeekContest.contest_name}" (OFFICIAL FINAL WINNER: ${adjudication.winner_manager} [${adjudication.winner_team}] with ${adjudication.winner_player} scoring ${adjudication.winning_score}. Margin: ${adjudication.margin ?? 'N/A'} pts over runner-up ${adjudication.runner_up?.managerName || 'Field'}).`;
+    } else if (adjudication?.status === 'stat_correction_pending') {
+      completedContestReport = `"${lastWeekContest.contest_name}" (STATUS: UNOFFICIAL / 48-HOUR STAT CORRECTION HOLD PENDING).
+  - WHY UNOFFICIAL: The margin between 1st and 2nd place is only ${adjudication.margin} points (inside the official 2.0-point stat correction buffer). The $10 prize cannot lock until Wednesday at 10:00 AM PT when the front office receives the official Elias Sports Bureau and NFL stat corrections.
+  - CURRENT PROVISIONAL LEADER: ${adjudication.winner_manager} (${adjudication.winner_team}) with ${adjudication.winner_player} (${adjudication.winning_score}).
+  - WITHIN STRIKING DISTANCE (RUNNER-UP): ${adjudication.runner_up?.managerName} (${adjudication.runner_up?.teamName}) with ${adjudication.runner_up?.name} (${adjudication.runner_up?.score}) — trailing by just ${adjudication.margin} points!
+  - DIRECTIVE FOR MARTY: You MUST explain this razor-thin contest drama! Detail why there is no official winner yet (holding for Wednesday 10:00 AM PT stat corrections), who is currently in the clubhouse lead, and who is lurking within striking distance.`;
+    } else if (adjudication?.winner_manager) {
+      completedContestReport = `"${lastWeekContest.contest_name}" (Leader: ${adjudication.winner_manager} with ${adjudication.winner_player} [${adjudication.winning_score}]).`;
+    } else if (lastWeekContest.winner_manager) {
+      completedContestReport = `"${lastWeekContest.contest_name}" (Winner: ${lastWeekContest.winner_manager} with ${lastWeekContest.winning_score} [${lastWeekContest.winner_player || ''}]).`;
+    } else {
+      completedContestReport = `"${lastWeekContest.contest_name}" (Tabulation pending).`;
+    }
+  } else {
+    completedContestReport = 'No contest logged.';
+  }
+
   const contestSummary = `
-- Completed Week ${weekToRecap} Contest: ${lastWeekContest ? `"${lastWeekContest.contest_name}" (Winner: ${lastWeekContest.winner_manager || 'TBD'} with score ${lastWeekContest.winning_score || 'N/A'}${lastWeekContest.winner_player ? `, winning player: ${lastWeekContest.winner_player}` : ''})` : 'No contest logged.'}
+- Completed Week ${weekToRecap} Contest: ${completedContestReport}
 - Upcoming Week ${upcomingWeek} Contest On Deck: ${thisWeekContest ? `"${thisWeekContest.contest_name}" (Prize: ${thisWeekContest.prize || '$10'} - Description: ${thisWeekContest.description || 'N/A'})` : `Standard $10 Week ${upcomingWeek} Challenge on deck.`}
   `.trim();
 
@@ -125,7 +153,7 @@ Your response MUST begin with exactly three lines of bracketed shortcodes so our
 
 ### 5. EDITORIAL & CONTINUITY RULES
 1. Traditional Column Format: Write a flowing, continuous print-style column (approx. 700 - 1000 words). Rely primarily on well-crafted paragraphs (<p>). DO NOT use segmented listicles, bullet points, or excessive sub-headers (<h2>/<h3>). It should read like a dusty newspaper column.
-2. Weekly Contest Coverage: Review the WEEKLY CONTEST data below. You MUST dedicate a paragraph to announcing the most recent winner in your grumpy, old-school voice (either praising their grit or complaining that it's a soft gimmick award), and include a brief mention or warning about the upcoming contest on deck.
+2. Weekly Contest Coverage: Review the WEEKLY CONTEST data below. You MUST dedicate a paragraph to the completed contest. If an official winner has been crowned, announce them in your grumpy, traditionalist voice. If the contest is currently UNOFFICIAL due to a 2-point stat correction hold, you MUST explain why the prize money is temporarily on ice pending Wednesday morning's official stat adjustments, who is currently sitting in the clubhouse lead, and who is lurking within striking distance! Then include a brief mention or warning about the upcoming contest on deck.
 3. Grounded in Real News: Weave at least one piece of real-world NFL news provided below into your column, usually complaining about how it reflects poorly on the modern game.
 4. Narrative Continuity: Review YOUR PAST ARTICLES below. Carry forward your ongoing grudges, running jokes, and past traditionalist predictions. DO NOT repeat identical punchlines or complaints from prior weeks.
 5. Organic Rebuttal: Review THE RIVAL'S TAKE below (${rivalInfo.rivalName}). Weave a natural, grumpy rebuttal into one of the paragraphs without breaking character.
