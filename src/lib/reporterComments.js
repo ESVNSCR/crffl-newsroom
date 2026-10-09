@@ -28,6 +28,29 @@ export function isReporterName(name) {
     n.includes('buck callahan')
   );
 }
+ 
+/**
+ * In-character fallback retort for reporters if the LLM is temporarily unavailable or times out.
+ * Ensures that reporters ALWAYS reply to managers on their articles.
+ */
+export function getFallbackReply(reporterId, humanName, teamName) {
+  const safeName = humanName || 'Manager';
+  const safeTeam = teamName || 'CRFFL Franchise';
+  switch (reporterId) {
+    case 'buck_callahan':
+      return `Appreciate you checking in from the ${safeTeam} sideline, ${safeName}. Keep your chin strapped and don't let anyone push you around in the trenches this week.`;
+    case 'chloe_carmichael':
+      return `Thanks for chiming in, ${safeName}! The front office rumor mill never rests—keep your FAAB tight and watch those wire claims closely.`;
+    case 'marty_sullivan':
+      return `Appreciate the dispatch, ${safeName}. Just make sure you leave the winning points on the field and off the pine on Sunday, and we'll get along fine.`;
+    case 'marcus_vance':
+      return `A salient observation, ${safeName}. While regression curves fluctuate, your franchise's expected value trajectory remains one to monitor closely.`;
+    case 'commissioner':
+      return `The Front Office acknowledges your dispatch, ${safeName}. Maintain constitutional compliance and compete with honor.`;
+    default:
+      return `Appreciate the perspective, ${safeName}. Best of luck on the field this week!`;
+  }
+}
 
 /**
  * Automatically generates and persists an in-character reporter response
@@ -110,16 +133,23 @@ export async function generateAndSaveReporterReply({
 
     // If thread parent exists, grab parent comment to give conversational continuity
     let threadContext = '';
+    let isReplyingToReporter = false;
     if (parentId) {
       const parentTable = targetType === 'power_ranking' ? 'power_ranking_comments' : 'article_comments';
       const { data: parentRow } = await supabase
         .from(parentTable)
-        .select('manager_name, comment')
+        .select('manager_name, comment, is_reporter')
         .eq('id', parentId)
         .maybeSingle();
 
       if (parentRow) {
+        isReplyingToReporter = Boolean(parentRow.is_reporter);
         threadContext = `PREVIOUS COMMENT IN THREAD BY ${parentRow.manager_name}: "${parentRow.comment}"\n`;
+      }
+
+      // If a manager is replying to another human manager, let them converse without reporter intrusion
+      if (!isReplyingToReporter) {
+        return null;
       }
     }
 
@@ -136,33 +166,39 @@ ${threadContext}COMMENT FROM ${humanName} (${teamName}): "${managerComment}"
 
 Reply in character as ${reporterPersona.name}:`;
 
-    // Call Gemini with timeout protection (15 seconds max)
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Reporter reply timeout')), 15000)
-    );
+    let cleanReply = '';
 
-    const geminiPromise = ai.models.generateContent({
-      model: FAST_MODEL || DEFAULT_MODEL,
-      contents: prompt,
-      config: {
-        systemInstruction,
-        temperature: 0.85,
-      },
-    });
+    try {
+      // Call Gemini with timeout protection (15 seconds max)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Reporter reply timeout')), 15000)
+      );
 
-    const response = await Promise.race([geminiPromise, timeoutPromise]);
-    let rawReply = response?.text || '';
+      const geminiPromise = ai.models.generateContent({
+        model: FAST_MODEL || DEFAULT_MODEL,
+        contents: prompt,
+        config: {
+          systemInstruction,
+          temperature: 0.85,
+        },
+      });
 
-    // Clean up reply text
-    let cleanReply = rawReply
-      .trim()
-      .replace(/^["']|["']$/g, '') // remove surrounding quotes
-      .replace(/^@\w+[:\s]*/i, '') // remove accidental leading @tag
-      .trim();
+      const response = await Promise.race([geminiPromise, timeoutPromise]);
+      const rawReply = response?.text || '';
 
+      // Clean up reply text
+      cleanReply = rawReply
+        .trim()
+        .replace(/^["']|["']$/g, '') // remove surrounding quotes
+        .replace(/^@\w+[:\s]*/i, '') // remove accidental leading @tag
+        .trim();
+    } catch (genErr) {
+      console.warn('Gemini reporter generation failed/timed out, using in-character fallback:', genErr.message);
+    }
+
+    // Always ensure an in-character reply even if Gemini times out or is empty
     if (!cleanReply || cleanReply.length < 5) {
-      console.warn('Reporter reply was too short or empty.');
-      return null;
+      cleanReply = getFallbackReply(reporterPersona.id, humanName, teamName);
     }
 
     // Persist the reporter reply to Supabase

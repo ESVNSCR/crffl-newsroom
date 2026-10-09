@@ -6,6 +6,7 @@ import { generateAndSaveReporterReply } from '@/lib/reporterComments';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const maxDuration = 60;
 
 export async function GET(request) {
   try {
@@ -269,7 +270,7 @@ export async function POST(request) {
     try {
       const replyResult = await generateAndSaveReporterReply({
         targetType: 'article',
-        articleId,
+        articleId: article_id,
         commentId: newComment.id,
         managerName: manager_name.trim(),
         managerComment: trimmedComment,
