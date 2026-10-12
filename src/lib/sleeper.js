@@ -21,9 +21,14 @@ export const MANAGERS = {
     teamName: 'Shortbus Superstars',
     logo: '/logos/kc.png',
   },
+  TROBISON74: {
+    managerName: 'Tolanda',
+    teamName: 'RaiderRose',
+    logo: '/logos/ed.png',
+  },
   RaiderRose510: {
-    managerName: 'Ed',
-    teamName: 'Team RaiderRose510',
+    managerName: 'Tolanda',
+    teamName: 'RaiderRose',
     logo: '/logos/ed.png',
   },
   rkelsoscudder: {

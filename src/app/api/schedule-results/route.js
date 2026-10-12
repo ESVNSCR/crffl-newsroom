@@ -24,7 +24,7 @@ function standardizeTeamName(rawName, managerUsername = '') {
   // Prepend "Team " if standard format
   if (name === 'GardenGoddess') return 'Team GardenGoddess';
   if (name === 'CoreyCash') return 'Team CoreyCash';
-  if (name === 'RaiderRose510') return 'Team RaiderRose510';
+  if (name === 'RaiderRose510' || name === 'RaiderRose' || name === 'TROBISON74') return 'RaiderRose';
   if (name === 'Killa MC') return 'Team Killa MC';
 
   return name;

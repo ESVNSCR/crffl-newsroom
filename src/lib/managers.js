@@ -13,11 +13,11 @@ export const MANAGERS_LIST = [
     sleeperUsername: 'coreycash',
   },
   {
-    id: 'ed',
-    name: 'Ed',
-    teamName: 'Team RaiderRose510',
+    id: 'tolanda',
+    name: 'Tolanda',
+    teamName: 'RaiderRose',
     logo: '/logos/ed.png',
-    sleeperUsername: 'RaiderRose510',
+    sleeperUsername: 'TROBISON74',
   },
   {
     id: 'eric',
@@ -80,7 +80,7 @@ export const MANAGERS_LIST = [
 
 export const VALID_MANAGERS = [
   'Corey',
-  'Ed',
+  'Tolanda',
   'Eric',
   'Jeff',
   'KC',
@@ -126,6 +126,17 @@ export function resolveManager(name) {
       authName: 'Eric',
       teamName: 'Office of the Commissioner',
       logo: '/logos/league.png',
+    };
+  }
+
+  // Backward compatibility alias for Ed -> Tolanda
+  const lower = trimmed.toLowerCase();
+  if (lower === 'ed' || lower.startsWith('ed ') || lower.includes('raiderrose510')) {
+    return {
+      managerName: 'Tolanda',
+      authName: 'Tolanda',
+      teamName: 'RaiderRose',
+      logo: '/logos/ed.png',
     };
   }
 

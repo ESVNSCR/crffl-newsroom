@@ -8,7 +8,7 @@ import { decodeHtmlEntities, formatDatePacific } from '@/lib/formatters';
 const MANAGERS_LIST = [
   'General League',
   'Corey (Team CoreyCash)',
-  'Ed (Team RaiderRose510)',
+  'Tolanda (RaiderRose)',
   'Eric (Rebel Scum)',
   'Jeff (Hickory Huskers)',
   'KC (Shortbus Superstars)',

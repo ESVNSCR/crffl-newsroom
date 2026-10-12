@@ -59,10 +59,10 @@ const MARCUS_VANCE_QUIPS = {
       "Team CoreyCash is experiencing severe inflation today: high investment, negligible fantasy dividends.",
       "My models suggest Corey is one missed extra point away from demanding an immediate audit of the scoring settings.",
     ],
-    Ed: [
-      "Ed, the Silver and Black telemetry is showing critical structural failure today. Your win probability is in full rebuild mode.",
-      "I appreciate Ed's loyalty to the running game, but in modern analytical fantasy football, 2.1 yards per carry is purely cosmetic.",
-      "Ed, my algorithms detect a severe deficit of completed passes. Just win, baby... or at least score 90 points.",
+    Tolanda: [
+      "Tolanda, the Silver and Black telemetry is showing critical structural failure today. Your win probability is in full rebuild mode.",
+      "I appreciate Tolanda's hostile takeover of RaiderRose, but in modern analytical fantasy football, 2.1 yards per carry is purely cosmetic.",
+      "Tolanda, my algorithms detect a severe deficit of completed passes. Just win, baby... or at least score 90 points.",
     ],
     Jeff: [
       "Jeff's corn-fed roster is facing an analytical drought today. The harvest yield is roughly 15 points below projections.",
@@ -157,10 +157,10 @@ const BUCK_CALLAHAN_QUIPS = {
       "Corey's team plays football like they're worried about scuffing their cleats. Hit the hole and lower your shoulder, son!",
       "Money talks, Corey, but right now your starting lineup is whispering apologies to the defense!",
     ],
-    Ed: [
-      "Ed knows what real football looks like, but his squad today is playing like they forgot the stadium was in Vegas! Wake up!",
-      "RaiderRose510 needs to dial up some 1976 Madden football right now. Line up in the I-formation and run it down their throats, Ed!",
-      "Ed, I respect the black and silver grit, but your boys are getting pushed backwards on 3rd-and-short!",
+    Tolanda: [
+      "Tolanda knows what real football looks like, but her squad today is playing like they forgot the stadium was in Vegas! Wake up!",
+      "RaiderRose needs to dial up some 1976 Madden football right now. Line up in the I-formation and run it down their throats, Tolanda!",
+      "Tolanda, I respect the black and silver grit of this RaiderRose takeover, but your boys are getting pushed backwards on 3rd-and-short!",
     ],
     Jeff: [
       "Jeff! The Huskers used to run the option and break willpowers! What is this horizontal bubble screen nonsense your team is running?!",
@@ -247,9 +247,9 @@ const MARTY_SULLIVAN_QUIPS = {
       "Corey's got that 1980s swagger, but flashy uniforms don't win ball games when the fundamentals break down in the red zone.",
       "CoreyCash is living dangerously today. I remember when high-rollers used to dominate this league with three bellcow running backs.",
     ],
-    Ed: [
-      "Ed's loyalty is legendary in this bureau. He's been riding with the silver and black through thick and thin for over a decade.",
-      "Ed knows the cardinal rule: you establish the run, you protect the football, and you don't panic when the scoreboard gets ugly.",
+    Tolanda: [
+      "Tolanda's taken the keys to RaiderRose and she's not looking back. Riding with the silver and black through thick and thin takes real backbone.",
+      "Tolanda knows the cardinal rule: you establish the run, you protect the football, and you don't panic when the scoreboard gets ugly.",
     ],
     Jeff: [
       "Jeff plays football the way it was meant to be played: quiet, focused, with clean handoffs and no end-zone celebrations.",
@@ -335,9 +335,9 @@ const CHLOE_CARMICHAEL_QUIPS = {
       "Corey's high-stakes swagger is legendary, but insiders are asking if Team CoreyCash is about to declare fantasy bankruptcy this week.",
       "Word around the league is Corey is already drafting a monster blockbuster trade offer for Tuesday's waiver run.",
     ],
-    Ed: [
-      "Ed's locker room has a strict 'no panic' policy, but rival general managers are already sniffing around his running back depth.",
-      "Sources say Ed's phone is currently on 'Do Not Disturb' while he watches the 4th quarter in silence.",
+    Tolanda: [
+      "Tolanda's hostile takeover of RaiderRose has rival general managers scrambling to recalculate their trade leverage.",
+      "Sources say Tolanda's front office is running a tight ship, but she's already eyeing Tuesday's waiver wire to clean house.",
     ],
     Jeff: [
       "Jeff is the most disciplined GM in the league, but even the Huskers' front office has to be sweating this scoreline.",

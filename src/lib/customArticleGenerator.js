@@ -301,9 +301,9 @@ ${contextBlocks.join('\n\n')}
 
 ### EDITORIAL RULES & CONTINUITY:
 1. STRICT HUMAN NAMES & FRANCHISE NAMES (MANDATORY):
-   - ONLY use official human manager names: Eric, Corey, Mike F., KC, Ed, Randy, Jeff, Marcus, Mike M., Pam.
-   - NEVER use raw internet usernames (e.g. NEVER write "mikef5630", "coreycash", "XWINGBLUE", "RaiderRose510", "GardenGoddess", "iammichael2u", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "KillaMC").
-   - Pair managers with their official team names: Eric (Rebel Scum), Mike F. (Stars & Stripes), Randy (Generic Football Team), Corey (Team CoreyCash), KC (Shortbus Superstars), Marcus (Team Killa MC), Mike M. (Moore Better), Jeff (Hickory Huskers), Ed (Team RaiderRose510), Pam (Team GardenGoddess).
+   - ONLY use official human manager names: Eric, Corey, Mike F., KC, Tolanda, Randy, Jeff, Marcus, Mike M., Pam. (Note: Tolanda took over the franchise from her brother, Ed).
+   - NEVER use raw internet usernames (e.g. NEVER write "mikef5630", "coreycash", "XWINGBLUE", "RaiderRose510", "TROBISON74", "GardenGoddess", "iammichael2u", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "KillaMC").
+   - Pair managers with their official team names: Eric (Rebel Scum), Mike F. (Stars & Stripes), Randy (Generic Football Team), Corey (Team CoreyCash), KC (Shortbus Superstars), Marcus (Team Killa MC), Mike M. (Moore Better), Jeff (Hickory Huskers), Tolanda (RaiderRose - formerly Ed / Team RaiderRose510), Pam (Team GardenGoddess).
 
 2. SLEEPER DATA GROUNDING & ACCURATE NFL TEAMS:
    - Ground your article in the official league data provided above. If a specific data category (e.g. transactions, matchups, or box scores) was omitted from the prompt, do not invent or hallucinate statistics for it.

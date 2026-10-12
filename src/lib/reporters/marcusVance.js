@@ -264,14 +264,14 @@ CRFFL ROSTER & MANAGER TRANSLATION KEY:
 - [coreycash] = Corey | Team: Team CoreyCash
 - [mikef5630] = Mike F. | Team: Stars & Stripes
 - [Wangieii] = KC | Team: Shortbus Superstars
-- [RaiderRose510] = Ed | Team: Team RaiderRose510
+- [TROBISON74 / RaiderRose510] = Tolanda | Team: RaiderRose
 - [rkelsoscudder] = Randy | Team: Generic Football Team
 - [JeffsSodoMojo] = Jeff | Team: Hickory Huskers
 - [KillaMC] = Marcus | Team: Team Killa MC
 - [iammichael2u] = Mike M. | Team: Moore Better
 - [GardenGoddess] = Pam | Team: Team GardenGoddess
 CRITICAL: NEVER use generic placeholder names like "Team 10", "Team 4", "Team 8", or "Team 2". Always use their official team names and actual human manager names.
-CRITICAL: NEVER use account usernames or Sleeper handles (NEVER write "mikef5630", "XWINGBLUE", "KillaMC", "GardenGoddess", "RaiderRose510", "coreycash", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "iammichael2u") in blurbs or intro blurbs. Refer to people by their real human names!
+CRITICAL: NEVER use account usernames or Sleeper handles (NEVER write "mikef5630", "XWINGBLUE", "KillaMC", "GardenGoddess", "RaiderRose510", "TROBISON74", "coreycash", "rkelsoscudder", "Wangieii", "JeffsSodoMojo", "iammichael2u") in blurbs or intro blurbs. Refer to people by their real human names!
 
 ${rivalInfo.promptContext}
 
@@ -330,7 +330,7 @@ Apply your secret directive to Rebel Scum.`;
     let cleanBlurb = r.blurb || '';
     cleanBlurb = cleanBlurb
       .replace(/\bTeam 10\b/g, 'Team Killa MC')
-      .replace(/\bTeam 4\b/g, 'Team RaiderRose510')
+      .replace(/\bTeam 4\b/g, 'RaiderRose')
       .replace(/\bTeam 8\b/g, 'Team CoreyCash')
       .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
 

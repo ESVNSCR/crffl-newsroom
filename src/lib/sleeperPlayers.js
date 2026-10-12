@@ -343,7 +343,8 @@ export function sanitizeManagerNames(text) {
     .replace(/\bTeam\s+JeffsSodoMojo\b/gi, 'Hickory Huskers')
     .replace(/\bTeam\s+coreycash\b/gi, 'Team CoreyCash')
     .replace(/\bTeam\s+KillaMC\b/gi, 'Team Killa MC')
-    .replace(/\bTeam\s+RaiderRose510\b/gi, 'Team RaiderRose510')
+    .replace(/\bTeam\s+RaiderRose510\b/gi, 'RaiderRose')
+    .replace(/\bTeam\s+TROBISON74\b/gi, 'RaiderRose')
     .replace(/\bTeam\s+GardenGoddess\b/gi, 'Team GardenGoddess')
     // Raw Sleeper usernames -> Real Manager First Names (using lookbehind so official Team names aren't corrupted)
     .replace(/(?<!Team\s+)XWINGBLUE\b/gi, 'Eric')
@@ -353,7 +354,8 @@ export function sanitizeManagerNames(text) {
     .replace(/(?<!Team\s+)rkelsoscudder\b/gi, 'Randy')
     .replace(/(?<!Team\s+)JeffsSodoMojo\b/gi, 'Jeff')
     .replace(/(?<!Team\s+)iammichael2u\b/gi, 'Mike M.')
-    .replace(/(?<!Team\s+)RaiderRose510\b/gi, 'Ed')
+    .replace(/(?<!Team\s+)RaiderRose510\b/gi, 'Tolanda')
+    .replace(/(?<!Team\s+)TROBISON74\b/gi, 'Tolanda')
     .replace(/(?<!Team\s+)KillaMC\b/gi, 'Marcus')
     .replace(/(?<!Team\s+)GardenGoddess\b/gi, 'Pam');
 }

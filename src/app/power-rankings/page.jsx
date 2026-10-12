@@ -98,7 +98,7 @@ export default async function PowerRankingsPage({ searchParams }) {
       let cleanBlurb = team.blurb || '';
       cleanBlurb = cleanBlurb
         .replace(/\bTeam 10\b/g, 'Team Killa MC')
-        .replace(/\bTeam 4\b/g, 'Team RaiderRose510')
+        .replace(/\bTeam 4\b/g, 'RaiderRose')
         .replace(/\bTeam 8\b/g, 'Team CoreyCash')
         .replace(/\bTeam 2\b/g, 'Team GardenGoddess');
 

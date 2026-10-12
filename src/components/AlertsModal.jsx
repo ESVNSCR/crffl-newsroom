@@ -8,7 +8,7 @@ const MANAGERS_LIST = [
   { name: 'Corey', team: 'Team CoreyCash' },
   { name: 'Mike F.', team: 'Stars & Stripes' },
   { name: 'KC', team: 'Shortbus Superstars' },
-  { name: 'Ed', team: 'Team RaiderRose510' },
+  { name: 'Tolanda', team: 'RaiderRose' },
   { name: 'Randy', team: 'Generic Football Team' },
   { name: 'Jeff', team: 'Hickory Huskers' },
   { name: 'Marcus', team: 'Team Killa MC' },
