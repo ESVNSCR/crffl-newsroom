@@ -16,7 +16,7 @@ export const MANAGERS_LIST = [
     id: 'tolanda',
     name: 'Tolanda',
     teamName: 'RaiderRose',
-    logo: '/logos/ed.png',
+    logo: '/logos/tolanda.png',
     sleeperUsername: 'TROBISON74',
   },
   {
@@ -136,7 +136,7 @@ export function resolveManager(name) {
       managerName: 'Tolanda',
       authName: 'Tolanda',
       teamName: 'RaiderRose',
-      logo: '/logos/ed.png',
+      logo: '/logos/tolanda.png',
     };
   }
 

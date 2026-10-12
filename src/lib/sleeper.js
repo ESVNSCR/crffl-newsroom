@@ -24,12 +24,12 @@ export const MANAGERS = {
   TROBISON74: {
     managerName: 'Tolanda',
     teamName: 'RaiderRose',
-    logo: '/logos/ed.png',
+    logo: '/logos/tolanda.png',
   },
   RaiderRose510: {
     managerName: 'Tolanda',
     teamName: 'RaiderRose',
-    logo: '/logos/ed.png',
+    logo: '/logos/tolanda.png',
   },
   rkelsoscudder: {
     managerName: 'Randy',
