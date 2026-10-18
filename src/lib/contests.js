@@ -5,8 +5,8 @@
 export const LEAGUE_PAYOUTS = [
   {
     place: '1st Place (Champion)',
-    amount: 195,
-    label: '$195',
+    amount: 200,
+    label: '$200',
     tag: 'League Champion',
     description: 'CRFFL Championship Trophy, ring honors, and apex cash payout.',
     badgeColor: 'border-[#d4af37] text-[#d4af37] bg-[#d4af37]/10',
@@ -54,7 +54,7 @@ export const LEAGUE_PAYOUTS = [
   },
 ];
 
-export const TOTAL_PRIZE_PURSE = 520;
+export const TOTAL_PRIZE_PURSE = 525;
 
 export const WEEKLY_CONTESTS_MASTER = [
   {

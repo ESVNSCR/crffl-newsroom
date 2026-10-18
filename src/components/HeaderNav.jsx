@@ -287,7 +287,7 @@ export default function HeaderNav() {
                   <span className="btn-nav-base btn-nav-info px-2 py-0.5 text-[11px]">Info</span>
                   <span className="font-semibold text-sm">Contests & Payouts</span>
                 </div>
-                <span className="text-xs text-emerald-400 font-mono font-bold">Rules &amp; $520 →</span>
+                <span className="text-xs text-emerald-400 font-mono font-bold">Rules &amp; $525 →</span>
               </Link>
 
               <a

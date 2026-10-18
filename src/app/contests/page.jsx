@@ -14,14 +14,29 @@ export const metadata = {
 };
 
 export default async function ContestsPage() {
-  // Query Supabase for latest contest statuses and logged winners, and get current NFL state
-  const [{ data: dbContests }, nflState] = await Promise.all([
+  // Query Supabase for latest contest statuses, payouts override, and current NFL state
+  const [{ data: dbContests }, { data: payoutsSetting }, nflState] = await Promise.all([
     supabase
       .from('weekly_contests')
       .select('*')
       .order('week_number', { ascending: true }),
+    supabase
+      .from('artie_settings')
+      .select('value')
+      .eq('key', 'league_payouts_override')
+      .maybeSingle(),
     getNflState().catch(() => ({ week: 1 })),
   ]);
+
+  let activePayouts = LEAGUE_PAYOUTS;
+  if (payoutsSetting?.value) {
+    try {
+      const parsed = JSON.parse(payoutsSetting.value);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        activePayouts = parsed;
+      }
+    } catch (_) {}
+  }
 
   const currentNflWeek = nflState?.week || 1;
 
@@ -75,9 +90,15 @@ export default async function ContestsPage() {
     };
   });
 
-  const playoffPool = LEAGUE_PAYOUTS
+  const weeklyBountiesTier = activePayouts.find((p) => p.place === '14 Weekly Contests');
+  const weeklyPool = weeklyBountiesTier ? weeklyBountiesTier.amount : 140;
+
+  const playoffPool = activePayouts
     .filter((p) => p.place !== '14 Weekly Contests')
-    .reduce((sum, p) => sum + p.amount, 0);
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+  const totalPurse = playoffPool + weeklyPool;
+  const champTier = activePayouts[0] || { amount: 200, label: '$200' };
 
   return (
     <div className="min-h-screen bg-[#0b0f17] text-gray-100 py-10 sm:py-14 px-4 sm:px-6 lg:px-8">
@@ -100,14 +121,14 @@ export default async function ContestsPage() {
             </h1>
 
             <p className="max-w-2xl mx-auto text-sm sm:text-base text-gray-300 leading-relaxed">
-              Every dollar accounted for. From the coveted $195 championship apex down to the fourteen $10 regular-season weekly side bounties, adjudicated following Monday Night Football by Marty Sullivan.
+              Every dollar accounted for. From the coveted {champTier.label || `$${champTier.amount}`} championship apex down to the fourteen $10 regular-season weekly side bounties, adjudicated following Monday Night Football by Marty Sullivan.
             </p>
 
             {/* Quick Stat Pill Highlights */}
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <div className="px-4 py-2 rounded-xl bg-black/60 border border-[#d4af37]/40 shadow-inner">
                 <span className="text-[10px] font-mono text-gray-400 block uppercase">Total League Purse</span>
-                <span className="text-xl sm:text-2xl font-black text-[#d4af37] font-mono">${TOTAL_PRIZE_PURSE}</span>
+                <span className="text-xl sm:text-2xl font-black text-[#d4af37] font-mono">${totalPurse}</span>
               </div>
 
               <div className="px-4 py-2 rounded-xl bg-black/60 border border-white/10 shadow-inner">
@@ -117,7 +138,7 @@ export default async function ContestsPage() {
 
               <div className="px-4 py-2 rounded-xl bg-black/60 border border-white/10 shadow-inner">
                 <span className="text-[10px] font-mono text-gray-400 block uppercase">Weekly Contests Pool</span>
-                <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">$140</span>
+                <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">${weeklyPool}</span>
               </div>
             </div>
           </div>
@@ -134,13 +155,21 @@ export default async function ContestsPage() {
                 Official Payout Schedule
               </h2>
             </div>
-            <span className="text-xs text-gray-400 font-mono">
-              6 Prize Tiers • All Payouts Guaranteed
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400 font-mono">
+                {activePayouts.length} Prize Tiers • All Payouts Guaranteed
+              </span>
+              <Link
+                href="/admin/contests"
+                className="text-[11px] font-mono font-bold text-[#d4af37] hover:text-[#e6c24d] transition border border-[#d4af37]/30 px-2.5 py-1 rounded bg-[#d4af37]/10"
+              >
+                Edit Payouts →
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {LEAGUE_PAYOUTS.map((tier, idx) => {
+            {activePayouts.map((tier, idx) => {
               const isFirst = idx === 0;
               return (
                 <div

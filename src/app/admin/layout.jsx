@@ -182,7 +182,7 @@ export default function AdminLayout({ children }) {
             <span>•</span>
             <Link href="/admin/rankings" className="hover:text-white transition">Rankings</Link>
             <span>•</span>
-            <Link href="/admin/contests" className="hover:text-white transition">Contests</Link>
+            <Link href="/admin/contests" className="text-purple-300 font-bold hover:text-white transition">Contests &amp; Payouts</Link>
           </div>
 
           <button
