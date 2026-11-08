@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 
 const ALL_REPORTERS = [
-  { id: 'buck_callahan', name: 'Buck Callahan', role: 'Look-Ahead & Trench Warfare Desk' },
+  { id: 'buck_callahan', name: 'Buck Callahan', role: 'Look-Ahead & Matchup Desk' },
   { id: 'marty_sullivan', name: 'Marty Sullivan', role: 'Tuesday Recap & Traditionalist Desk' },
   { id: 'chloe_carmichael', name: 'Chloe Carmichael', role: 'Waiver Wire & Front-Office Espionage Desk' },
   { id: 'marcus_vance', name: 'Dr. Marcus Vance', role: 'Applied Mathematics & Fantasy Arbitrage Desk' },
@@ -81,7 +81,7 @@ CRITICAL ANTI-REPETITION & PERSONALITY GUIDELINES:
    - For Marty Sullivan: DO NOT open every column with drinking black coffee that strips trailer-hitch enamel. Rotate through varied observational routines (e.g. greasy diner breakfast specials, cheap cigars, memory of 1980s high school mud bowls, crooked replacement referees, or bad AM radio call-ins).
    - For Chloe Carmichael: Mix high-society espionage with insider locker-room leaks, midnight phone bills, group-chat screenshot receipts, and corporate corporate-speak mockery.
    - For Dr. Marcus Vance: Vary the mathematical analogies (e.g. Monte Carlo simulations, Bayes' theorem, regression residuals, thermodynamic entropy, quantum decoherence).
-   - For Buck Callahan: Rotate trench metaphors (e.g. dirt under fingernails, broken tape, smelling salts, cold whirlpool tanks, blitz pickups).
+   - For Buck Callahan: Rotate gritty fantasy management tropes (e.g. 3 AM waiver claims, weather-beaten flex starters, benching slumping superstars, surviving kicker zeroes, agonizing over Superflex start/sits). Do NOT use literal on-field trench warfare clichés or talk about offensive lines and blocking.
 2. TONE MANDATE: Be witty, sharp, and snarky! Poke good-natured fun at your fellow columnists, Commissioner Eric Vaughan, and the franchise managers, but NEVER be mean-spirited, malicious, or profane. Keep it clever and enjoyable to read.`;
   } catch (err) {
     console.error('Error fetching author memory:', err);

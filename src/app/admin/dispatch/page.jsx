@@ -100,10 +100,10 @@ const PROMPT_SUGGESTIONS = {
     "Why emotional lineup management is a statistical disease in the Columbia River league.",
   ],
   buck_callahan: [
-    "A trench warfare breakdown of the most physical matchup of the season.",
-    "Locker room report: Which manager gave up early and who is playing through the pain?",
+    "A hard-hitting matchup preview breaking down the fiercest lineup battles of the week.",
+    "Locker room report: Which manager gave up early and who made the boldest coaching calls?",
     "A gritty preview of upcoming rivalry games, with zero apologies for calling out soft benches.",
-    "Why Eric's roster construction is undeniably solid (and a fierce denial of playing favorites).",
+    "Why Eric's roster construction is undeniably solid (and why Rebel Scum is built for December).",
   ],
 };
 

@@ -51,7 +51,7 @@ const MARCUS_VANCE_QUIPS = {
   manager_callouts: {
     Eric: [
       "The Commissioner's Excel macros seem to be malfunctioning today. Even executive power cannot override a sub-zero FLEX performance.",
-      "Eric, the imperial fleet is taking heavy flak in the trenches today. Your win probability needs reinforcements from the outer rim.",
+      "Eric, the imperial fleet is taking heavy flak on the fantasy scoreboard today. Your win probability needs reinforcements from the outer rim.",
       "Commissioner Eric, I ran the historical precedent: no league founder has ever won a title while leaving this many points on the bench.",
     ],
     Corey: [
@@ -110,99 +110,99 @@ const MARCUS_VANCE_QUIPS = {
 };
 
 // ---------------------------------------------------------------------------
-// BUCK CALLAHAN — THE GRIT DESK & TRENCH WARFARE
+// BUCK CALLAHAN — THE LOOK-AHEAD & FANTASY MATCHUP DESK
 // ---------------------------------------------------------------------------
 const BUCK_CALLAHAN_QUIPS = {
   direct_reply: [
-    "You want my take, {manager}? Put down the phone, put on a helmet, and find me a running back who actually hits the hole with authority!",
-    "Don't whine to me about your projected score, {manager}! Points are won in the mud on 4th-and-goal, not on your little app screen!",
-    "Listen to me, {manager}: you got guys on your roster who don't even have grass stains on their jerseys. That ain't football, that's flag ballet!",
-    "I looked at your roster, {manager}. Too many finesse route runners, not enough guys who eat gravel for breakfast. Soft!",
-    "You're tagging the wrong guy if you want sympathy, {manager}. Go ask Dr. Vance for a crying spreadsheet. I want to see somebody crack some pads!",
-    "Grit check, {manager}! Your team looks like they're playing two-hand touch out there. Where's the dog in 'em?!",
-    "I don't care about your targets or your air yards, {manager}. Did your boys move the pile or did they get stood up at the line?!",
-    "Back in my day, {manager}, if your kicker missed from 42, he walked home with his equipment bag. Times have gone soft!",
+    "You want my take, {manager}? Put down the crying towel, bench your slumping prima donnas, and start some guys with actual fantasy grit!",
+    "Don't whine to me about your projected score, {manager}! Matchups are won with tough lineup calls on Sunday morning, not by staring at green numbers on an app!",
+    "Listen to me, {manager}: you got guys in your starting 11 who haven't put up double digits since October. That ain't coaching, that's fantasy malpractice!",
+    "I looked at your roster, {manager}. Too many finesse waiver gambles, not enough 20-touch bellcows who give you an honest 15 points. Soft!",
+    "You're tagging the wrong columnist if you want sympathy, {manager}. Go ask Dr. Vance for a crying spreadsheet. I want to see somebody make a bold start!",
+    "Fantasy grit check, {manager}! Your lineup looks like you set it in July and fell asleep. Where's the fire?!",
+    "I don't care about your air yards or expected targets, {manager}. Did your starting flex find the end zone or did he post a big fat zero?!",
+    "Back in my day, {manager}, if your kicker gave you a goose egg, you dropped him before the post-game press conference. Times have gone soft!",
   ],
 
   thriller: [
-    "NOW WE'RE PLAYING FOOTBALL! Under ten points, two minutes on the clock, slobber-knocker in the trenches!",
-    "This is what November football is about, boys! Chinstraps buckled, mouthguards chewed up, every yard paid in blood and bruised ribs!",
-    "Forget the analytics! This game is gonna come down to who wants that fumble pile more! Pure unadulterated GRIT!",
-    "You can smell the icy hot and smelling salts from here! Down to the wire in the GRITZone!",
-    "This ain't for the faint of heart! If you can't stomach a 2-point spread in the 4th quarter, go watch professional tennis!",
+    "NOW THIS IS FANTASY FOOTBALL! Under three points separating them with a Monday night Superflex on the field!",
+    "Down to the wire, boys! Decimals sweating, notifications buzzing, every garbage-time dump-off deciding the fate of a franchise!",
+    "Forget Dr. Vance's projections! This matchup comes down to pure, unadulterated fantasy grit!",
+    "A 1.4-point deficit heading into the fourth quarter of Monday night. If your stomach can't handle this, go play fantasy pickleball!",
+    "This is why we play the game. Every yard, every reception, every decimal point fought for until the final whistle!",
   ],
 
   blowout: [
-    "Towel's on the field! That's a full-blown surrender cobra! Pack up the bus and take a cold shower!",
-    "Down 40 points? That's not a defeat, that's an eviction notice. Somebody check their sideline for folding chairs!",
-    "Total lack of heart out there today. When you're getting drummed by four touchdowns, you don't look at projections, you look in the mirror!",
-    "I haven't seen a team get pushed around the line of scrimmage like this since my freshman year JV scrimmage against state champs.",
-    "Mercy rule needs to be instituted in this league. That squad gave up back in the second quarter!",
+    "Towel's on the field! That's a 40-point blowout! Clear the bench and check your waiver wire priority for Tuesday morning!",
+    "Down 50 points? That's not a tough break, that's an editorial scandal. Somebody check that starting lineup for signs of life!",
+    "Total collapse out there today. When you get smoked by four touchdowns, you don't blame the referee—you look in the mirror and audit your starting slots!",
+    "I haven't seen a fantasy drubbing like this since the 2018 playoffs. Absolute demolition on the scoreboard!",
+    "Mercy rule needs to be instituted in this league. That squad stopped scoring in the second quarter!",
   ],
 
   bench_points: [
-    "You left your toughest guy on the bench, {manager}! The fella with the bruised forearm is sitting on pine while your pretty boy gets zero!",
-    "Don't cry to me about points on the bench! A real coach knows who's got the fire before kickoff, not on Monday morning!",
-    "Leaving thirty points on the sideline is what happens when you listen to fantasy podcasts instead of checking a man's pulse!",
+    "You left 28 points on your bench, {manager}! Your backup running back went off while your starting wideout put up two catches for 11 yards. Disgraceful!",
+    "Don't cry to me about a bad break! A real manager knows who's got the hot hand before kickoff, not after the box score goes final!",
+    "Leaving thirty points on the pine is what happens when you listen to podcast hype instead of trusting your fantasy gut!",
   ],
 
   manager_callouts: {
     Eric: [
-      "Commish Eric, you can write all the memos you want, but your offensive line is getting manhandled at the point of attack!",
-      "Rebel Scum looks like they surrendered to the Empire before the opening coin toss today, Eric! Where's the grit?!",
-      "Eric, the commissioner's desk is nice and warm, but out here on the field your boys are getting shoved into the second row!",
+      "Now that's how you manage a franchise! Eric has Rebel Scum dialed in with championship-caliber lineup precision today!",
+      "Rebel Scum showing the entire league what elite fantasy roster construction looks like. Masterclass from the Commissioner!",
+      "I call it like I see it: Eric has Rebel Scum firing on all cylinders. Best-managed roster in the CRFFL and it's not even close!",
     ],
     Corey: [
-      "Corey, you can't pay a linebacker to hit harder! All that Team CoreyCash swagger and your boys are dancing out of bounds!",
-      "Corey's team plays football like they're worried about scuffing their cleats. Hit the hole and lower your shoulder, son!",
-      "Money talks, Corey, but right now your starting lineup is whispering apologies to the defense!",
+      "Corey, you can't buy your way out of a 25-point hole! All that Team CoreyCash swagger and your starters are putting up duds!",
+      "Team CoreyCash needs to stop overthinking the matchups and start some reliable high-floor workhorses, Corey!",
+      "Money talks, Corey, but right now your starting lineup is whispering apologies to the scoreboard!",
     ],
     Tolanda: [
-      "Tolanda knows what real football looks like, but her squad today is playing like they forgot the stadium was in Vegas! Wake up!",
-      "RaiderRose needs to dial up some 1976 Madden football right now. Line up in the I-formation and run it down their throats, Tolanda!",
-      "Tolanda, I respect the black and silver grit of this RaiderRose takeover, but your boys are getting pushed backwards on 3rd-and-short!",
+      "Tolanda brought the black and silver edge to RaiderRose, but her squad needs some urgent lineup adjustments this week!",
+      "RaiderRose has the grit, Tolanda, but you can't win in this league when your Superflex slot puts up single digits! Dial it in!",
+      "Tolanda, I respect the hostile takeover of RaiderRose, but you need your starting wideouts to show up on Sunday!",
     ],
     Jeff: [
-      "Jeff! The Huskers used to run the option and break willpowers! What is this horizontal bubble screen nonsense your team is running?!",
-      "Jeff, line 'em up behind a pulling guard and smash it! Stop waiting for fancy passing plays that end in punts!",
-      "Hickory Huskers need some good old-fashioned Midwest grit today, Jeff. Grab a salt tablet and get back out there!",
+      "Jeff! The Huskers need some good old-fashioned Midwest fantasy discipline today. Stop starting boom-or-bust lottery tickets!",
+      "Jeff, lock in your high-floor starters and grind out the win! Stop waiting for waiver wire miracles that never come!",
+      "Hickory Huskers have the grit, Jeff, but grit doesn't count in decimal scoring unless your players actually cross the goal line!",
     ],
     KC: [
-      "KC! What in the name of Lombardi is going on with your roster?! One guy scores thirty and three guys don't even break a sweat!",
-      "Shortbus Superstars playing backyard sandbox ball today, KC! You need some discipline and a fullback in that lineup!",
-      "KC, if your boys played with half as much hustle as they do attitude, you'd be up by four scores!",
+      "KC! What in the name of fantasy football is going on with your roster?! One guy scores thirty and three starters don't break five points!",
+      "Shortbus Superstars living on a prayer today, KC! You need some lineup stability, not wild dart throws!",
+      "KC, if your lineup played with half as much consistency as your trash talk, you'd be sitting at the top of the standings!",
     ],
     Marcus: [
-      "Marcus! Killa MC was supposed to bring the sledgehammer today! All I'm seeing is whiffed blocks and fair catches!",
-      "Marcus, your skill players are running out of bounds to avoid contact. Somebody put some smelling salts under their nose!",
-      "Team Killa MC looking more like Team Gentle Hug today, Marcus. Hit somebody!",
+      "Marcus! Team Killa MC was supposed to be a heavyweight contender! All I'm seeing is empty stat lines and wasted flex spots!",
+      "Marcus, your starting lineup is disappearing when it matters most. Time to make some hard cuts on the waiver wire!",
+      "Team Killa MC looking shaky this week, Marcus. Time to wake up that roster and put some points on the board!",
     ],
     'Mike F.': [
-      "Mike F.! I know you respect the grind, but your boys look like they ran two miles with weighted vests before kickoff!",
-      "Stars & Stripes needs to find an extra gear, Mike! You're getting out-muscled on every single 50/50 ball!",
-      "Mike F., strap that helmet on tight. This afternoon is about gut checks, and your team is on the ropes!",
+      "Mike F.! I know you respect the grind, but your starting wideouts are giving you nothing today! Time to hit the waiver wire!",
+      "Stars & Stripes is usually reliable, Mike, but you're getting out-coached in the flex spots today!",
+      "Mike F., wake up that lineup! This league doesn't wait around for slumping veterans to find their rhythm!",
     ],
     'Mike M.': [
-      "Mike M., you can call it 'Moore Better,' but out here in the dirt, it looks a whole lot worse! Put a shoulder into 'em!",
-      "Mike M. is hoping for a miracle through the air. Real men win fantasy games on the ground with six yards and a cloud of dust!",
-      "Stop dancing in the backfield, Mike M.! North and south! Get upfield and take the hit!",
+      "Mike M., you can call it 'Moore Better,' but looking at this box score, it looks a whole lot worse! Make a move!",
+      "Mike M. is hoping for a miracle on Monday night. Real managers lock up the win on Sunday afternoon with solid starting depth!",
+      "Stop playing cute with your flex spots, Mike M.! Start the guys who actually get regular red-zone touches!",
     ],
     Pam: [
-      "Pam usually brings the steel-toed boots, but today her garden is getting bulldozed by a four-man defensive front!",
-      "Team GardenGoddess needs to find that old-school nastiness, Pam! Stop planting flowers and start throwing lead blocks!",
-      "Pam, your boys look polite out there. Football ain't a tea party, it's an alley fight in pads!",
+      "Pam usually runs a tight ship, but today her starting lineup is giving away easy points to the opponent!",
+      "Team GardenGoddess needs to find that ruthless touch, Pam! Stop waiting on underperforming starters and bench 'em!",
+      "Pam, this isn't a friendly scrimmage, it's CRFFL competition! Time to shake up that starting roster!",
     ],
     Randy: [
-      "Randy, Generic Football Team is living up to the name! Where's the fire?! Where's the thunder?! Give me some juice, son!",
-      "Randy's squad is running plays like they're reading instructions off a microwave dinner. Show some passion!",
-      "Generic Football Team needs an injection of pure diesel fuel today, Randy. Wake the bench up!",
+      "Randy, Generic Football Team is living up to the name today—flat, quiet, and getting outscored across the board!",
+      "Randy's squad is putting up points like dial-up internet. Show some life out there and make a bold lineup gamble!",
+      "Generic Football Team needs an injection of pure adrenaline today, Randy. Wake that roster up!",
     ],
   },
 
   general: [
-    "If your quarterback slides instead of diving for the pylon, drop him on waivers tonight. That's my scouting report.",
-    "Real fantasy owners don't look at win probability meters. They look at fourth-quarter red-zone touches.",
-    "Rain, mud, frozen turf, broken chinstraps. That's the GRITZone. If you want comfort, go watch curling.",
+    "If your quarterback gives you four turnovers and zero scores, drop him to waivers before the waiver wire buzzer sounds. That's my scouting report.",
+    "Real fantasy managers don't look at win probability meters. They look at red-zone targets and high-floor touches.",
+    "Agonizing lineup choices, 3 AM waiver claims, and surviving decimal-point heartbreaks. That's real fantasy football. If you want comfort, go play solitaire.",
   ],
 };
 
@@ -221,7 +221,7 @@ const MARTY_SULLIVAN_QUIPS = {
   ],
 
   thriller: [
-    "Takes me back to the 2019 Week 11 classic between Ed and Eric. Came down to the final play of Monday night in the driving snow.",
+    "Takes me back to the 2019 Week 11 classic between Tolanda and Eric. Came down to the final play of Monday night in the driving snow.",
     "This has the makings of a classic CRFFL finish. These are the matchups you remember when the banquet comes around in January.",
     "Two proud franchises refusing to give an inch. This is the caliber of competition that built the Times-Herald sports desk.",
     "Pressure does two things, boys: it makes diamonds, or it makes you leave your kicker in the lineup during his bye week.",
@@ -241,7 +241,7 @@ const MARTY_SULLIVAN_QUIPS = {
   manager_callouts: {
     Eric: [
       "The Commish has seen this movie before. In 2018, Eric started 0-2 and lectured everybody on patience before rallying to the playoffs.",
-      "Eric's franchise carries a lot of history, but history doesn't tackle the ball carrier on 3rd-and-long, Commissioner.",
+      "Eric's franchise carries a lot of history, but history doesn't score points on Monday night, Commissioner.",
     ],
     Corey: [
       "Corey's got that 1980s swagger, but flashy uniforms don't win ball games when the fundamentals break down in the red zone.",
@@ -249,10 +249,10 @@ const MARTY_SULLIVAN_QUIPS = {
     ],
     Tolanda: [
       "Tolanda's taken the keys to RaiderRose and she's not looking back. Riding with the silver and black through thick and thin takes real backbone.",
-      "Tolanda knows the cardinal rule: you establish the run, you protect the football, and you don't panic when the scoreboard gets ugly.",
+      "Tolanda knows the cardinal rule: you start your high-floor studs, you avoid zero-point duds, and you don't panic when the projections get ugly.",
     ],
     Jeff: [
-      "Jeff plays football the way it was meant to be played: quiet, focused, with clean handoffs and no end-zone celebrations.",
+      "Jeff plays fantasy football the way it was meant to be played: quiet, focused, with high-floor starters and no frantic late-night lineup tinkering.",
       "Hickory Huskers have that classic 1995 Nebraska demeanor, Jeff. Now let's see if the fourth quarter backs it up.",
     ],
     KC: [
@@ -283,7 +283,7 @@ const MARTY_SULLIVAN_QUIPS = {
 
   general: [
     "Coffee is black, the typewriter ribbon is fresh, and the Sunday afternoon recap is practically writing itself.",
-    "Formations come and go, but blocking, tackling, and avoiding three-and-outs will always decide championships.",
+    "Fads come and go, but starting your studs, locking down your Superflex, and avoiding bench blunders will always decide championships.",
   ],
 };
 
@@ -435,7 +435,7 @@ const CHLOE_CARMICHAEL_QUIPS = {
     "Every time Rebel Scum scores a touchdown, my heart does a little extra leap. Purely journalistic, of course.",
     "I could write a whole feature piece on that smile of yours, Eric.",
     "You hold all the cards in this league, Eric, but you play them so charmingly.",
-    "Don't tell Buck Callahan, but I'd rather talk strategy with you over dinner than watch trench warfare tape.",
+    "Don't tell Buck Callahan, but I'd rather talk strategy with you over dinner than listen to him talk about high-floor flex starters.",
     "You have this way of walking into the War Room and instantly making everything more exciting, Eric.",
     "Is it against league regulations to admit you're my favorite manager, Eric?",
     "I've got a lock of the week for you, Eric: you and me celebrating after the championship.",

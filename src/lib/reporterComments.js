@@ -38,17 +38,17 @@ export function getFallbackReply(reporterId, humanName, teamName) {
   const safeTeam = teamName || 'CRFFL Franchise';
   switch (reporterId) {
     case 'buck_callahan':
-      return `Appreciate you checking in from the ${safeTeam} sideline, ${safeName}. Keep your chin strapped and don't let anyone push you around in the trenches this week.`;
+      return `Appreciate you checking in from the ${safeTeam} front office, ${safeName}. Make sure you set your optimal lineup and don't leave your winning points on the pine this week.`;
     case 'chloe_carmichael':
       return `Thanks for chiming in, ${safeName}! The front office rumor mill never rests—keep your FAAB tight and watch those wire claims closely.`;
     case 'marty_sullivan':
-      return `Appreciate the dispatch, ${safeName}. Just make sure you leave the winning points on the field and off the pine on Sunday, and we'll get along fine.`;
+      return `Appreciate the dispatch, ${safeName}. Just make sure you leave the winning points in your starting lineup and off the pine on Sunday, and we'll get along fine.`;
     case 'marcus_vance':
       return `A salient observation, ${safeName}. While regression curves fluctuate, your franchise's expected value trajectory remains one to monitor closely.`;
     case 'commissioner':
       return `The Front Office acknowledges your dispatch, ${safeName}. Maintain constitutional compliance and compete with honor.`;
     default:
-      return `Appreciate the perspective, ${safeName}. Best of luck on the field this week!`;
+      return `Appreciate the perspective, ${safeName}. Best of luck with your starting lineup this week!`;
   }
 }
 
