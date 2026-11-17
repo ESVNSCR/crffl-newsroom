@@ -11,7 +11,7 @@
  * - Playoffs: Weeks 15 to 17 (Round 1: #3 vs #6, #4 vs #5; Round 2: #1 vs lowest remaining, #2 vs highest; Round 3: Championship)
  */
 
-import { DEFAULT_LEAGUE_ID, MANAGERS } from './sleeper';
+import { DEFAULT_LEAGUE_ID, MANAGERS } from './sleeper.js';
 
 // In-memory cache for high-performance response times (TTL: 60s)
 let cachedData = null;
@@ -547,7 +547,7 @@ export async function getPlayoffAnalytics(targetWeek = null) {
           { matchup: 'Matchup A', highSeed: orderedSeeds[2], lowSeed: orderedSeeds[5] },
           { matchup: 'Matchup B', highSeed: orderedSeeds[3], lowSeed: orderedSeeds[4] }
         ],
-        bubbleTeams
+        bubbleTeams: bubbleSeeds
       }
     };
 
