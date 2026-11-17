@@ -2,7 +2,10 @@ import { supabase } from '@/lib/supabase';
 import { MANAGERS } from '@/lib/sleeper';
 import { getSleeperPlayerMap, sanitizeManagerNames } from '@/lib/sleeperPlayers';
 import PowerRankingComments from '@/components/PowerRankingComments';
+import PlayoffPictureBanner from '@/components/PlayoffPictureBanner';
+import TeamPlayoffAnalyticsCard from '@/components/TeamPlayoffAnalyticsCard';
 import { selfHealMarcusPowerRankings } from '@/lib/selfHealing';
+import { getPlayoffAnalytics } from '@/lib/playoffAnalytics';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -59,6 +62,9 @@ export default async function PowerRankingsPage({ searchParams }) {
     .order('week_number', { ascending: false });
 
   const weekList = Array.from(new Set(allWeeks?.map((w) => w.week_number) || []));
+
+  // Live Playoff Analytics & Monte Carlo Simulation Engine
+  const playoffAnalytics = await getPlayoffAnalytics(requestedWeek);
 
   // Process, normalize names, clean blurbs, and sort from #10 down to #1
   const isWeekOne = (currentRankings?.week_number || 1) === 1;
@@ -130,6 +136,27 @@ export default async function PowerRankingsPage({ searchParams }) {
         }
       }
 
+      // Match with live playoff analytics
+      const lookupKeys = [
+        team.manager_name?.toLowerCase(),
+        team.team_name?.toLowerCase(),
+        team.username?.toLowerCase(),
+        preset.managerName?.toLowerCase(),
+        preset.teamName?.toLowerCase(),
+      ].filter(Boolean);
+
+      let matchedAnalytics = null;
+      for (const k of lookupKeys) {
+        if (playoffAnalytics?.seedsMap?.[k]) {
+          const entry = playoffAnalytics.seedsMap[k];
+          matchedAnalytics = {
+            ...entry.team,
+            ...entry,
+          };
+          break;
+        }
+      }
+
       return {
         ...team,
         team_name: preset.teamName || team.team_name,
@@ -139,6 +166,7 @@ export default async function PowerRankingsPage({ searchParams }) {
         points_for: isWeekOne ? '0.0' : team.points_for || '0.0',
         blurb: cleanBlurb,
         trend: isWeekOne ? '▬' : computedTrend,
+        teamAnalytics: matchedAnalytics,
       };
     })
     .sort((a, b) => b.rank - a.rank); // Sort 10 at the top, down to 1 at the bottom
@@ -227,6 +255,11 @@ export default async function PowerRankingsPage({ searchParams }) {
             </div>
           </div>
 
+          {/* Master Postseason Grid: If The Playoffs Started Today */}
+          {playoffAnalytics && (
+            <PlayoffPictureBanner analytics={playoffAnalytics} />
+          )}
+
           {/* Rankings List (Counting Down: #10 at top down to #1 at bottom) */}
           <div className="space-y-6">
             {displayRankings.map((team) => {
@@ -241,55 +274,63 @@ export default async function PowerRankingsPage({ searchParams }) {
               return (
                 <div
                   key={team.rank}
-                  className={`glass-panel p-5 sm:p-8 flex flex-col md:flex-row items-center gap-4 sm:gap-8 transition relative ${
+                  className={`glass-panel p-5 sm:p-8 space-y-4 transition relative ${
                     isNumberOne ? 'rank-1-glow' : 'hover:border-white/30'
                   }`}
                 >
-                  {/* Rank Badge */}
-                  <div className="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] text-center">
-                    <span className="text-3xl sm:text-5xl font-black text-white/90">
-                      #{team.rank}
-                    </span>
-                    {isNumberOne && (
-                      <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#d4af37] mt-1 bg-[#d4af37]/10 px-2.5 py-0.5 rounded border border-[#d4af37]/30 whitespace-nowrap">
-                        Apex #1
+                  {/* Top Hero Section: Rank, Logo, Info, Trend */}
+                  <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-8">
+                    {/* Rank Badge */}
+                    <div className="flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] text-center">
+                      <span className="text-3xl sm:text-5xl font-black text-white/90">
+                        #{team.rank}
                       </span>
-                    )}
-                  </div>
-
-                  {/* Team Logo: Responsive container with full containment to avoid clipping */}
-                  <div className="flex-shrink-0 flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 p-2 overflow-hidden rounded-2xl bg-black/40 border border-white/10 shadow-inner">
-                    <img
-                      src={team.logo_url}
-                      alt={`${team.team_name} logo`}
-                      className="w-full h-full object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.9)] transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
-
-                  {/* Team Info & Blurb */}
-                  <div className="flex-grow text-center md:text-left space-y-2">
-                    <div className="flex flex-wrap items-baseline gap-2 justify-center md:justify-start">
-                      <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                        {team.team_name}
-                      </h2>
-                      <span className="text-base font-semibold text-gray-300">
-                        ({team.manager_name})
-                      </span>
+                      {isNumberOne && (
+                        <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#d4af37] mt-1 bg-[#d4af37]/10 px-2.5 py-0.5 rounded border border-[#d4af37]/30 whitespace-nowrap">
+                          Apex #1
+                        </span>
+                      )}
                     </div>
 
-                    <div className="text-xs sm:text-sm font-semibold text-[#d4af37]">
-                      Record: {team.record || '0-0'} &nbsp;|&nbsp; PF: {team.points_for || '0.0'}
+                    {/* Team Logo: Responsive container with full containment to avoid clipping */}
+                    <div className="flex-shrink-0 flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 p-2 overflow-hidden rounded-2xl bg-black/40 border border-white/10 shadow-inner">
+                      <img
+                        src={team.logo_url}
+                        alt={`${team.team_name} logo`}
+                        className="w-full h-full object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.9)] transition-transform duration-300 hover:scale-105"
+                      />
                     </div>
 
-                    <p className="text-sm sm:text-base text-gray-200 leading-relaxed pt-2">
-                      {team.blurb}
-                    </p>
+                    {/* Team Info & Blurb */}
+                    <div className="flex-grow text-center md:text-left space-y-2">
+                      <div className="flex flex-wrap items-baseline gap-2 justify-center md:justify-start">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                          {team.team_name}
+                        </h2>
+                        <span className="text-base font-semibold text-gray-300">
+                          ({team.manager_name})
+                        </span>
+                      </div>
+
+                      <div className="text-xs sm:text-sm font-semibold text-[#d4af37]">
+                        Record: {team.record || '0-0'} &nbsp;|&nbsp; PF: {team.points_for || '0.0'}
+                      </div>
+
+                      <p className="text-sm sm:text-base text-gray-200 leading-relaxed pt-2">
+                        {team.blurb}
+                      </p>
+                    </div>
+
+                    {/* Trend Indicator */}
+                    <div className="flex-shrink-0 self-center md:self-start md:pt-2">
+                      <span className={trendClass}>{trend}</span>
+                    </div>
                   </div>
 
-                  {/* Trend Indicator */}
-                  <div className="flex-shrink-0 self-center md:self-start md:pt-2">
-                    <span className={trendClass}>{trend}</span>
-                  </div>
+                  {/* Bottom Analytical Section: Seeding, SOS Matrix, Probability Scores, Dr. Vance Postseason Outlook */}
+                  {team.teamAnalytics && (
+                    <TeamPlayoffAnalyticsCard teamAnalytics={team.teamAnalytics} />
+                  )}
                 </div>
               );
             })}
